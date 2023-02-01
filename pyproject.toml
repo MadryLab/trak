@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trak"
+dynamic = ["version", "readme"]
+description = "TRAK: Understanding Model Predictions at Scale"
+requires-python = ">=3.5"
+
+[tool.setuptools.dynamic]
+version = {attr = "trak.VERSION"}
+readme = {file = ["README.md"]}

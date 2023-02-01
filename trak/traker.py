@@ -1,5 +1,4 @@
 from typing import Iterable, Optional
-from numpy.lib.utils import open_mmap
 import torch as ch
 from torch.nn.parameter import Parameter
 from torch import Tensor
@@ -8,7 +7,7 @@ class TRAKer():
     def __init__(self, save_dir: str, load_from_existing: bool = False):
         self.save_dir = save_dir
         self.last_ind = 0
-        self.mmap = open_mmap
+        # self.mmap = open_mmap
     
     def featurize(self, val: Tensor, 
                         params: Iterable[Parameter], 
@@ -19,7 +18,7 @@ class TRAKer():
             val.backward()
             g = None
         else:
-            from functorch import vmap, grad
+            # from functorch import vmap, grad
             # functorch stuff
             pass
 
