@@ -13,6 +13,10 @@ dependencies = [
     'tqdm'
 ]
 
+[project.optional-dependencies]
+tests = ['torchvision'
+]
+
 [tool.setuptools.dynamic]
 version = {attr = "trak.VERSION"}
 readme = {file = ["README.md"]}
