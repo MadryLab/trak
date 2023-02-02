@@ -27,8 +27,8 @@ class CrossEntropyModelOutput(AbstractModelOutput):
     """
     Margin for image classification.
 
-    \[\text{logit}[\text{correct}] - \log(\sum_{i \neq \text{correct}}
-    \exp(\text{logit}[i]))\]
+    $$\\text{logit}[\\text{correct}] - \log\left(\sum_{i \\neq \\text{correct}}
+    \exp(\\text{logit}[i])\\right)$$
 
     Version proposed in 'Understanding Influence Functions
     and Datamodels via Harmonic Analysis'
