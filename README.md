@@ -1,21 +1,34 @@
-# TRAK: Tracing by Rewinding the After Kernel
+<!-- ![workflow badge](https://github.com/MadryLab/trak/blob/main/.github/workflows/python-package.yml/badge.svg) -->
+<!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
+# TRAK: Understanding Model Predictions at Scale
 
 ## Usage
 
 ### Setting up TRAK scorer
 ```python
-from trak import TRAKer
-
-traker = TRAKer('/tmp', load_from_existing=False)
+from trak import TRAKer, CrossEntropyModelOutput
 
 model = ...
 tr_loader = ...
 
+model_output_fn = CrossEntropyModelOutput()
+traker = FunctionalTRAKer('/tmp', model, model_output_fn)
+
+# if using functorch for paralellizing per-sample gradients
+func_model, weights, buffers = make_functional_with_buffers(model)
+def compute_model_output(weights, buffers, batch):
+  batch = images, labels
+  logits = func_model(weights, buffers, images)
+  return model_output_fn(logits, labels)
+
+# otherwise (vanilla pytorch)
+def compute_model_output(model, batch):
+  batch = images, labels
+  logits = model(images)
+  return model_output_fn(logits, labels)
+
 for inds, batch in loader:
-  out = model(batch)
-  loss = ...
-  traker.make_features(loss, model.parameters(), inds=inds)
-  # If the loader is sequential, no need for inds
+  traker.featurize(compute_model_output, weights, buffers, batch)
 
 trak.finalize(out_dir='results/', agg=True, cleanup=False)
 ```
