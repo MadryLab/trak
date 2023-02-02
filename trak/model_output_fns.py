@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional
 from torch import Tensor
+from torch.nn import Module
 import torch as ch
 
 class AbstractModelOutput(ABC):
     """
     ModelOutputFunction classes must implement a `get_output` method that takes
-    in model outputs (logits), possibly together with labels, and produces
-    "margins". Those margins will be used by TRAK: the gradients for produciung
-    the after kernel will be of the margin, rather than the loss.
-    This is especially useful for exponentially saturating loss f-ns like cross
-    entropy.
+    in a batch of inputs and a model to produce "margins". Those margins will be
+    used by TRAK: the gradients for produciung the after kernel will be of the
+    margin, rather than the loss.  This is especially useful for exponentially
+    saturating loss f-ns like cross entropy.
     """
     @abstractmethod
     def __init__(self, device) -> None:
@@ -18,8 +18,8 @@ class AbstractModelOutput(ABC):
 
     @abstractmethod
     def get_output(self,
-                   logits: Iterable[Tensor],
-                   labels: Optional[Tensor]) -> Tensor:
+                   model: Module,
+                   batch: Iterable[Tensor]) -> Tensor:
         ...
 
 
@@ -44,6 +44,7 @@ class CrossEntropyModelOutput(AbstractModelOutput):
 
         cloned_logits = logits.clone().to(self.device, non_blocking=False)
         cloned_logits[bindex, labels] = ch.tensor(-ch.inf).cuda()  # exp(-inf) = 0
+
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins
 
