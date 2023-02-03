@@ -41,7 +41,7 @@ class BasicProjector(AbstractProjector):
         self.generator = ch.Generator(device=self.device)
         self.generator = self.generator.manual_seed(self.seed)
 
-        self.proj_matrix = ch.empty(self.grad_dim, self.proj_dim)
+        self.proj_matrix = ch.empty(self.grad_dim, self.proj_dim).to(self.device)
 
         if self.proj_type == ProjectionType.normal:
             self.proj_matrix.normal_(generator=self.generator)

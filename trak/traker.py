@@ -79,7 +79,7 @@ class TRAKer():
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
-                     in_dims=(None, None, 0, 0),
+                     in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
         self.record_grads(grads, inds)
 
@@ -100,7 +100,7 @@ class TRAKer():
 
     def record_grads(self, grads, inds):
         grads = self.projector.project(vectorize_and_ignore_buffers(grads))
-        self.grads[inds] = grads
+        self.grads[inds] = grads.detach().clone().cpu()
     
     def _get_loss_gradient_functional(self, func_model, weifhts, buffers, batch, inds):
         pass
