@@ -47,10 +47,10 @@ class CrossEntropyModelOutput(AbstractModelOutput):
 
         cloned_logits = logits.clone().to(self.device, non_blocking=False)
         # exp(-inf) = 0
-        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).cuda()
+        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).to(self.device)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
-        return margins
+        return margins.sum()
 
 
 class NLPModelOutput(AbstractModelOutput):

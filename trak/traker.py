@@ -4,7 +4,7 @@ from torch.nn.parameter import Parameter
 from torch import Tensor
 from trak.modelout_functions import AbstractModelOutput
 from trak.projectors import BasicProjector, ProjectionType
-from trak.utils import parameters_to_vector
+from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
 try:
     from functorch import make_functional_with_buffers, grad, vmap
 except ImportError:
@@ -20,7 +20,7 @@ class TRAKer():
                  proj_seed=0,
                  save_dir: str='./trak_results',
                  device=None,
-                 train_set_size=None,
+                 train_set_size=1,
                  load_from_existing: bool = False):
         """ Main class for computing TRAK scores.
         See [User guide link here] for detailed examples.
@@ -43,9 +43,6 @@ class TRAKer():
 
         self.last_ind = 0
 
-        if self.functional:
-            self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
-        
         self.projector = projector(seed=proj_seed,
                                    proj_dim=proj_dim,
                                    grad_dim=parameters_to_vector(self.model.parameters()).numel(),
@@ -56,6 +53,8 @@ class TRAKer():
 
         self.model_params = parameters_to_vector(model.parameters())
         self.grad_dim = self.model_params.numel()
+
+        self.grads = ch.zeros([train_set_size, proj_dim])
     
     def featurize(self,
                   out_fn,
@@ -80,8 +79,8 @@ class TRAKer():
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
-                     in_dims=(None, None, 0),
-                     randomness='different')(weights, buffers, batch)
+                     in_dims=(None, None, 0, 0),
+                     randomness='different')(weights, buffers, *batch)
         self.record_grads(grads, inds)
 
     def _featurize_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
@@ -100,7 +99,11 @@ class TRAKer():
         return grads
 
     def record_grads(self, grads, inds):
+        grads = self.projector.project(vectorize_and_ignore_buffers(grads))
         self.grads[inds] = grads
+    
+    def _get_loss_gradient_functional(self, func_model, weifhts, buffers, batch, inds):
+        pass
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 

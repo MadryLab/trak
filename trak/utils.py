@@ -9,3 +9,34 @@ def parameters_to_vector(parameters):
     for param in parameters:
         vec.append(param.reshape(-1))
     return ch.cat(vec)
+
+
+def is_not_buffer(ind, params_dict):
+    name = params_dict[ind]
+    if ('running_mean' in name) or ('running_var' in name) or ('num_batches_tracked' in name):
+        return False
+    return True
+
+
+def vectorize_and_ignore_buffers(g, params_dict=None, convert_to_half=False):
+    """
+    gradients are given as a tuple (grad_w0, grad_w1, ... grad_wp)
+    where p is the number of weight matrices. each grad_wi has shape
+    [batch_size, ...]
+    this f-n flattens g to have shape [batch_size, num_params]
+    """
+    batch_size = len(g[0])
+    out = []
+    if params_dict is not None:
+        for b in range(batch_size):
+            if convert_to_half:
+                out.append(ch.cat([x[b].flatten().half() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
+            else:
+                out.append(ch.cat([x[b].flatten() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
+    else:
+        for b in range(batch_size):
+            if convert_to_half:
+                out.append(ch.cat([x[b].flatten().half() for x in g]))
+            else:
+                out.append(ch.cat([x[b].flatten() for x in g]))
+    return ch.stack(out)
