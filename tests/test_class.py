@@ -1,6 +1,6 @@
 import pytest
 from trak.traker import TRAKer
-from trak.model_output_fns import CrossEntropyModelOutput
+from trak.modelout_functions import CrossEntropyModelOutput
 from torchvision.models import resnet18
 
 def test_class_init():

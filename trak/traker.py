@@ -2,7 +2,7 @@ from typing import Iterable, Optional
 import torch as ch
 from torch.nn.parameter import Parameter
 from torch import Tensor
-from trak.model_output_fns import AbstractModelOutput
+from trak.modelout_functions import AbstractModelOutput
 from trak.projectors import BasicProjector, ProjectionType
 from trak.utils import parameters_to_vector
 try:
@@ -12,20 +12,33 @@ except ImportError:
 
 class TRAKer():
     def __init__(self,
-                 save_dir: str,
                  model,
                  model_output_fn: AbstractModelOutput,
-                 functional: bool = True,
-                 proj_seed=0,
                  proj_dim=10,
-                 proj_type=ProjectionType.normal,
                  projector=BasicProjector,
+                 proj_type=ProjectionType.normal,
+                 proj_seed=0,
+                 save_dir: str='./trak_results',
                  device=None,
+                 train_set_size=None,
                  load_from_existing: bool = False):
+        """ Main class for computing TRAK scores.
+        See [User guide link here] for detailed examples.
+
+        Parameters
+        ----------
+        save_dir : str, default='./trak_results'
+            Directory to save TRAK scores and intermediate values
+            like projected gradients of the train set samples and
+            targets.
+
+        Attributes
+        ----------
+
+        """
         self.save_dir = save_dir
         self.model = model
         self.model_output_fn = model_output_fn
-        self.functional = functional
         self.device = device
 
         self.last_ind = 0
@@ -38,29 +51,56 @@ class TRAKer():
                                    grad_dim=parameters_to_vector(self.model.parameters()).numel(),
                                    proj_type=proj_type,
                                    device=self.device)
+        
+        self.train_set_size = train_set_size
+
+        self.model_params = parameters_to_vector(model.parameters())
+        self.grad_dim = self.model_params.numel()
     
     def featurize(self,
-                  fn,
-                  params: Iterable[Parameter],
-                  batch: Iterable[Tensor]) -> Tensor:
-        if self.functional:
-            weights, buffers = params
-            self._featurize_functional(fn, weights, buffers, batch)
+                  out_fn,
+                  model,
+                  batch: Iterable[Tensor],
+                  inds: Optional[Iterable[int]]=None,
+                  functional: bool=False) -> Tensor:
+        if functional:
+            func_model, weights, buffers = model
+            self._featurize_functional(out_fn, weights, buffers, batch, inds)
+            self._get_loss_gradient_functional(func_model, weights, buffers, batch, inds)
         else:
-            # Make sure param grads are zero
-            self._featurize_iter(fn, params, batch)
+            self._featurize_iter(out_fn, model, batch, inds)
+            self._get_loss_gradient_iter(model, batch, inds)
+
     
-    def _featurize_functional(self, fn, weights, buffers, batch) -> Tensor:
+    def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
         """
         Using the `vmap` feature of `functorch`
         """
-        grads_loss = grad(fn, has_aux=False)
-        return vmap(grads_loss,
-                    in_dims=(None, None, 0, 0),
-                    randomness='different')(weights, buffers, batch)
 
-    def _featurize_iter(fn, params, batch) -> Tensor:
-        pass
+        grads_loss = grad(out_fn, has_aux=False)
+        # map over batch dimension
+        grads = vmap(grads_loss,
+                     in_dims=(None, None, 0),
+                     randomness='different')(weights, buffers, batch)
+        self.record_grads(grads, inds)
+
+    def _featurize_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
+        if batch_size is None:
+            # assuming batch is an iterable of torch Tensors, each of
+            # shape [batch_size, ...]
+            batch_size = batch[0].size(0)
+        grads = ch.zeros(batch_size, self.grad_dim).cuda()
+
+        for ind in range(batch_size):
+            for p in model.parameters():
+                p.zero_grad()
+            margin = out_fn(model, [x[ind] for x in batch])
+            margin.backward()
+            grads[ind] = self.model_params.grad
+        return grads
+
+    def record_grads(self, grads, inds):
+        self.grads[inds] = grads
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 

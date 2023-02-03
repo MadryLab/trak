@@ -4,6 +4,7 @@ from torch import Tensor
 from torch.nn import Module
 import torch as ch
 
+
 class AbstractModelOutput(ABC):
     """
     ModelOutputFunction classes must implement a `get_output` method that takes
@@ -27,12 +28,14 @@ class CrossEntropyModelOutput(AbstractModelOutput):
     """
     Margin for image classification.
 
-    $$\\text{logit}[\\text{correct}] - \log\left(\sum_{i \\neq \\text{correct}}
-    \exp(\\text{logit}[i])\\right)$$
+    .. math::
+        \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
+        \exp(\text{logit}[i])\right)
 
     Version proposed in 'Understanding Influence Functions
     and Datamodels via Harmonic Analysis'
     """
+
     def __init__(self, device) -> None:
         super().__init__(device)
 
@@ -43,7 +46,8 @@ class CrossEntropyModelOutput(AbstractModelOutput):
         logits_correct = logits[bindex, labels]
 
         cloned_logits = logits.clone().to(self.device, non_blocking=False)
-        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).cuda()  # exp(-inf) = 0
+        # exp(-inf) = 0
+        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).cuda()
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins
@@ -56,10 +60,11 @@ class NLPModelOutput(AbstractModelOutput):
     Logits: [batch size, sequence length, vocab size]
     Labels: [batch size, sequence length]
     """
+
     def __init__(self, device) -> None:
         super().__init__(device)
         self.inf = ch.tensor(-ch.inf).to(self.device)
-    
+
     def get_output(self,
                    logits: Iterable[Tensor],
                    labels: Optional[Tensor]) -> Tensor:
