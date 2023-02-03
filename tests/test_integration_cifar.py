@@ -48,5 +48,6 @@ def test_cifar10(device='cpu'):
     # loader_val = DataLoader(ds_val, batch_size=256)
     # load margins
 
+@pytest.mark.cuda
 def test_cifar10_cuda():
     test_cifar10(device='cuda:0')

@@ -20,3 +20,8 @@ tests = ['torchvision'
 [tool.setuptools.dynamic]
 version = {attr = "trak.VERSION"}
 readme = {file = ["README.md"]}
+
+[tool.pytest.ini_options]
+markers = [
+    "cuda: marks tests that require GPU",
+]
