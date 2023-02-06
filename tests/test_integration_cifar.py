@@ -21,6 +21,7 @@ def test_cifar10(device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
+    loss_fn = ch.nn.CrossEntropyLoss()
     traker = TRAKer(model=model,
                     model_output_fn=modelout_fn,
                     train_set_size=50_000,
@@ -37,8 +38,12 @@ def test_cifar10(device='cpu'):
         batch = [x.to(device) for x in batch]
         inds = list(range(bind * loader_train.batch_size,
                           (bind + 1) * loader_train.batch_size))
-        traker.featurize(compute_outputs, (func_model, weights, buffers),
-                         batch, functional=True, inds=inds)
+        traker.featurize(out_fn=compute_outputs,
+                         loss_fn=loss_fn,
+                         model=(func_model, weights, buffers),
+                         batch=batch,
+                         functional=True,
+                         inds=inds)
         if bind == 10:
             break # a CPU pass takes too long lol
     

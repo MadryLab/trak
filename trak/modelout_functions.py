@@ -22,6 +22,12 @@ class AbstractModelOutput(ABC):
                    model: Module,
                    batch: Iterable[Tensor]) -> Tensor:
         ...
+    
+    @abstractmethod
+    def get_out_to_loss(self,
+                        model: Module,
+                        batch: Iterable[Tensor]) -> Tensor:
+        ...
 
 
 class CrossEntropyModelOutput(AbstractModelOutput):

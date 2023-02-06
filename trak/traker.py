@@ -21,7 +21,7 @@ class TRAKer():
                  save_dir: str='./trak_results',
                  device=None,
                  train_set_size=1,
-                 load_from_existing: bool = False):
+                 load_from: Optional[str]=None):
         """ Main class for computing TRAK scores.
         See [User guide link here] for detailed examples.
 
@@ -58,6 +58,7 @@ class TRAKer():
     
     def featurize(self,
                   out_fn,
+                  loss_fn,
                   model,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]]=None,
@@ -65,10 +66,10 @@ class TRAKer():
         if functional:
             func_model, weights, buffers = model
             self._featurize_functional(out_fn, weights, buffers, batch, inds)
-            self._get_loss_gradient_functional(func_model, weights, buffers, batch, inds)
+            self._get_loss_grad_functional(loss_fn, func_model, weights, buffers, batch, inds)
         else:
             self._featurize_iter(out_fn, model, batch, inds)
-            self._get_loss_gradient_iter(model, batch, inds)
+            self._get_loss_grad_iter(loss_fn, model, batch, inds)
 
     
     def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
@@ -102,8 +103,13 @@ class TRAKer():
         grads = self.projector.project(vectorize_and_ignore_buffers(grads))
         self.grads[inds] = grads.detach().clone().cpu()
     
-    def _get_loss_gradient_functional(self, func_model, weifhts, buffers, batch, inds):
-        pass
+    def _get_loss_grad_functional(self, func_model, weights, buffers, batch, inds):
+        """Computes
+        .. math::
+            \partial \ell / \partial \text{margin}
+        
+        """
+
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 

@@ -27,7 +27,7 @@ def compute_model_output(model, batch):
   logits = model(images)
   return model_output_fn(logits, labels)
 
-for inds, batch in loader:
+for batch in loader:
   traker.featurize(compute_model_output, weights, buffers, batch)
 
 trak.finalize(out_dir='results/', agg=True, cleanup=False)
