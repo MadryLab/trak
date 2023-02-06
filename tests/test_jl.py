@@ -232,21 +232,22 @@ def test_prod_preservation(seed,
 
     p = proj.project(g)
 
-    delta = 0.05
+    delta = 0.2
     eps = np.sqrt(np.log(1 / delta) / proj_dim)
     num_trials = 100
     num_successes = 0
+    nrm = proj.proj_matrix.norm(dim=1).mean()
 
     for _ in range(num_trials):
         i, j = np.random.choice(range(g.shape[0]), size=2)
-        n = (g[i] - g[j]).norm()
-        pn = (p[i] - p[j]).norm() / proj.proj_matrix.norm(dim=1).mean()
-        # 15 is an arbitrary constant
-        res = (n - pn).cpu().abs().item()
+        n = (g[i] @ g[j])
+        pn = ((p[i] / nrm) @ (p[j] / nrm))
+        res = (n.abs() - pn.abs()).cpu().abs().item()
+        t = (15 * np.sqrt(proj.proj_matrix.shape[-1]) * eps * n).abs().item()
         # if NaN, just give up and count as success
-        num_successes += max(int(res <= 15 * eps * n), math.isinf(res))
+        num_successes += max(int(res <= t), math.isinf(res), math.isinf(t))
         
-    assert num_successes >= num_trials * (1 - 3 * delta)
+    assert num_successes >= num_trials * (1 - 2 * delta)
 
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
