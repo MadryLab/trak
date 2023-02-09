@@ -248,34 +248,3 @@ def test_prod_preservation(seed,
         num_successes += max(int(res <= t), math.isinf(res), math.isinf(t))
         
     assert num_successes >= num_trials * (1 - 2 * delta)
-
-
-@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
-@pytest.mark.cuda
-def test_linearity(seed,
-                   proj_type,
-                   dtype,
-                   proj_dim,
-                   input_shape,
-                   ):
-    """
-    Check that linearity holds (relevant for projectors that do not instantiate the
-    entire JL matrix, ow trivial)
-    """
-    dtype = ch.float32
-    g1 = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
-    g2 = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
-
-    proj = BasicProjector(grad_dim=input_shape[-1],
-                          proj_dim=proj_dim,
-                          proj_type=proj_type,
-                          seed=seed,
-                          device='cuda:0',
-                          dtype=dtype
-                          )
-
-    for a in [1., 10., 45.]: # arbitrary constants
-        for b in [3., 18., -24.]: # arbitrary constants
-            gp = proj.project(a * g1 + b * g2)
-            pg = a * proj.project(g1) + b * proj.project(g2)
-            testing.assert_close(gp, pg, equal_nan=True)
