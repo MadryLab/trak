@@ -276,3 +276,35 @@ def test_same_features(seed,
     p = proj.project(g)
 
     assert ch.allclose(p[0], p[-1])
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_orthogonality(seed,
+                       proj_type,
+                       dtype,
+                       proj_dim,
+                       input_shape,
+                       ):
+    """
+    Check that orthgonality of inputs is approximately presereved whp
+    """
+    if input_shape[0] == 1:
+        pass
+    else:
+        proj = BasicProjector(grad_dim=input_shape[-1],
+                            proj_dim=proj_dim,
+                            proj_type=proj_type,
+                            seed=seed,
+                            device='cuda:0',
+                            dtype=dtype
+                            )
+
+        num_successes = 0
+        num_trials = 100
+        for _ in range(num_trials):
+            g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
+            g[-1] -= g[0] @ g[-1] / (g[0].norm() ** 2) * g[0]
+            p = proj.project(g)
+            if p[0] @ p[-1] < 1e-3:
+                num_successes += 1
+        assert num_successes > 0.35 * num_trials
