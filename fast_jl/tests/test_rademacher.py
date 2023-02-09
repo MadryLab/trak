@@ -4,7 +4,10 @@ from itertools import product
 import torch as ch
 from torch import testing
 
-import fast_jl
+try:
+    import fast_jl
+except:
+    print(f'No fast_jl available!')
 from assertpy import assert_that
 
 PARAM = list(product([8], [1024, 2048], [5], [0, 1]))

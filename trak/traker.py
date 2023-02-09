@@ -4,6 +4,7 @@ from torch.nn.parameter import Parameter
 from torch import Tensor
 from trak.modelout_functions import AbstractModelOutput
 from trak.projectors import BasicProjector, ProjectionType
+from trak.reweighters import BasicSingleBlockReweighter
 from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
 try:
     from functorch import make_functional_with_buffers, grad, vmap
@@ -70,14 +71,15 @@ class TRAKer():
         if functional:
             func_model, weights, buffers = model
             self._featurize_functional(out_fn, weights, buffers, batch, inds)
-            loss_grads = self._get_loss_grad_functional(func_model,
+            loss_grads = self._get_loss_grad_functional(loss_fn,
+                                                        func_model,
                                                         weights,
                                                         buffers,
                                                         batch,
                                                         inds)
         else:
             self._featurize_iter(out_fn, model, batch, inds)
-            self._get_loss_grad_iter(model, batch, inds)
+            self._get_loss_grad_iter(loss_fn, model, batch, inds)
 
     
     def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
@@ -92,7 +94,8 @@ class TRAKer():
                      randomness='different')(weights, buffers, *batch)
         self.record_grads(vectorize_and_ignore_buffers(grads), inds)
 
-    def _featurize_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
+
+    def _featurize_iter(self, out_fn, model, batch, inds, batch_size=None) -> Tensor:
         """Computes per-sample gradients of the model output function
         This method does not leverage vectorization (and is hence much slower than
         `_featurize_vmap`).
@@ -110,27 +113,28 @@ class TRAKer():
                                                                model.parameters(),
                                                                retain_graph=True))
 
-        return grads
+        self.record_grads(grads, inds)
 
     def record_grads(self, grads, inds):
         grads = self.projector.project(grads.to(self.grad_dtype))
         self.grads[inds] = grads.detach().clone().cpu()
     
-    def _get_loss_grad_functional(self, func_model, weights, buffers, batch, inds):
+    def _get_loss_grad_functional(self, loss_fn, func_model,
+                                  weights, buffers, batch, inds):
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
         
         """
-        images, labels = batch  # hardcoded for CV for now
-        logits = func_model(weights, buffers, images)
-        return self.model_output_fn.get_out_to_loss(logits, labels)
+        return loss_fn(weights, buffers, *batch)
 
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 
                        agg: bool = False):
-        pass
+        self.reweighter = BasicSingleBlockReweighter(device=self.device)
+        xtx = self.reweighter.reweight(self.grads)
+        self.features =  self.reweighter.finalize(self.grads, xtx)
 
     def score(self, val: Tensor, params: Iterable[Parameter]) -> Tensor:
         return ch.zeros(1, 1)

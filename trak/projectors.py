@@ -29,10 +29,44 @@ class AbstractProjector(ABC):
     def project(self, grads: Tensor) -> Tensor:
         ...
 
-class BasicProjector(AbstractProjector):
+
+class BasicSingleBlockProjector(AbstractProjector):
     """
     A bare-bones implementation of the projection, which is (extremely)
     inefficient in terms of both time and memory footrpint.
+    """
+    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
+                 ProjectionType, device, dtype=ch.float16) -> None:
+        super().__init__(grad_dim, proj_dim, seed, proj_type, device)
+
+        self.proj_type = proj_type
+        self.generator = ch.Generator(device=self.device)
+        self.generator = self.generator.manual_seed(self.seed)
+        self.dtype = dtype
+
+        self.proj_matrix = ch.ones(self.grad_dim,
+                                   self.proj_dim,
+                                   dtype=self.dtype,
+                                   device=self.device)
+
+        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
+            self.proj_matrix.normal_(generator=self.generator)
+        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
+            self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
+            self.proj_matrix *= 2.
+            self.proj_matrix -= 1.
+        else:
+            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+
+    
+    def project(self, grads: Tensor) -> Tensor:
+        return grads @ self.proj_matrix
+
+
+class BasicProjector(AbstractProjector):
+    """
+    A bare-bones implementation of the projection which performs the
+    matmul blockwise if needed.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
                  ProjectionType, device, dtype=ch.float16) -> None:
