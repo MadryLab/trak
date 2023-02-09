@@ -116,7 +116,7 @@ class TRAKer():
             \partial \ell / \partial \text{margin}
         
         """
-        return loss_fn(weights, buffers, *batch)
+        self.loss_grad = loss_fn(weights, buffers, *batch)
 
     def _get_loss_grad_iter(self, loss_fn, model, batch, inds):
         """Computes
@@ -124,7 +124,7 @@ class TRAKer():
             \partial \ell / \partial \text{margin}
         
         """
-        return loss_fn(model, *batch)
+        self.loss_grad = loss_fn(model, *batch)
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 
@@ -132,6 +132,7 @@ class TRAKer():
         self.reweighter = BasicSingleBlockReweighter(device=self.device)
         xtx = self.reweighter.reweight(self.grads)
         self.features =  self.reweighter.finalize(self.grads, xtx)
+        self.features *= self.loss_grad
 
     def score(self, out_fn, model, batch, functional=True) -> Tensor:
         if functional:
