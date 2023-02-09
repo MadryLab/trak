@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+*cmake-build-debug
+*.idea
+
+
 # Distribution / packaging
 .Python
 build/

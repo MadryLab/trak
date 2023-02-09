@@ -54,12 +54,12 @@ __global__ void fast_jl_rademacher_cuda_kernel(
 
     wmma::fill_fragment(accumulator, 0.0f);
 
-    for (uint32_t iteration = 0 ; iteration < feature_tile_size; iteration += 32) {
+    for (uint32_t iteration = 0 ; iteration < feature_tile_size; iteration += 16) {
 
         uint32_t random_bits = curand(&random_state);
         uint32_t to_write = 0;
 
-#pragma unroll
+        #pragma unroll
         for (uint32_t random_chunk = 0; random_chunk < 8; random_chunk++) {
             to_write = 1006648320 | (random_bits & 1) << 31;
             to_write |= (random_bits & 2) << 14;

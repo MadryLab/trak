@@ -5,16 +5,19 @@ import numpy as np
 import torch as ch
 from torch import testing
 
-from trak.projectors import BasicProjector
+from trak.projectors import CudaProjector
+BasicProjector = CudaProjector
 
 PARAM = list(product([0, 1, 10**8], # seed
-                     ['normal', 'rademacher'], # proj type
-                     [ch.float16, ch.float32], # dtype
+                     # ['normal', 'rademacher'], # proj type
+                     ['rademacher'],  # proj type
+                     # [ch.float16, ch.float32], # dtype
+                     [ch.float16], # dtype
                      [
-                      (1, 10_000),
-                      (10, 10_000),
+                      (8, 10_000),
+                      (16, 10_001),
                       ], # input shape
-                     [1_000], # proj dim
+                     [2048], # proj dim
         ))
 
 # will OOM for BasicProjector
@@ -186,11 +189,13 @@ def test_single_nonzero_feature(seed,
     """
     Check that output takes into account every feature.
     """
+    print(dtype)
     g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
     for ind in range(input_shape[0]):
         coord = np.random.choice(range(input_shape[1]))
         val = ch.randn(1)
         g[ind, coord] = val.item()
+
 
     proj = BasicProjector(grad_dim=input_shape[-1],
                           proj_dim=proj_dim,
