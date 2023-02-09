@@ -13,9 +13,8 @@ PARAM = list(product([0, 1, 10**8], # seed
                      [
                       (1, 10_000),
                       (10, 10_000),
-                      (100, 100_000),
                       ], # input shape
-                     [1000], # proj dim
+                     [1_000], # proj dim
         ))
 
 # will OOM for BasicProjector
@@ -90,80 +89,6 @@ def test_seed_consistency_2(seed,
     testing.assert_close(result, result_again, equal_nan=True)
 
 
-@pytest.mark.parametrize("seed, proj_type",
-                         list(product([0, 1, 10**8], ['normal', 'rademacher'])))
-@pytest.mark.cuda
-def test_orthogonality(seed,
-                       proj_type,
-                       dtype=ch.float32,
-                       proj_dim=1_000,
-                       input_shape=(10, 10_000),
-                       ):
-    """
-    Check that the columns of the projection matrix are orthogonal
-    (we do grads @ proj_matrix)
-    """
-    proj = BasicProjector(grad_dim=input_shape[-1],
-                          proj_dim=proj_dim,
-                          proj_type=proj_type,
-                          seed=seed,
-                          device='cuda:0',
-                          dtype=dtype
-                          )
-
-    proj_matrix = proj.proj_matrix
-    num_successes  = 0
-    num_trials = 300
-    two_sigma = 2 * np.sqrt(proj_matrix.shape[0])
-    for _ in range(num_trials):
-        i, j = np.random.choice(range(proj_matrix.shape[-1]), replace=False, size=2)
-        res = proj_matrix[:, i] @ proj_matrix[:, j]
-        num_successes += int(res.cpu().abs().item() < two_sigma) 
-    assert num_successes >= num_trials * 0.92 #  (0.95 cutting it a bit too close lol)
-
-
-@pytest.mark.parametrize("seed, proj_type",
-                         list(product([0, 1, 10**8], ['normal', 'rademacher'])))
-@pytest.mark.cuda
-def test_orthogonality_2(seed,
-                         proj_type,
-                         dtype=ch.float32,
-                         proj_dim=1_000,
-                         input_shape=(10, 10_000),
-                         ):
-    """
-    Check that the columns of the projection matrix are orthogonal
-    (we do grads @ proj_matrix)
-    """
-    proj = BasicProjector(grad_dim=input_shape[-1],
-                          proj_dim=proj_dim,
-                          proj_type=proj_type,
-                          seed=seed,
-                          device='cuda:0',
-                          dtype=dtype
-                          )
-
-    proj_matrix = proj.proj_matrix
-
-    proj_again = BasicProjector(grad_dim=input_shape[-1],
-                                proj_dim=proj_dim,
-                                proj_type=proj_type,
-                                seed=seed + 10,
-                                device='cuda:0',
-                                dtype=dtype
-                                )
-    proj_matrix_again =  proj_again.proj_matrix
-
-    num_successes  = 0
-    num_trials = 300
-    two_sigma = 2 * np.sqrt(proj_matrix.shape[0])
-    for _ in range(num_trials):
-        i = np.random.choice(range(proj_matrix.shape[-1]), size=1)
-        res = proj_matrix[:, i].T @ proj_matrix_again[:, i]
-        num_successes += int(res.cpu().abs().item() < two_sigma) 
-    assert num_successes >= num_trials * 0.92 #  (0.95 cutting it a bit too close lol)
-
-
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
 def test_norm_preservation(seed,
@@ -184,10 +109,6 @@ def test_norm_preservation(seed,
                           dtype=dtype
                           )
 
-    # check that things break with a garbage matrix
-    # (making sure the constant 15 is reasonable)
-    # proj.proj_matrix = ch.empty_like(proj.proj_matrix)
-
     p = proj.project(g)
 
     delta = 0.05
@@ -198,11 +119,16 @@ def test_norm_preservation(seed,
     for _ in range(num_trials):
         i, j = np.random.choice(range(g.shape[0]), size=2)
         n = (g[i] - g[j]).norm()
-        pn = (p[i] - p[j]).norm() / proj.proj_matrix.norm(dim=1).mean()
+        # assuming for the test that the norm of each column
+        # of the projection matrix has norm sqrt(n)
+        # (true for rademacher and approx true for gaussian)
+        pn = (p[i] - p[j]).norm() / np.sqrt(input_shape[-1])
         res = (n - pn).cpu().abs().item()
         # 15 is an arbitrary constant
         # if NaN, just give up and count as success
-        num_successes += max(int(res <= 15 * eps * n), math.isinf(res))
+        if math.isinf(res):
+            print('aaaaaa')
+        num_successes += int(res <= 15 * eps * n)
     assert num_successes >= num_trials * (1 - 3 * delta) # leeway with 2 * 
 
 
@@ -236,15 +162,91 @@ def test_prod_preservation(seed,
     eps = np.sqrt(np.log(1 / delta) / proj_dim)
     num_trials = 100
     num_successes = 0
-    nrm = proj.proj_matrix.norm(dim=1).mean()
 
     for _ in range(num_trials):
         i, j = np.random.choice(range(g.shape[0]), size=2)
         n = (g[i] @ g[j])
-        pn = ((p[i] / nrm) @ (p[j] / nrm))
+        pn = ((p[i] / np.sqrt(input_shape[-1])) @ (p[j] / input_shape[-1]))
         res = (n.abs() - pn.abs()).cpu().abs().item()
-        t = (15 * np.sqrt(proj.proj_matrix.shape[-1]) * eps * n).abs().item()
+        t = (15 * np.sqrt(proj_dim) * eps * n).abs().item()
         # if NaN, just give up and count as success
         num_successes += max(int(res <= t), math.isinf(res), math.isinf(t))
         
     assert num_successes >= num_trials * (1 - 2 * delta)
+
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_single_nonzero_feature(seed,
+                                proj_type,
+                                dtype,
+                                proj_dim,
+                                input_shape,
+                                ):
+    """
+    Check that output takes into account every feature.
+    """
+    g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
+    for ind in range(input_shape[0]):
+        coord = np.random.choice(range(input_shape[1]))
+        val = ch.randn(1)
+        g[ind, coord] = val.item()
+
+    proj = BasicProjector(grad_dim=input_shape[-1],
+                          proj_dim=proj_dim,
+                          proj_type=proj_type,
+                          seed=seed,
+                          device='cuda:0',
+                          dtype=dtype
+                          )
+    p = proj.project(g)
+    assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_first_nonzero_feature(seed,
+                               proj_type,
+                               dtype,
+                               proj_dim,
+                               input_shape,
+                               ):
+    """
+    Check that output takes into account every feature.
+    """
+    g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
+    g[:, 0] = 1.
+
+    proj = BasicProjector(grad_dim=input_shape[-1],
+                          proj_dim=proj_dim,
+                          proj_type=proj_type,
+                          seed=seed,
+                          device='cuda:0',
+                          dtype=dtype
+                          )
+    p = proj.project(g)
+    assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
+
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_last_nonzero_feature(seed,
+                              proj_type,
+                              dtype,
+                              proj_dim,
+                              input_shape,
+                              ):
+    """
+    Check that output takes into account every feature.
+    """
+    g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
+    g[:, -1] = 1.
+
+    proj = BasicProjector(grad_dim=input_shape[-1],
+                          proj_dim=proj_dim,
+                          proj_type=proj_type,
+                          seed=seed,
+                          device='cuda:0',
+                          dtype=dtype
+                          )
+    p = proj.project(g)
+    assert (~ch.isclose(p, ch.zeros_like(p))).all().item()

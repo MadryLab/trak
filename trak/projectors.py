@@ -52,7 +52,8 @@ class BasicProjector(AbstractProjector):
             self.proj_matrix.normal_(generator=self.generator)
         elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
             self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
-            self.proj_matrix -= 0.5
+            self.proj_matrix *= 2.
+            self.proj_matrix -= 1.
         else:
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
 
