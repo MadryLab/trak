@@ -211,7 +211,7 @@ def test_first_nonzero_feature(seed,
                                input_shape,
                                ):
     """
-    Check that output takes into account every feature.
+    Check that output takes into account first features.
     """
     g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
     g[:, 0] = 1.
@@ -236,7 +236,7 @@ def test_last_nonzero_feature(seed,
                               input_shape,
                               ):
     """
-    Check that output takes into account every feature.
+    Check that output takes into account last features.
     """
     g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
     g[:, -1] = 1.
@@ -250,3 +250,29 @@ def test_last_nonzero_feature(seed,
                           )
     p = proj.project(g)
     assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
+
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_same_features(seed,
+                       proj_type,
+                       dtype,
+                       proj_dim,
+                       input_shape,
+                       ):
+    """
+    Check that output is the same for the same features
+    """
+    g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
+    g[-1] = g[0]
+
+    proj = BasicProjector(grad_dim=input_shape[-1],
+                          proj_dim=proj_dim,
+                          proj_type=proj_type,
+                          seed=seed,
+                          device='cuda:0',
+                          dtype=dtype
+                          )
+    p = proj.project(g)
+
+    assert ch.allclose(p[0], p[-1])
