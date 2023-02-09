@@ -4,7 +4,7 @@ from os import environ
 from distutils.core import setup
 from setuptools import setup
 from setuptools import find_packages
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+# from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 
 environ['TORCH_CUDA_ARCH_LIST']="7.0+PTX"
