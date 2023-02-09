@@ -2,19 +2,17 @@ from typing import Iterable, Optional
 import torch as ch
 from torch.nn.parameter import Parameter
 from torch import Tensor
-from trak.modelout_functions import AbstractModelOutput
 from trak.projectors import BasicProjector, ProjectionType
 from trak.reweighters import BasicSingleBlockReweighter
 from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
 try:
-    from functorch import make_functional_with_buffers, grad, vmap
+    from functorch import grad, vmap
 except ImportError:
     print('Cannot import `functorch`. Functional mode cannot be used.')
 
 class TRAKer():
     def __init__(self,
                  model,
-                 model_output_fn: AbstractModelOutput,
                  proj_dim=10,
                  projector=BasicProjector,
                  proj_type=ProjectionType.normal,
@@ -40,7 +38,6 @@ class TRAKer():
         """
         self.save_dir = save_dir
         self.model = model
-        self.model_output_fn = model_output_fn
         self.device = device
         self.grad_dtype = grad_dtype
 
@@ -71,12 +68,7 @@ class TRAKer():
         if functional:
             func_model, weights, buffers = model
             self._featurize_functional(out_fn, weights, buffers, batch, inds)
-            loss_grads = self._get_loss_grad_functional(loss_fn,
-                                                        func_model,
-                                                        weights,
-                                                        buffers,
-                                                        batch,
-                                                        inds)
+            self._get_loss_grad_functional(loss_fn, func_model, weights, buffers, batch, inds)
         else:
             self._featurize_iter(out_fn, model, batch, inds)
             self._get_loss_grad_iter(loss_fn, model, batch, inds)
@@ -115,10 +107,12 @@ class TRAKer():
 
         self.record_grads(grads, inds)
 
+
     def record_grads(self, grads, inds):
         grads = self.projector.project(grads.to(self.grad_dtype))
         self.grads[inds] = grads.detach().clone().cpu()
     
+
     def _get_loss_grad_functional(self, loss_fn, func_model,
                                   weights, buffers, batch, inds):
         """Computes
@@ -136,5 +130,20 @@ class TRAKer():
         xtx = self.reweighter.reweight(self.grads)
         self.features =  self.reweighter.finalize(self.grads, xtx)
 
-    def score(self, val: Tensor, params: Iterable[Parameter]) -> Tensor:
-        return ch.zeros(1, 1)
+
+    def score(self, out_fn, model, batch, functional=True) -> Tensor:
+        if functional:
+            return self._score_functional(out_fn, model, batch)
+        else:
+            return self._score_iter(out_fn, model, batch)
+    
+
+    def _score_functional(self, out_fn, model, batch, functional=True) -> Tensor:
+        _, weights, buffers = model
+        grads_loss = grad(out_fn, has_aux=False)
+        # map over batch dimension
+        grads = vmap(grads_loss,
+                     in_dims=(None, None, *([0] * len(batch))),
+                     randomness='different')(weights, buffers, *batch)
+        grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
+        return grads.detach().clone().cpu()

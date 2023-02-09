@@ -21,7 +21,7 @@ setup(name='TRAK',
         'tqdm'
         ],
     extras_require = {
-        'mysterious_feature_x':
+        'tests':
         ["assertpy",
          "torchvision",
         ]}

@@ -18,7 +18,7 @@ def is_not_buffer(ind, params_dict):
     return True
 
 
-def vectorize_and_ignore_buffers(g, params_dict=None, convert_to_half=False):
+def vectorize_and_ignore_buffers(g, params_dict=None):
     """
     gradients are given as a tuple (grad_w0, grad_w1, ... grad_wp)
     where p is the number of weight matrices. each grad_wi has shape
@@ -29,14 +29,8 @@ def vectorize_and_ignore_buffers(g, params_dict=None, convert_to_half=False):
     out = []
     if params_dict is not None:
         for b in range(batch_size):
-            if convert_to_half:
-                out.append(ch.cat([x[b].flatten().half() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
-            else:
-                out.append(ch.cat([x[b].flatten() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
+            out.append(ch.cat([x[b].flatten() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
     else:
         for b in range(batch_size):
-            if convert_to_half:
-                out.append(ch.cat([x[b].flatten().half() for x in g]))
-            else:
-                out.append(ch.cat([x[b].flatten() for x in g]))
+            out.append(ch.cat([x[b].flatten() for x in g]))
     return ch.stack(out)

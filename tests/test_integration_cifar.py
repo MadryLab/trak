@@ -21,9 +21,7 @@ def test_cifar10(device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    loss_fn = ch.nn.CrossEntropyLoss()
     traker = TRAKer(model=model,
-                    model_output_fn=modelout_fn,
                     train_set_size=50_000,
                     grad_dtype=ch.float32,
                     device=device)
@@ -49,14 +47,20 @@ def test_cifar10(device='cpu'):
                          batch=batch,
                          functional=True,
                          inds=inds)
-        if bind == 10:
+        if bind == 5:
             break # a CPU pass takes too long lol
     
     traker.finalize()
 
-    # ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False)
-    # loader_val = DataLoader(ds_val, batch_size=256)
+    ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
+    loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
+    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
+        batch = [x.to(device) for x in batch]
+        traker.score(out_fn=compute_outputs, batch=batch,
+                     model=(func_model, weights, buffers))
+        if bind == 5:
+            break
 
 @pytest.mark.cuda
 def test_cifar10_cuda():
