@@ -15,7 +15,7 @@ PARAM = list(product([0, 1, 10**8], # seed
                      [ch.float16], # dtype
                      [
                       (8, 10_000),
-                      (16, 10_001),
+                      (16, 10_002),
                       ], # input shape
                      [2048], # proj dim
         ))

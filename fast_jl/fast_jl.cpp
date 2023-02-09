@@ -14,7 +14,7 @@
 #include <ATen/core/PhiloxRNGEngine.h>
 #include <cuda.h>
 #include <cuda_fp16.h>
-#include <cuda_runtime.h>
+#include <cuda_runtime.h>
 
 using namespace torch::indexing;
 
@@ -34,10 +34,11 @@ void fast_jl_rademacher_cuda(
 // NOTE: AT_ASSERT has become AT_CHECK on master after 0.4.
 #define CHECK_CUDA(x) AT_ASSERTM(x.is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x " must be contiguous")
-#define CHECK_BIG(x) AT_ASSERTM(x.size(1) >= 1024, #x " must have at least 1024 components")
+#define CHECK_BIG(x) AT_ASSERTM(x.size(1) >= 256, #x " must have at least 256 components")
+#define CHECK_EVEN(x) AT_ASSERTM(x.size(1) % 2 == 0, #x " must have an even number of features if of type fp16")
 #define CHECK_2D(x) AT_ASSERTM(x.dim() == 2, #x " must be 2D")
 #define CHECK_HALF(x) AT_ASSERTM(x.dtype() == torch::kFloat16, #x " must be Float16")
-#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x);
+#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x); CHECK_BIG(x); CHECK_EVEN(x)
 
 torch::Tensor fast_jl_rademacher(
         torch::Tensor input,
@@ -87,9 +88,10 @@ torch::Tensor fast_jl_rademacher(
     auto leftover_jl = torch::rand({remaining, N}, generator, torch::TensorOptions().device(input.device()));
     leftover_jl = torch::round(leftover_jl) * 2 - 1;
 
-    return partial_sum + torch::matmul(input.index({
-        Ellipsis,
-        Slice(input.size(1) - remaining, None, None)}).to(torch::kFloat), leftover_jl);
+    auto A = input.index({
+                                Slice(),
+                                Slice(input.size(1) - remaining, None, None)}).to(torch::kFloat);
+    return partial_sum + torch::matmul(A, leftover_jl);
 
 }
 
