@@ -25,3 +25,6 @@ readme = {file = ["README.md"]}
 markers = [
     "cuda: marks tests that require GPU",
 ]
+
+[tool.setuptools.packages.find]
+include = ["trak"]
