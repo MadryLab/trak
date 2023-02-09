@@ -278,4 +278,4 @@ def test_linearity(seed,
         for b in [3., 18., -24.]: # arbitrary constants
             gp = proj.project(a * g1 + b * g2)
             pg = a * proj.project(g1) + b * proj.project(g2)
-            testing.assert_close(gp, pg, equal_nan=True)
+            testing.assert_close(gp, pg, equal_nan=True, msg=lambda msg: f"Header\n\n{msg}\n\nFooter")
