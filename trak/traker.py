@@ -4,6 +4,7 @@ from torch.nn.parameter import Parameter
 from torch import Tensor
 from trak.projectors import BasicProjector, ProjectionType
 from trak.reweighters import BasicSingleBlockReweighter
+from trak.savers import KeepInRAMSaver
 from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
 try:
     from functorch import grad, vmap
@@ -21,7 +22,8 @@ class TRAKer():
                  device=None,
                  train_set_size=1,
                  grad_dtype=ch.float16,
-                 load_from: Optional[str]=None):
+                #  load_from: Optional[str]=None,
+                 ):
         """ Main class for computing TRAK scores.
         See [User guide link here] for detailed examples.
 
@@ -36,7 +38,6 @@ class TRAKer():
         ----------
 
         """
-        self.save_dir = save_dir
         self.model = model
         self.device = device
         self.grad_dtype = grad_dtype
@@ -55,8 +56,8 @@ class TRAKer():
         self.model_params = parameters_to_vector(model.parameters())
         self.grad_dim = self.model_params.numel()
 
-
-        self.grads = ch.zeros([train_set_size, proj_dim])
+        self.saver = KeepInRAMSaver(grads_shape=[train_set_size, proj_dim],
+                                    device=self.device)
     
     def featurize(self,
                   out_fn,
@@ -64,7 +65,9 @@ class TRAKer():
                   model,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]]=None,
+                  model_id: Optional[int]=0,
                   functional: bool=False) -> Tensor:
+        self.model_id = model_id
         if functional:
             func_model, weights, buffers = model
             self._featurize_functional(out_fn, weights, buffers, batch, inds)
@@ -107,7 +110,7 @@ class TRAKer():
 
     def record_grads(self, grads, inds):
         grads = self.projector.project(grads.to(self.grad_dtype))
-        self.grads[inds] = grads.detach().clone().cpu()
+        self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=self.model_id)
     
     def _get_loss_grad_functional(self, loss_fn, func_model,
                                   weights, buffers, batch, inds):
@@ -116,7 +119,9 @@ class TRAKer():
             \partial \ell / \partial \text{margin}
         
         """
-        self.loss_grad = loss_fn(weights, buffers, *batch)
+        self.saver.loss_set(loss_grads=loss_fn(weights, buffers, *batch),
+                            inds=inds,
+                            model_id=self.model_id)
 
     def _get_loss_grad_iter(self, loss_fn, model, batch, inds):
         """Computes
@@ -124,15 +129,18 @@ class TRAKer():
             \partial \ell / \partial \text{margin}
         
         """
-        self.loss_grad = loss_fn(model, *batch)
+        self.saver.loss_set(loss_grads=loss_fn(model, *batch),
+                            inds=inds,
+                            model_id=self.model_id)
 
-    def finalize(self, out_dir: Optional[str] = None, 
-                       cleanup: bool = False, 
-                       agg: bool = False):
+    def finalize(self):
         self.reweighter = BasicSingleBlockReweighter(device=self.device)
-        xtx = self.reweighter.reweight(self.grads)
-        self.features =  self.reweighter.finalize(self.grads, xtx)
-        self.features *= self.loss_grad
+        self.features = ch.zeros_like(self.saver.grad_get())
+        for model_id in self.saver.model_ids:
+            xtx = self.reweighter.reweight(self.saver.grad_get())
+            g = self.saver.grad_get(model_id=model_id)
+            self.features += self.reweighter.finalize(g, xtx) * \
+                             self.saver.loss_get(model_id=model_id)
 
     def score(self, out_fn, model, batch, functional=True) -> Tensor:
         if functional:
@@ -148,7 +156,7 @@ class TRAKer():
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
-        return grads.detach().clone().cpu()
+        return grads.detach().clone()
 
     def _score_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
         if batch_size is None:
@@ -164,4 +172,4 @@ class TRAKer():
                                                                retain_graph=True))
 
         grads = self.projector.project(grads.to(self.grad_dtype))
-        return grads.detach().clone().cpu()
+        return grads.detach().clone()

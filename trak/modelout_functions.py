@@ -63,7 +63,7 @@ class CrossEntropyModelOutput(AbstractModelOutput):
     def get_out_to_loss(self, logits: Module, labels: Iterable[Tensor]) -> Tensor:
         ps = self.partial_loss_fn(logits / self.loss_temperature)[ch.arange(logits.size(0)),
                                                                   labels]
-        return (1 - ps).clone().detach().cpu()
+        return (1 - ps).clone().detach()
 
 
 

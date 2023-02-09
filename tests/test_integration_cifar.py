@@ -37,18 +37,24 @@ def test_cifar10(device='cpu'):
         out = func_model(weights, buffers, images)
         return modelout_fn.get_out_to_loss(out, labels)
 
-    for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
-        batch = [x.to(device) for x in batch]
-        inds = list(range(bind * loader_train.batch_size,
-                          (bind + 1) * loader_train.batch_size))
-        traker.featurize(out_fn=compute_outputs,
-                         loss_fn=compute_out_to_loss,
-                         model=(func_model, weights, buffers),
-                         batch=batch,
-                         functional=True,
-                         inds=inds)
-        if bind == 5:
-            break # a CPU pass takes too long lol
+    ckpts = [None, None]
+    for model_id, ckpt in enumerate(ckpts):
+        # load state dict here if we actually had checkpoints
+        # model.load_state_dict(ckpt)
+        # update weights, buffers; etc
+        for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
+            batch = [x.to(device) for x in batch]
+            inds = list(range(bind * loader_train.batch_size,
+                            (bind + 1) * loader_train.batch_size))
+            traker.featurize(out_fn=compute_outputs,
+                            loss_fn=compute_out_to_loss,
+                            model=(func_model, weights, buffers),
+                            batch=batch,
+                            functional=True,
+                            model_id=model_id,
+                            inds=inds)
+            if bind == 5:
+                break # a CPU pass takes too long lol
     
     traker.finalize()
 
