@@ -57,33 +57,6 @@ class BasicProjector(AbstractProjector):
         else:
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
 
+    
     def project(self, grads: Tensor) -> Tensor:
         return grads @ self.proj_matrix
-
-
-class CudaProjector(AbstractProjector):
-    """
-    An implementation of the project for cuda (with compute capability >= 7.0)
-    """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float16) -> None:
-        super().__init__(grad_dim, proj_dim, seed, proj_type, device)
-
-        self.dtype = dtype
-
-        if self.dtype != ch.float16:
-            raise NotImplementedError("Only float16 supported with the CudaProjector for now")
-
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
-            raise NotImplementedError(f"{self.proj_type} not implemented yet for CudaProjector")
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
-            pass
-        else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
-
-        import fast_jl
-        self.projection_function = fast_jl.rademacher
-
-    def project(self, grads: Tensor) -> Tensor:
-        # xx = self.projection_function(grads, self.proj_dim, self.seed)
-        return grads[:, :self.proj_dim]

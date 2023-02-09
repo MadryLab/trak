@@ -21,6 +21,7 @@ class TRAKer():
                  save_dir: str='./trak_results',
                  device=None,
                  train_set_size=1,
+                 grad_dtype=ch.float16,
                  load_from: Optional[str]=None):
         """ Main class for computing TRAK scores.
         See [User guide link here] for detailed examples.
@@ -40,6 +41,7 @@ class TRAKer():
         self.model = model
         self.model_output_fn = model_output_fn
         self.device = device
+        self.grad_dtype = grad_dtype
 
         self.last_ind = 0
 
@@ -47,12 +49,14 @@ class TRAKer():
                                    proj_dim=proj_dim,
                                    grad_dim=parameters_to_vector(self.model.parameters()).numel(),
                                    proj_type=proj_type,
+                                   dtype=self.grad_dtype,
                                    device=self.device)
         
         self.train_set_size = train_set_size
 
         self.model_params = parameters_to_vector(model.parameters())
         self.grad_dim = self.model_params.numel()
+
 
         self.grads = ch.zeros([train_set_size, proj_dim])
     
@@ -66,10 +70,14 @@ class TRAKer():
         if functional:
             func_model, weights, buffers = model
             self._featurize_functional(out_fn, weights, buffers, batch, inds)
-            self._get_loss_grad_functional(loss_fn, func_model, weights, buffers, batch, inds)
+            loss_grads = self._get_loss_grad_functional(func_model,
+                                                        weights,
+                                                        buffers,
+                                                        batch,
+                                                        inds)
         else:
             self._featurize_iter(out_fn, model, batch, inds)
-            self._get_loss_grad_iter(loss_fn, model, batch, inds)
+            self._get_loss_grad_iter(model, batch, inds)
 
     
     def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
@@ -82,25 +90,30 @@ class TRAKer():
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
-        self.record_grads(grads, inds)
+        self.record_grads(vectorize_and_ignore_buffers(grads), inds)
 
     def _featurize_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
+        """Computes per-sample gradients of the model output function
+        This method does not leverage vectorization (and is hence much slower than
+        `_featurize_vmap`).
+        """
         if batch_size is None:
             # assuming batch is an iterable of torch Tensors, each of
             # shape [batch_size, ...]
             batch_size = batch[0].size(0)
+
         grads = ch.zeros(batch_size, self.grad_dim).cuda()
+        margin = out_fn(model, batch)
 
         for ind in range(batch_size):
-            for p in model.parameters():
-                p.zero_grad()
-            margin = out_fn(model, [x[ind] for x in batch])
-            margin.backward()
-            grads[ind] = self.model_params.grad
+            grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
+                                                               model.parameters(),
+                                                               retain_graph=True))
+
         return grads
 
     def record_grads(self, grads, inds):
-        grads = self.projector.project(vectorize_and_ignore_buffers(grads))
+        grads = self.projector.project(grads.to(self.grad_dtype))
         self.grads[inds] = grads.detach().clone().cpu()
     
     def _get_loss_grad_functional(self, func_model, weights, buffers, batch, inds):
@@ -109,6 +122,9 @@ class TRAKer():
             \partial \ell / \partial \text{margin}
         
         """
+        images, labels = batch  # hardcoded for CV for now
+        logits = func_model(weights, buffers, images)
+        return self.model_output_fn.get_out_to_loss(logits, labels)
 
 
     def finalize(self, out_dir: Optional[str] = None, 

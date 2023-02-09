@@ -25,6 +25,7 @@ def test_cifar10(device='cpu'):
     traker = TRAKer(model=model,
                     model_output_fn=modelout_fn,
                     train_set_size=50_000,
+                    grad_dtype=ch.float32,
                     device=device)
 
     func_model, weights, buffers = make_functional_with_buffers(model)

@@ -42,8 +42,10 @@ class CrossEntropyModelOutput(AbstractModelOutput):
     and Datamodels via Harmonic Analysis'
     """
 
-    def __init__(self, device) -> None:
+    def __init__(self, device, temperature=1.) -> None:
         super().__init__(device)
+        self.partial_loss_fn = ch.nn.Softmax(-1)
+        self.loss_temperature = temperature
 
     def get_output(self,
                    logits: Iterable[Tensor],
@@ -57,6 +59,12 @@ class CrossEntropyModelOutput(AbstractModelOutput):
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
+    
+    def get_out_to_loss(self, logits: Module, labels: Iterable[Tensor]) -> Tensor:
+        ps = self.partial_loss_fn(logits / self.loss_temperature)[ch.arange(logits.size(0)),
+                                                                  labels]
+        return (1 - ps).clone().detach().cpu()
+
 
 
 class NLPModelOutput(AbstractModelOutput):
