@@ -73,7 +73,6 @@ class TRAKer():
             self._featurize_iter(out_fn, model, batch, inds)
             self._get_loss_grad_iter(loss_fn, model, batch, inds)
 
-    
     def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
         """
         Using the `vmap` feature of `functorch`
@@ -86,7 +85,6 @@ class TRAKer():
                      randomness='different')(weights, buffers, *batch)
         self.record_grads(vectorize_and_ignore_buffers(grads), inds)
 
-
     def _featurize_iter(self, out_fn, model, batch, inds, batch_size=None) -> Tensor:
         """Computes per-sample gradients of the model output function
         This method does not leverage vectorization (and is hence much slower than
@@ -97,8 +95,8 @@ class TRAKer():
             # shape [batch_size, ...]
             batch_size = batch[0].size(0)
 
-        grads = ch.zeros(batch_size, self.grad_dim).cuda()
-        margin = out_fn(model, batch)
+        grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
+        margin = out_fn(model, *batch)
 
         for ind in range(batch_size):
             grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
@@ -107,12 +105,10 @@ class TRAKer():
 
         self.record_grads(grads, inds)
 
-
     def record_grads(self, grads, inds):
         grads = self.projector.project(grads.to(self.grad_dtype))
         self.grads[inds] = grads.detach().clone().cpu()
     
-
     def _get_loss_grad_functional(self, loss_fn, func_model,
                                   weights, buffers, batch, inds):
         """Computes
@@ -122,6 +118,13 @@ class TRAKer():
         """
         return loss_fn(weights, buffers, *batch)
 
+    def _get_loss_grad_iter(self, loss_fn, model, batch, inds):
+        """Computes
+        .. math::
+            \partial \ell / \partial \text{margin}
+        
+        """
+        return loss_fn(model, *batch)
 
     def finalize(self, out_dir: Optional[str] = None, 
                        cleanup: bool = False, 
@@ -130,15 +133,13 @@ class TRAKer():
         xtx = self.reweighter.reweight(self.grads)
         self.features =  self.reweighter.finalize(self.grads, xtx)
 
-
     def score(self, out_fn, model, batch, functional=True) -> Tensor:
         if functional:
             return self._score_functional(out_fn, model, batch)
         else:
             return self._score_iter(out_fn, model, batch)
-    
 
-    def _score_functional(self, out_fn, model, batch, functional=True) -> Tensor:
+    def _score_functional(self, out_fn, model, batch) -> Tensor:
         _, weights, buffers = model
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
@@ -146,4 +147,20 @@ class TRAKer():
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
+        return grads.detach().clone().cpu()
+
+    def _score_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
+        if batch_size is None:
+            # assuming batch is an iterable of torch Tensors, each of shape [batch_size, ...]
+            batch_size = batch[0].size(0)
+
+        grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
+        margin = out_fn(model, *batch)
+
+        for ind in range(batch_size):
+            grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
+                                                               model.parameters(),
+                                                               retain_graph=True))
+
+        grads = self.projector.project(grads.to(self.grad_dtype))
         return grads.detach().clone().cpu()
