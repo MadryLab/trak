@@ -18,7 +18,7 @@ def test_cifar10(device='cpu'):
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     ds_train = datasets.CIFAR10(root='/tmp', download=True, train=True, transform=transform)
-    loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
+    loader_train = DataLoader(ds_train, batch_size=64, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
     traker = TRAKer(model=model,
@@ -122,8 +122,8 @@ def test_cifar10_iter(device='cpu'):
     # load margins
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.to(device) for x in batch]
-        traker.score(out_fn=compute_outputs, batch=batch,
-                     model=model, functional=False)
+        s = traker.score(out_fn=compute_outputs, batch=batch,
+                         model=model, functional=False)
         if bind == 5:
             break
 

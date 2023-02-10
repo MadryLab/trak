@@ -51,9 +51,10 @@ class TRAKer():
                                    dtype=self.grad_dtype,
                                    device=self.device)
         
-        self.train_set_size = train_set_size
-
         self.model_params = parameters_to_vector(model.parameters())
+        self.params_dict = [x[0] for x in list(self.model.named_parameters())]
+
+        self.train_set_size = train_set_size
         self.grad_dim = self.model_params.numel()
 
         self.saver = KeepInRAMSaver(grads_shape=[train_set_size, proj_dim],
@@ -156,7 +157,7 @@ class TRAKer():
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
-        return grads.detach().clone()
+        return grads.detach().clone() @ self.features.T
 
     def _score_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
         if batch_size is None:
