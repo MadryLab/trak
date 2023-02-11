@@ -12,12 +12,15 @@ from typing import List
 import torch as ch
 import torchvision
 
-from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
-from ffcv.loader import Loader, OrderOption
-from ffcv.pipeline.operation import Operation
-from ffcv.transforms import RandomHorizontalFlip, Cutout, \
-    RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
-from ffcv.transforms.common import Squeeze
+try:
+    from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
+    from ffcv.loader import Loader, OrderOption
+    from ffcv.pipeline.operation import Operation
+    from ffcv.transforms import RandomHorizontalFlip, Cutout, \
+        RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
+    from ffcv.transforms.common import Squeeze
+except:
+    print('No ffcv installed')
 
 BETONS = {
         'train': "/mnt/cfs/home/spark/cifar_ffcv/cifar2/train.beton",

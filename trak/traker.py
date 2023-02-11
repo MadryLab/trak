@@ -1,11 +1,13 @@
 from typing import Iterable, Optional
+from pathlib import Path
 import torch as ch
-from torch.nn.parameter import Parameter
 from torch import Tensor
 from trak.projectors import BasicProjector, ProjectionType
+# from trak.reweighters import BasicReweighter, BasicSingleBlockReweighter
 from trak.reweighters import BasicSingleBlockReweighter
 from trak.savers import KeepInRAMSaver
 from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
+BasicReweighter = BasicSingleBlockReweighter
 try:
     from functorch import grad, vmap
 except ImportError:
@@ -57,7 +59,9 @@ class TRAKer():
         self.train_set_size = train_set_size
         self.grad_dim = self.model_params.numel()
 
+        self.save_dir = Path(save_dir)
         self.saver = KeepInRAMSaver(grads_shape=[train_set_size, proj_dim],
+                                    save_dir=self.save_dir,
                                     device=self.device)
     
     def featurize(self,
@@ -135,7 +139,7 @@ class TRAKer():
                             model_id=self.model_id)
 
     def finalize(self):
-        self.reweighter = BasicSingleBlockReweighter(device=self.device)
+        self.reweighter = BasicReweighter(device=self.device)
         self.features = ch.zeros_like(self.saver.grad_get())
         for model_id in self.saver.model_ids:
             xtx = self.reweighter.reweight(self.saver.grad_get())
@@ -174,3 +178,9 @@ class TRAKer():
 
         grads = self.projector.project(grads.to(self.grad_dtype))
         return grads.detach().clone()
+    
+    def save(self):
+        self.saver.save(self.features)
+        
+    def load(self, path):
+        self.features = self.saver.load(path)

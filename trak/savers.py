@@ -11,8 +11,10 @@ class AbstractSaver(ABC):
     """
     @abstractmethod
     def __init__(self,
+                 save_dir,
                  device) -> None:
         self.device = device
+        self.save_dir = save_dir
         self.model_ids = set()
 
     @abstractmethod
@@ -44,8 +46,8 @@ class KeepInRAMSaver(AbstractSaver):
     """ A basic "saver" that does not serialize anything and
     instead keeps all tensors in RAM.
     """
-    def __init__(self, device, grads_shape) -> None:
-        super().__init__(device)
+    def __init__(self, device, save_dir, grads_shape) -> None:
+        super().__init__(save_dir, device)
         self.grads_shape = grads_shape
         self.loss_shape = [grads_shape[0], 1]
         self.grads = {0: ch.zeros(self.grads_shape, device=self.device)}

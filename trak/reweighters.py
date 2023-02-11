@@ -23,9 +23,8 @@ class AbstractReweighter(ABC):
 
 
 class BasicSingleBlockReweighter(AbstractReweighter):
-    """ A bare-bones implementation of the reweighting, inefficient
-    in terms of both time and memory footrpint.  Only useful for
-    small-scale applications.
+    """ A bare-bones implementation of the reweighting, inefficient in terms of
+    both time and memory footrpint. Only useful for small-scale applications.
     """
     def __init__(self, device, dtype=ch.float16) -> None:
         super().__init__(device)
@@ -34,5 +33,39 @@ class BasicSingleBlockReweighter(AbstractReweighter):
     def reweight(self, grads: Tensor) -> Tensor:
         return grads.T @ grads
 
-    def finalize(self, grads: Tensor, xtx: Tensor) -> Tensor:
-        return grads @ ch.linalg.inv(xtx)
+    def finalize(self, grads: Tensor, xtx: Tensor) -> None:
+        return grads @ ch.linalg.inv(xtx) 
+
+
+class BasicReweighter(AbstractReweighter):
+    """ An implementation of Reweighter that computes the matrix product in a
+    block-wise manner.
+    """
+    def __init__(self, device, dtype=ch.float16, CUDA_MAX_DIM_SIZE=500_000) -> None:
+        super().__init__(device)
+        self.dtype = dtype
+        self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
+    
+    def reweight(self, grads: Tensor) -> Tensor:
+        self.proj_dim = grads.shape[1]
+        result = ch.zeros(self.proj_dim, self.proj_dim).to(self.device)
+        blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
+
+        for block in blocks:
+            result += block.T.to(self.device) @ block.to(self.device)
+
+        return result
+
+    def finalize(self, grads: Tensor, xtx: Tensor, recompute_xtx_inv: bool=True) -> None:
+        """ Update matrix of (reweighted) dot products in-place
+        """
+        blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
+        if recompute_xtx_inv:
+            self.xtx_inv = ch.linalg.inv(xtx)
+
+        result = ch.zeros(grads.shape[0], self.xtx_inv.shape[1], device=self.device)
+        for i, block in enumerate(blocks):
+            start = i * self.CUDA_MAX_DIM_SIZE
+            end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
+            result[start : end] += (block.to(self.device) @ self.xtx_inv)
+        return result
