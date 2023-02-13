@@ -37,7 +37,7 @@ void load_into_shared_memory(
             batch * CHUNK_ROW
             + threadIdx.y);
 
-    for (uint32_t iter=0; iter < 8; iter++) {
+    for (uint32_t iter=0; iter < CHUNK_ROW; iter++) {
         half value;
 
         if (current_col >= features || current_row >= channels) {
@@ -138,7 +138,7 @@ float *project(const float *__restrict__ input,
                uint32_t channels, uint32_t features, uint32_t output_dims,
                uint32_t seed, uint32_t num_SMs) {
 
-    if (channels == 0 || channels > 8 * NUM_BATCHES) {
+    if (channels == 0 || channels > CHUNK_ROW * NUM_BATCHES) {
         throw invalid_argument("Invalid number of channels (has to be in [1, 8 * NUM_BATCHES])");
     }
 
@@ -160,7 +160,7 @@ float *project(const float *__restrict__ input,
 
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
-            (input, output, 8 * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
+            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
 
     std::cout <<"HOHO" << std::endl;
     return output;
