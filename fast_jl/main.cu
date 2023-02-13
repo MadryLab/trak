@@ -41,7 +41,7 @@ void load_into_shared_memory(
         half value;
 
         if (current_col >= features || current_row >= channels) {
-            value = __float2half(1.0f);
+            value = __float2half(0.0f);
         } else {
             const InputType *my_input = (input
                                          + current_row * features
