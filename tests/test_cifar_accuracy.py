@@ -167,8 +167,7 @@ def test_cifar_acc():
                 traker.score(out_fn=compute_outputs,
                              batch=batch,
                              model=model,
-                             model_id=model_id,
-                             functional=True).cpu()
+                             model_id=model_id).cpu()
             )
         scores.append(ch.cat(s))
     scores = ch.stack(scores).mean(dim=0) # average influence matrices

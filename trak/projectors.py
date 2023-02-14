@@ -125,7 +125,6 @@ class BasicProjector(AbstractProjector):
                           dtype=self.dtype, device=self.device)
 
         if model_id != self.model_id:
-            print(f'New model id {model_id}!')
             self.model_id = model_id
             self.get_generator_states()  # regenerate random seeds for new model_id
             if self.num_blocks == 1:

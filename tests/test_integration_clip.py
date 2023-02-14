@@ -19,16 +19,13 @@ def test_cifar10(device='cuda:0'):
                                    annFile = '/mnt/xfs/projects/trak/datasets/coco_csv/coco_train_karpathy.json',
                                )
 
-    ds_val = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/coco_csv/val2014',
-                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_csv/coco_val_karpathy.json',
-                               )
-
     logit_scale = [v for (k, v) in model.named_parameters() if k == 'logit_scale'][0]
     modelout_fn = CLIPModelOutput(device=device, temperature=logit_scale)
     traker = TRAKer(model=model,
                     grad_wrt=[x[1] for x in model.named_parameters() if x[0] != 'logit_scale'],
                     device=device,
                     train_set_size=len(ds_train),
+                    functional=False,
                     proj_dim=100)
 
 

@@ -97,6 +97,7 @@ def test_cifar10_iter(device='cpu'):
     traker = TRAKer(model=model,
                     train_set_size=50_000,
                     grad_dtype=ch.float32,
+                    functional=False,
                     device=device)
 
     def compute_outputs(model, images, labels):
@@ -129,8 +130,7 @@ def test_cifar10_iter(device='cpu'):
     # load margins
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.to(device) for x in batch]
-        s = traker.score(out_fn=compute_outputs, batch=batch,
-                        model=model, functional=False)
+        s = traker.score(out_fn=compute_outputs, batch=batch, model=model)
         if bind == 2:
             break
 
