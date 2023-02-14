@@ -17,8 +17,8 @@ class TRAKer():
     def __init__(self,
                  model,
                  grad_wrt=None,
+                 projector=None,
                  proj_dim=10,
-                 projector=BasicProjector,
                  proj_type=ProjectionType.normal,
                  proj_seed=0,
                  save_dir: str='./trak_results',
@@ -37,6 +37,11 @@ class TRAKer():
             like projected gradients of the train set samples and
             targets.
 
+        you can  either
+        1) specify an already initialized `projector`
+        2) specify `proj_dim`, `proj_type`, and `proj_seed` and
+           a projector will be initialized for you
+
         Attributes
         ----------
 
@@ -53,12 +58,16 @@ class TRAKer():
         self.model_params = parameters_to_vector(self.grad_wrt)
         self.grad_dim = self.model_params.numel()
 
-        self.projector = projector(seed=proj_seed,
-                                   proj_dim=proj_dim,
-                                   grad_dim=self.grad_dim,
-                                   proj_type=proj_type,
-                                   dtype=self.grad_dtype,
-                                   device=self.device)
+        if projector is None:
+            projector = BasicProjector
+            self.projector = projector(seed=proj_seed,
+                                    proj_dim=proj_dim,
+                                    grad_dim=self.grad_dim,
+                                    proj_type=proj_type,
+                                    dtype=self.grad_dtype,
+                                    device=self.device)
+        else:
+            self.projector = projector
         
         self.params_dict = [x[0] for x in list(self.model.named_parameters())]
 
@@ -88,12 +97,26 @@ class TRAKer():
         if functional:
             # if self.func_model is None:
             self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
-            self._featurize_functional(out_fn, self.weights, self.buffers, batch, inds)
-            self._get_loss_grad_functional(loss_fn, self.func_model, self.weights,
-                                           self.buffers, batch, inds)
+            self._featurize_functional(out_fn,
+                                       self.weights,
+                                       self.buffers,
+                                       batch,
+                                       inds)
+            self._get_loss_grad_functional(loss_fn,
+                                           self.func_model,
+                                           self.weights,
+                                           self.buffers,
+                                           batch,
+                                           inds)
         else:
-            self._featurize_iter(out_fn, model, batch, inds)
-            self._get_loss_grad_iter(loss_fn, model, batch, inds)
+            self._featurize_iter(out_fn,
+                                 model,
+                                 batch,
+                                 inds)
+            self._get_loss_grad_iter(loss_fn,
+                                     model,
+                                     batch,
+                                     inds)
 
     def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
         """
@@ -127,7 +150,7 @@ class TRAKer():
         self.record_grads(grads, inds)
 
     def record_grads(self, grads, inds):
-        grads = self.projector.project(grads.to(self.grad_dtype))
+        grads = self.projector.project(grads.to(self.grad_dtype), model_id=self.model_id)
         self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=self.model_id)
     
     def _get_loss_grad_functional(self, loss_fn, func_model,
@@ -175,7 +198,8 @@ class TRAKer():
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(self.weights, self.buffers, *batch)
-        grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
+        grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype),
+                                       model_id=model_id)
         return grads.detach().clone() @ self.features[model_id].T
 
     def _score_iter(self, out_fn, model, model_id, batch, batch_size=None) -> Tensor:
@@ -191,7 +215,7 @@ class TRAKer():
                                                                self.grad_wrt,
                                                                retain_graph=True))
 
-        grads = self.projector.project(grads.to(self.grad_dtype))
+        grads = self.projector.project(grads.to(self.grad_dtype), model_id=model_id)
         return grads.detach().clone() @ self.features[model_id].T
     
     def save(self):

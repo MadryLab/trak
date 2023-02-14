@@ -167,6 +167,7 @@ def test_cifar_acc():
                 traker.score(out_fn=compute_outputs,
                              batch=batch,
                              model=model,
+                             model_id=model_id,
                              functional=True).cpu()
             )
         scores.append(ch.cat(s))

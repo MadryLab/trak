@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from torch import Tensor
+import numpy as np
 import torch as ch
 from typing import Optional
 
@@ -50,14 +51,17 @@ class KeepInRAMSaver(AbstractSaver):
         super().__init__(save_dir, device)
         self.grads_shape = grads_shape
         self.loss_shape = [grads_shape[0], 1]
-        self.grads = {0: ch.zeros(self.grads_shape, device=self.device)}
-        self.loss_grads = {0: ch.zeros(self.loss_shape, device=self.device)}
+        self.grads = {0: self.init_tensor(shape=self.grads_shape, device=self.device)}
+        self.loss_grads = {0: self.init_tensor(shape=self.loss_shape, device=self.device)}
         self.model_ids.add(0)
+    
+    def init_tensor(self, shape, device):
+        return ch.zeros(shape, device=device)
     
     def grad_set(self, grads: Tensor, inds: Tensor, model_id=0) -> None:
         if self.grads.get(model_id) is None:
             self.model_ids.add(model_id)
-            self.grads[model_id] = ch.zeros(self.grads_shape, device=self.device)
+            self.grads[model_id] = self.init_tensor(shape=self.grads_shape, device=self.device)
         self.grads[model_id][inds] = grads
 
     def grad_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
@@ -69,7 +73,7 @@ class KeepInRAMSaver(AbstractSaver):
     def loss_set(self, loss_grads: Tensor, inds: Tensor, model_id=0) -> None:
         if self.loss_grads.get(model_id) is None:
             self.model_ids.add(model_id)
-            self.loss_grads[model_id] = ch.zeros(self.loss_shape, device=self.device)
+            self.loss_grads[model_id] = self.init_tensor(shape=self.loss_shape, device=self.device)
         self.loss_grads[model_id][inds] = loss_grads.unsqueeze(-1)
 
     def loss_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
@@ -91,3 +95,12 @@ class ZarrSaver(AbstractSaver):
     
     def grad_set(self, grads: Tensor) -> None:
         return super().grad_set(grads)
+
+
+class MmapSaver(KeepInRAMSaver):
+    def __init__(self, device, save_dir, grads_shape) -> None:
+        super().__init__(device=device, save_dir=save_dir, grads_shape=grads_shape)
+    
+    def init_tensor(self, shape, device, name='test.mmap') -> None:
+        obj = np.memmap(filename=name, shape=shape)
+        return obj.to(device)
