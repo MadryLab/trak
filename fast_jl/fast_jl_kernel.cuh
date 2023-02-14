@@ -130,11 +130,12 @@ project_kernel(const InputType *__restrict__ input,
     }
 
     for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
+        fill_fragment(accumulator[batch], 1.0f);
         store_matrix_sync(
                 output
-                + batch * (CHUNK_ROW * output_dims)
+                + batch * (CHUNK_ROW * output_dims * gridDim.y)
                 + col_output,
-                accumulator[batch], CHUNK_COL, mem_row_major);
+                accumulator[batch], output_dims * gridDim.y, mem_row_major);
     }
 }
 
