@@ -1,6 +1,7 @@
 #include <iostream>
 #include <type_traits>
 #include <cuda_fp16.h>
+#include <vector_types.h>
 #include <curand_kernel.h>
 #include <cuda_pipeline.h>
 #include <mma.h>
@@ -15,6 +16,15 @@
 
 using namespace std;
 using namespace nvcuda::wmma;
+
+template <typename InputType>
+__device__ half convert(InputType t);
+
+template<>
+__device__ half convert<half>(half t) {return t;}
+
+template<>
+__device__ half convert<float>(float t) {return __float2half(t);}
 
 template<typename InputType, uint32_t CHUNKS_PER_TILE>
 __device__
@@ -47,11 +57,7 @@ void load_into_shared_memory(
                                          + current_row * features
                                          + current_col
             );
-            if (is_same<InputType, float>::value) {
-                value = __float2half(*my_input);
-            } else {
-                value = *my_input;
-            }
+            value = convert<InputType>(*my_input);
         }
         input_buffer[threadIdx.z][threadIdx.y + blockDim.y * iter][threadIdx.x] = value;
         current_col += blockDim.y;
@@ -60,7 +66,7 @@ void load_into_shared_memory(
 
 template<typename InputType, ProjectionType p_type, uint32_t NUM_BATCHES, uint32_t CHUNKS_PER_TILE>
 __global__ void
-project_kernel(const float *__restrict__ input,
+project_kernel(const InputType *__restrict__ input,
                float *__restrict__ output,
                uint32_t channels,
                uint32_t features,
@@ -132,11 +138,11 @@ project_kernel(const float *__restrict__ input,
     }
 }
 
-
 template<typename InputType, ProjectionType p_type, uint32_t NUM_BATCHES, uint32_t CHUNKS_PER_TILE>
-float *project(const float *__restrict__ input,
+void project(const InputType *__restrict__ input,
+               float* output,
                uint32_t channels, uint32_t features, uint32_t output_dims,
-               uint32_t seed, uint32_t num_SMs) {
+               uint32_t seed, uint32_t num_feature_tiles) {
 
     if (channels == 0 || channels > CHUNK_ROW * NUM_BATCHES) {
         throw invalid_argument("Invalid number of channels (has to be in [1, 8 * NUM_BATCHES])");
@@ -145,14 +151,10 @@ float *project(const float *__restrict__ input,
     uint32_t num_chunks = (output_dims - 1) / CHUNK_COL + 1;
     uint32_t num_jl_tiles = (num_chunks - 1) / CHUNKS_PER_TILE + 1;
 
-    uint32_t num_feature_tiles = num_SMs * 1;
     uint32_t feature_tile_size = (features - 1) / (num_feature_tiles) + 1;
 
     dim3 blockSize(CHUNK_COL, WARP_SIZE / CHUNK_COL, CHUNKS_PER_TILE);
     dim3 gridSize(num_jl_tiles, num_feature_tiles , 1);
-
-    float *output;
-    cudaMalloc(&output, channels * num_feature_tiles * output_dims * sizeof(float));
 
     cout << blockSize.x << ", " << blockSize.y << ", " << blockSize.z << std::endl;
     cout << gridSize.x << ", " << gridSize.y << ", " << gridSize.z << std::endl;
@@ -161,33 +163,4 @@ float *project(const float *__restrict__ input,
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
             (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
-
-    std::cout <<"HOHO" << std::endl;
-    return output;
-}
-
-int main() {
-
-    uint32_t C = 32;
-    uint32_t F = 10485760;
-    uint32_t N = 512;
-
-    float *input;
-
-    cudaMalloc(&input, C * F * sizeof(float));
-
-    cudaDeviceSynchronize();
-
-    float* output;
-    for (int i = 0; i < 1; i++) {
-        output = project<float, ProjectionType::Rademacher, 4, 16>(input, C, F, N, 0, 56);
-    }
-
-    cudaDeviceSynchronize();
-
-    cudaFree(input);
-    cudaFree(output);
-
-    CHECK_LAST_CUDA_ERROR();
-    return 0;
 }

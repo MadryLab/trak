@@ -7,5 +7,5 @@ include_directories( /home/guillaumeleclerc/miniconda3/envs/fastjl/lib/python3.1
 include_directories( /home/guillaumeleclerc/miniconda3/envs/fastjl/lib/python3.10/site-packages/torch/include/)
 
 add_executable(fast_jl
-        fast_jl.cpp
-        fast_jl_kernel.cu)
+        fast_jl.cu
+        fast_jl_kernel.cuh)

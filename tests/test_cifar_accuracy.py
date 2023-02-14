@@ -5,8 +5,8 @@ from tqdm import tqdm
 from pathlib import Path
 from functorch import make_functional_with_buffers
 
-from trak.traker import TRAKer
-from trak.modelout_functions import CrossEntropyModelOutput
+from traker.traker import TRAKer
+from traker.modelout_functions import CrossEntropyModelOutput
 
 from typing import List
 import torch as ch
@@ -118,7 +118,7 @@ def test_cifar_acc():
     loader_train = get_dataloader(batch_size=100, split='train')
     loader_val = get_dataloader(batch_size=100, split='val')
 
-    CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
+    CKPT_PATH = '/mnt/xfs/projects/traker/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 

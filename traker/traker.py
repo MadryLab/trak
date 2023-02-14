@@ -2,11 +2,11 @@ from typing import Iterable, Optional
 from pathlib import Path
 import torch as ch
 from torch import Tensor
-from trak.projectors import BasicProjector, ProjectionType
-# from trak.reweighters import BasicReweighter, BasicSingleBlockReweighter
-from trak.reweighters import BasicSingleBlockReweighter
-from trak.savers import KeepInRAMSaver
-from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
+from traker.projectors import BasicProjector, ProjectionType
+# from traker.reweighters import BasicReweighter, BasicSingleBlockReweighter
+from traker.reweighters import BasicSingleBlockReweighter
+from traker.savers import KeepInRAMSaver
+from traker.utils import parameters_to_vector, vectorize_and_ignore_buffers
 BasicReweighter = BasicSingleBlockReweighter
 try:
     from functorch import grad, vmap

@@ -5,8 +5,8 @@ from functorch import make_functional_with_buffers
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-from trak.traker import TRAKer
-from trak.modelout_functions import CrossEntropyModelOutput
+from traker.traker import TRAKer
+from traker.modelout_functions import CrossEntropyModelOutput
 
 def test_cifar10(device='cpu'):
     # TODO: load CIFAR-10 weights instead ('DEFAULT' loads ImageNet ones)

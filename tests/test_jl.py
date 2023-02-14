@@ -5,12 +5,12 @@ import numpy as np
 import torch as ch
 from torch import testing
 
-from trak.projectors import CudaProjector
+from traker.projectors import CudaProjector, ProjectionType
 BasicProjector = CudaProjector
 
 PARAM = list(product([0, 1, 10**8], # seed
                      # ['normal', 'rademacher'], # proj type
-                     ['rademacher'],  # proj type
+                     [ProjectionType.rademacher],  # proj type
                      # [ch.float16, ch.float32], # dtype
                      [ch.float16], # dtype
                      [
