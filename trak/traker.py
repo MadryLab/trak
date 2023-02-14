@@ -78,9 +78,6 @@ class TRAKer():
                                     save_dir=self.save_dir,
                                     device=self.device)
         
-        self.func_model = None
-        self.weights = None
-        self.buffers = None
 
         self.features = {}
         self.loss_grads = AverageMeter()
@@ -95,17 +92,15 @@ class TRAKer():
                   functional: bool=False) -> Tensor:
         self.model_id = model_id
         if functional:
-            # if self.func_model is None:
-            self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
+            _, weights, buffers = make_functional_with_buffers(model)
             self._featurize_functional(out_fn,
-                                       self.weights,
-                                       self.buffers,
+                                       weights,
+                                       buffers,
                                        batch,
                                        inds)
             self._get_loss_grad_functional(loss_fn,
-                                           self.func_model,
-                                           self.weights,
-                                           self.buffers,
+                                           weights,
+                                           buffers,
                                            batch,
                                            inds)
         else:
@@ -153,8 +148,7 @@ class TRAKer():
         grads = self.projector.project(grads.to(self.grad_dtype), model_id=self.model_id)
         self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=self.model_id)
     
-    def _get_loss_grad_functional(self, loss_fn, func_model,
-                                  weights, buffers, batch, inds):
+    def _get_loss_grad_functional(self, loss_fn, weights, buffers, batch, inds):
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
@@ -191,13 +185,12 @@ class TRAKer():
             return self._score_iter(out_fn, model, model_id, batch)
 
     def _score_functional(self, out_fn, model, model_id, batch) -> Tensor:
-        # if self.func_model is None:
-        self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
+        _, weights, buffers = make_functional_with_buffers(model)
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
-                     randomness='different')(self.weights, self.buffers, *batch)
+                     randomness='different')(weights, buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype),
                                        model_id=model_id)
         return grads.detach().clone() @ self.features[model_id].T
