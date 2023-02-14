@@ -90,30 +90,33 @@ class TRAKer():
                   inds: Optional[Iterable[int]]=None,
                   model_id: Optional[int]=0,
                   functional: bool=False) -> Tensor:
-        self.model_id = model_id
         if functional:
             _, weights, buffers = make_functional_with_buffers(model)
             self._featurize_functional(out_fn,
                                        weights,
                                        buffers,
                                        batch,
+                                       model_id,
                                        inds)
             self._get_loss_grad_functional(loss_fn,
                                            weights,
                                            buffers,
                                            batch,
+                                           model_id,
                                            inds)
         else:
             self._featurize_iter(out_fn,
                                  model,
                                  batch,
+                                 model_id,
                                  inds)
             self._get_loss_grad_iter(loss_fn,
                                      model,
                                      batch,
+                                     model_id,
                                      inds)
 
-    def _featurize_functional(self, out_fn, weights, buffers, batch, inds) -> Tensor:
+    def _featurize_functional(self, out_fn, weights, buffers, batch, model_id, inds) -> Tensor:
         """
         Using the `vmap` feature of `functorch`
         """
@@ -123,9 +126,9 @@ class TRAKer():
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(weights, buffers, *batch)
-        self.record_grads(vectorize_and_ignore_buffers(grads), inds)
+        self.record_grads(vectorize_and_ignore_buffers(grads), model_id, inds)
 
-    def _featurize_iter(self, out_fn, model, batch, inds, batch_size=None) -> Tensor:
+    def _featurize_iter(self, out_fn, model, batch, model_id, inds, batch_size=None) -> Tensor:
         """Computes per-sample gradients of the model output function
         This method does not leverage vectorization (and is hence much slower than
         `_featurize_vmap`).
@@ -142,13 +145,14 @@ class TRAKer():
                                                                self.grad_wrt,
                                                                retain_graph=True))
 
-        self.record_grads(grads, inds)
+        self.record_grads(grads, model_id, inds)
 
-    def record_grads(self, grads, inds):
-        grads = self.projector.project(grads.to(self.grad_dtype), model_id=self.model_id)
-        self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=self.model_id)
+    def record_grads(self, grads, model_id, inds):
+        grads = self.projector.project(grads.to(self.grad_dtype), model_id=model_id)
+        # print('grads', grads)
+        self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=model_id)
     
-    def _get_loss_grad_functional(self, loss_fn, weights, buffers, batch, inds):
+    def _get_loss_grad_functional(self, loss_fn, weights, buffers, batch, model_id, inds):
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
@@ -156,9 +160,9 @@ class TRAKer():
         """
         self.saver.loss_set(loss_grads=loss_fn(weights, buffers, *batch),
                             inds=inds,
-                            model_id=self.model_id)
+                            model_id=model_id)
 
-    def _get_loss_grad_iter(self, loss_fn, model, batch, inds):
+    def _get_loss_grad_iter(self, loss_fn, model, batch, model_id, inds):
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
@@ -166,7 +170,7 @@ class TRAKer():
         """
         self.saver.loss_set(loss_grads=loss_fn(model, *batch),
                             inds=inds,
-                            model_id=self.model_id)
+                            model_id=model_id)
 
     def finalize(self):
         self.reweighter = BasicReweighter(device=self.device)
@@ -174,7 +178,7 @@ class TRAKer():
             self.loss_grads.update(self.saver.loss_get(model_id=model_id))
 
         for model_id in self.saver.model_ids:
-            xtx = self.reweighter.reweight(self.saver.grad_get())
+            xtx = self.reweighter.reweight(self.saver.grad_get(model_id=model_id))
             g = self.saver.grad_get(model_id=model_id)
             self.features[model_id] = self.reweighter.finalize(g, xtx) * self.loss_grads.avg
 
@@ -193,6 +197,8 @@ class TRAKer():
                      randomness='different')(weights, buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype),
                                        model_id=model_id)
+
+        # print(self.features[model_id].T.shape, self.features[model_id].T)
         return grads.detach().clone() @ self.features[model_id].T
 
     def _score_iter(self, out_fn, model, model_id, batch, batch_size=None) -> Tensor:
