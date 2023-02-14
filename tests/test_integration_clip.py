@@ -1,12 +1,8 @@
 import pytest
 import torch as ch
 from tqdm import tqdm
-from functorch import make_functional_with_buffers
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
-from clip import simple_tokenizer
+from torchvision import datasets
 import open_clip
-import torchvision.transforms as transforms
 
 from trak.traker import TRAKer
 from trak.modelout_functions import CLIPModelOutput
@@ -19,12 +15,12 @@ def test_cifar10(device='cuda:0'):
 
     tokenizer = open_clip.get_tokenizer('RN50')
 
-    ds_train = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/train2014',
-                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_train_karpathy.json',
+    ds_train = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/coco_csv/train2014',
+                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_csv/coco_train_karpathy.json',
                                )
 
-    ds_val = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/val2014',
-                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_val_karpathy.json',
+    ds_val = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/coco_csv/val2014',
+                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_csv/coco_val_karpathy.json',
                                )
 
     logit_scale = [v for (k, v) in model.named_parameters() if k == 'logit_scale'][0]

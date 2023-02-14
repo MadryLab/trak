@@ -62,12 +62,18 @@ def test_cifar10(device='cpu'):
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
-    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-        batch = [x.to(device) for x in batch]
-        traker.score(out_fn=compute_outputs, batch=batch,
-                     model=(func_model, weights, buffers))
-        if bind == 2:
-            break
+    for model_id, ckpt in enumerate(ckpts):
+        # load state dict here if we actually had checkpoints
+        # model.load_state_dict(ckpt)
+        # update weights, buffers; etc
+        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
+            batch = [x.to(device) for x in batch]
+            traker.score(out_fn=compute_outputs,
+                         batch=batch,
+                         model=model,
+                         model_id=model_id)
+            if bind == 2:
+                break
 
 
 @pytest.mark.cuda
@@ -124,7 +130,7 @@ def test_cifar10_iter(device='cpu'):
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.to(device) for x in batch]
         s = traker.score(out_fn=compute_outputs, batch=batch,
-                         model=model, functional=False)
+                        model=model, functional=False)
         if bind == 2:
             break
 

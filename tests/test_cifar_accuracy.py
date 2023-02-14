@@ -136,8 +136,6 @@ def test_cifar_acc():
         model.eval()
         func_model, weights, buffers = make_functional_with_buffers(model)
         def compute_outputs(weights, buffers, image, label):
-            # we are only allowed to pass in tensors to vmap,
-            # thus func_model is used from above
             out = func_model(weights, buffers, image.unsqueeze(0))
             return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
 
@@ -159,11 +157,19 @@ def test_cifar_acc():
     traker.finalize()
 
     scores = []
-    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-        scores.append(
-            traker.score(out_fn=compute_outputs, batch=batch, model=model)
-        )
-    print(scores[0].shape)
-    scores = ch.cat(scores)
+    for model_id, ckpt in enumerate(ckpts):
+        model.load_state_dict(ckpt)
+        model.eval()
+        func_model, weights, buffers = make_functional_with_buffers(model)
+        s = []
+        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
+            s.append(
+                traker.score(out_fn=compute_outputs,
+                             batch=batch,
+                             model=model,
+                             functional=True).cpu()
+            )
+        scores.append(ch.cat(s))
+    scores = ch.stack(scores).mean(dim=0) # average influence matrices
     SAVE_DIR = '/mnt/cfs/projects/better_tracin/estimators/CIFAR2/debug2/estimates.npy'
     np.save(SAVE_DIR, scores.cpu().numpy().T)

@@ -6,7 +6,7 @@ from trak.projectors import BasicProjector, ProjectionType
 # from trak.reweighters import BasicReweighter, BasicSingleBlockReweighter
 from trak.reweighters import BasicSingleBlockReweighter
 from trak.savers import KeepInRAMSaver
-from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
+from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers, AverageMeter
 BasicReweighter = BasicSingleBlockReweighter
 try:
     from functorch import grad, vmap, make_functional_with_buffers
@@ -72,6 +72,9 @@ class TRAKer():
         self.func_model = None
         self.weights = None
         self.buffers = None
+
+        self.features = {}
+        self.loss_grads = AverageMeter()
     
     def featurize(self,
                   out_fn,
@@ -83,8 +86,8 @@ class TRAKer():
                   functional: bool=False) -> Tensor:
         self.model_id = model_id
         if functional:
-            if self.func_model is None:
-                self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
+            # if self.func_model is None:
+            self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
             self._featurize_functional(out_fn, self.weights, self.buffers, batch, inds)
             self._get_loss_grad_functional(loss_fn, self.func_model, self.weights,
                                            self.buffers, batch, inds)
@@ -150,31 +153,32 @@ class TRAKer():
 
     def finalize(self):
         self.reweighter = BasicReweighter(device=self.device)
-        self.features = ch.zeros_like(self.saver.grad_get())
+        for model_id in self.saver.model_ids:
+            self.loss_grads.update(self.saver.loss_get(model_id=model_id))
+
         for model_id in self.saver.model_ids:
             xtx = self.reweighter.reweight(self.saver.grad_get())
             g = self.saver.grad_get(model_id=model_id)
-            self.features += self.reweighter.finalize(g, xtx) * \
-                             self.saver.loss_get(model_id=model_id)
+            self.features[model_id] = self.reweighter.finalize(g, xtx) * self.loss_grads.avg
 
-    def score(self, out_fn, model, batch, functional=True) -> Tensor:
+    def score(self, out_fn, model, batch, model_id=0, functional=True) -> Tensor:
         if functional:
-            return self._score_functional(out_fn, model, batch)
+            return self._score_functional(out_fn, model, model_id, batch)
         else:
-            return self._score_iter(out_fn, model, batch)
+            return self._score_iter(out_fn, model, model_id, batch)
 
-    def _score_functional(self, out_fn, model, batch) -> Tensor:
-        if self.func_model is None:
-            self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
+    def _score_functional(self, out_fn, model, model_id, batch) -> Tensor:
+        # if self.func_model is None:
+        self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
                      randomness='different')(self.weights, self.buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
-        return grads.detach().clone() @ self.features.T
+        return grads.detach().clone() @ self.features[model_id].T
 
-    def _score_iter(self, out_fn, model, batch, batch_size=None) -> Tensor:
+    def _score_iter(self, out_fn, model, model_id, batch, batch_size=None) -> Tensor:
         if batch_size is None:
             # assuming batch is an iterable of torch Tensors, each of shape [batch_size, ...]
             batch_size = batch[0].size(0)
@@ -188,7 +192,7 @@ class TRAKer():
                                                                retain_graph=True))
 
         grads = self.projector.project(grads.to(self.grad_dtype))
-        return grads.detach().clone()
+        return grads.detach().clone() @ self.features[model_id].T
     
     def save(self):
         self.saver.save(self.features)

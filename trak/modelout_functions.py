@@ -54,7 +54,8 @@ class CrossEntropyModelOutput(AbstractModelOutput):
         logits_correct = logits[bindex, labels]
 
         cloned_logits = logits.clone().to(self.device, non_blocking=False)
-        # exp(-inf) = 0
+        # a hacky way to remove the logits of the correct labels from the sum
+        # in logsumexp by setting to -ch.inf
         cloned_logits[bindex, labels] = ch.tensor(-ch.inf).to(self.device)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
@@ -64,7 +65,6 @@ class CrossEntropyModelOutput(AbstractModelOutput):
         ps = self.partial_loss_fn(logits / self.loss_temperature)[ch.arange(logits.size(0)),
                                                                   labels]
         return (1 - ps).clone().detach()
-
 
 
 class NLPModelOutput(AbstractModelOutput):

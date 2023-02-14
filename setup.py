@@ -24,6 +24,8 @@ setup(name='TRAK',
         'tests':
         ["assertpy",
          "torchvision",
+         "clip",
+         "open_clip",
         ]}
     # ext_modules=[
         # CUDAExtension('fast_jl', [
