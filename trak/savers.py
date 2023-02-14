@@ -84,3 +84,10 @@ class KeepInRAMSaver(AbstractSaver):
     def load(self, grads, loss_grads) -> None:
         self.grads = grads
         self.loss_grads = loss_grads
+
+class ZarrSaver(AbstractSaver):
+    def __init__(self, save_dir, device) -> None:
+        super().__init__(save_dir, device)
+    
+    def grad_set(self, grads: Tensor) -> None:
+        return super().grad_set(grads)

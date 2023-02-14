@@ -94,3 +94,52 @@ class NLPModelOutput(AbstractModelOutput):
             margins = logits_correct - cloned_logits.logsumexp(dim=-1)
 
         return (margins * (labels != 0)).sum(-1) / (labels != 0).sum(-1)
+
+
+class CLIPModelOutput(AbstractModelOutput):
+    def __init__(self, device, temperature=1., simulated_batch_size=50) -> None:
+        super().__init__(device)
+        self.partial_loss_fn = ch.nn.Softmax(-1)
+        self.sim_batch_size = simulated_batch_size
+        self.temperature = temperature
+    
+    def get_embeddings(self, model, loader, size=50_000, embedding_dim=1024,
+                       preprocess_fn_img=None, preprocess_fn_txt=None):
+        img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
+                             ch.zeros(size, embedding_dim).cuda()
+        
+        with ch.no_grad():
+            for ind, (images, text) in enumerate(loader):
+                if preprocess_fn_img is not None:
+                    images = preprocess_fn_img(images)
+                if preprocess_fn_txt is not None:
+                    text = preprocess_fn_txt(text)
+                image_embeddings, text_embeddings, _ = model(images, text)
+                img_embs[ind] = image_embeddings.mean(dim=0).clone().detach()
+                txt_embs[ind] += text_embeddings.mean(dim=0).clone().detach()
+                if ind == size - 1:
+                    break
+
+        self.all_image_fts = img_embs
+        self.all_text_fts = txt_embs
+
+    def get_output(self,
+                   logits: Iterable[Tensor],
+                   labels: Optional[Tensor]) -> Tensor:
+        """
+        In this case, "logits" are the image embeddings, and "labels" are the
+        text embeddings.
+        - simulating a batch by sampling inds
+        - doing a smooth min with -logsumexp(-x)
+        """
+        ii = ch.multinomial(input=ch.arange(self.all_image_fts.shape[0]).float(),
+                            num_samples=self.sim_batch_size,
+                            replacement=False)
+        return -ch.logsumexp(-logits @ (labels - self.all_text_fts[ii]).T, dim=1) +\
+            -ch.logsumexp(-logits @ (labels - self.all_image_fts[ii]).T, dim=1)
+
+
+    def get_out_to_loss(self, logits: Module, labels: Iterable[Tensor]) -> Tensor:
+        res = self.temperature * logits @ labels.T
+        ps = (self.partial_loss_fn(res) + self.partial_loss_fn(res.T)).diag() / 2.
+        return (1 - ps).clone().detach()

@@ -150,7 +150,7 @@ def test_cifar_acc():
                             (bind + 1) * loader_train.batch_size))
             traker.featurize(out_fn=compute_outputs,
                             loss_fn=compute_out_to_loss,
-                            model=(func_model, weights, buffers),
+                            model=model,
                             batch=batch,
                             functional=True,
                             model_id=model_id,
@@ -161,8 +161,7 @@ def test_cifar_acc():
     scores = []
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         scores.append(
-            traker.score(out_fn=compute_outputs, batch=batch,
-                     model=(func_model, weights, buffers))
+            traker.score(out_fn=compute_outputs, batch=batch, model=model)
         )
     print(scores[0].shape)
     scores = ch.cat(scores)

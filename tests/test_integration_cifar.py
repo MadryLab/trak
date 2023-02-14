@@ -7,6 +7,7 @@ from torchvision import datasets, models, transforms
 
 from trak.traker import TRAKer
 from trak.modelout_functions import CrossEntropyModelOutput
+from trak.utils import parameters_to_vector
 
 def test_cifar10(device='cpu'):
     # TODO: load CIFAR-10 weights instead ('DEFAULT' loads ImageNet ones)
@@ -48,7 +49,7 @@ def test_cifar10(device='cpu'):
                             (bind + 1) * loader_train.batch_size))
             traker.featurize(out_fn=compute_outputs,
                             loss_fn=compute_out_to_loss,
-                            model=(func_model, weights, buffers),
+                            model=model,
                             batch=batch,
                             functional=True,
                             model_id=model_id,

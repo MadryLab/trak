@@ -9,13 +9,14 @@ from trak.savers import KeepInRAMSaver
 from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
 BasicReweighter = BasicSingleBlockReweighter
 try:
-    from functorch import grad, vmap
+    from functorch import grad, vmap, make_functional_with_buffers
 except ImportError:
     print('Cannot import `functorch`. Functional mode cannot be used.')
 
 class TRAKer():
     def __init__(self,
                  model,
+                 grad_wrt=None,
                  proj_dim=10,
                  projector=BasicProjector,
                  proj_type=ProjectionType.normal,
@@ -41,28 +42,36 @@ class TRAKer():
 
         """
         self.model = model
-        self.device = device
+        if grad_wrt is None:
+            self.grad_wrt = list(self.model.parameters())
+        else:
+            self.grad_wrt = grad_wrt
         self.grad_dtype = grad_dtype
+        self.device = device
 
         self.last_ind = 0
+        self.model_params = parameters_to_vector(self.grad_wrt)
+        self.grad_dim = self.model_params.numel()
 
         self.projector = projector(seed=proj_seed,
                                    proj_dim=proj_dim,
-                                   grad_dim=parameters_to_vector(self.model.parameters()).numel(),
+                                   grad_dim=self.grad_dim,
                                    proj_type=proj_type,
                                    dtype=self.grad_dtype,
                                    device=self.device)
         
-        self.model_params = parameters_to_vector(model.parameters())
         self.params_dict = [x[0] for x in list(self.model.named_parameters())]
 
         self.train_set_size = train_set_size
-        self.grad_dim = self.model_params.numel()
 
         self.save_dir = Path(save_dir)
         self.saver = KeepInRAMSaver(grads_shape=[train_set_size, proj_dim],
                                     save_dir=self.save_dir,
                                     device=self.device)
+        
+        self.func_model = None
+        self.weights = None
+        self.buffers = None
     
     def featurize(self,
                   out_fn,
@@ -74,9 +83,11 @@ class TRAKer():
                   functional: bool=False) -> Tensor:
         self.model_id = model_id
         if functional:
-            func_model, weights, buffers = model
-            self._featurize_functional(out_fn, weights, buffers, batch, inds)
-            self._get_loss_grad_functional(loss_fn, func_model, weights, buffers, batch, inds)
+            if self.func_model is None:
+                self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
+            self._featurize_functional(out_fn, self.weights, self.buffers, batch, inds)
+            self._get_loss_grad_functional(loss_fn, self.func_model, self.weights,
+                                           self.buffers, batch, inds)
         else:
             self._featurize_iter(out_fn, model, batch, inds)
             self._get_loss_grad_iter(loss_fn, model, batch, inds)
@@ -105,10 +116,9 @@ class TRAKer():
 
         grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
         margin = out_fn(model, *batch)
-
         for ind in range(batch_size):
             grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
-                                                               model.parameters(),
+                                                               self.grad_wrt,
                                                                retain_graph=True))
 
         self.record_grads(grads, inds)
@@ -154,12 +164,13 @@ class TRAKer():
             return self._score_iter(out_fn, model, batch)
 
     def _score_functional(self, out_fn, model, batch) -> Tensor:
-        _, weights, buffers = model
+        if self.func_model is None:
+            self.func_model, self.weights, self.buffers = make_functional_with_buffers(model)
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
                      in_dims=(None, None, *([0] * len(batch))),
-                     randomness='different')(weights, buffers, *batch)
+                     randomness='different')(self.weights, self.buffers, *batch)
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype))
         return grads.detach().clone() @ self.features.T
 
@@ -173,7 +184,7 @@ class TRAKer():
 
         for ind in range(batch_size):
             grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
-                                                               model.parameters(),
+                                                               self.grad_wrt,
                                                                retain_graph=True))
 
         grads = self.projector.project(grads.to(self.grad_dtype))
