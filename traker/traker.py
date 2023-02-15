@@ -4,13 +4,10 @@ import torch as ch
 from torch import Tensor
 from .projectors import BasicProjector, ProjectionType
 from .reweighters import BasicReweighter
+from .gradient_computers import FunctionalGradientComputer, IterativeGradientComputer
 from .scorers import FunctionalScorer, IterScorer
 from .savers import KeepInRAMSaver
-from .utils import parameters_to_vector, vectorize_and_ignore_buffers, AverageMeter
-try:
-    from functorch import grad, vmap, make_functional_with_buffers
-except ImportError:
-    print('Cannot import `functorch`. Functional mode cannot be used.')
+from .utils import parameters_to_vector, AverageMeter
 
 class TRAKer():
     def __init__(self,
@@ -46,17 +43,17 @@ class TRAKer():
 
         """
         self.model = model
-        if grad_wrt is None:
-            self.grad_wrt = list(self.model.parameters())
-        else:
-            self.grad_wrt = grad_wrt
+        self.grad_wrt = grad_wrt
         self.grad_dtype = grad_dtype
         self.device = device
         self.functional = functional
+        self.train_set_size = train_set_size
 
-        self.last_ind = 0
-        self.model_params = parameters_to_vector(self.grad_wrt)
-        self.grad_dim = self.model_params.numel()
+        self.params_dict = [x[0] for x in list(self.model.named_parameters())]
+        if self.grad_wrt is not None:
+            self.grad_dim = parameters_to_vector(self.grad_wrt).numel()
+        else:
+            self.grad_dim = parameters_to_vector(self.model.parameters()).numel()
 
         if projector is None:
             projector = BasicProjector
@@ -69,9 +66,7 @@ class TRAKer():
         else:
             self.projector = projector
         
-        self.params_dict = [x[0] for x in list(self.model.named_parameters())]
 
-        self.train_set_size = train_set_size
 
         self.save_dir = Path(save_dir)
         self.saver = KeepInRAMSaver(grads_shape=[train_set_size, proj_dim],
@@ -79,16 +74,21 @@ class TRAKer():
                                     device=self.device)
         
         if self.functional:
+            self.gradient_computer = FunctionalGradientComputer(func_model=self.model,
+                                                                device=self.device,
+                                                                params_dict=self.params_dict)
             self.scorer = FunctionalScorer(device=self.device,
                                            projector=self.projector,
                                            grad_dtype=self.grad_dtype)
         else:
+            self.gradient_computer = IterativeGradientComputer(model=self.model,
+                                                               device=self.device,
+                                                               grad_dim=self.grad_dim)
             self.scorer = IterScorer(device=self.device,
                                      projector=self.projector,
                                      grad_dtype=self.grad_dtype,
                                      grad_dim=self.grad_dim,
                                      grad_wrt=self.grad_wrt)
-        
 
         self.features = {}
         self.loss_grads = AverageMeter()
@@ -96,91 +96,27 @@ class TRAKer():
     def featurize(self,
                   out_fn,
                   loss_fn,
-                  model,
+                  model_params,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]]=None,
                   model_id: Optional[int]=0,
-                  functional: bool=False) -> Tensor:
-        if functional:
-            _, weights, buffers = make_functional_with_buffers(model)
-            self._featurize_functional(out_fn,
-                                       weights,
-                                       buffers,
-                                       batch,
-                                       model_id,
-                                       inds)
-            self._get_loss_grad_functional(loss_fn,
-                                           weights,
-                                           buffers,
-                                           batch,
-                                           model_id,
-                                           inds)
-        else:
-            self._featurize_iter(out_fn,
-                                 model,
-                                 batch,
-                                 model_id,
-                                 inds)
-            self._get_loss_grad_iter(loss_fn,
-                                     model,
-                                     batch,
-                                     model_id,
-                                     inds)
-
-    def _featurize_functional(self, out_fn, weights, buffers, batch, model_id, inds) -> Tensor:
+                  ) -> Tensor:
         """
-        Using the `vmap` feature of `functorch`
         """
+        grads = self.gradient_computer.compute_per_sample_grad(out_fn=out_fn,
+                                                               model_params=model_params,
+                                                               batch=batch,
+                                                               grad_wrt=self.grad_wrt,
+                                                               model_id=model_id)
 
-        grads_loss = grad(out_fn, has_aux=False)
-        # map over batch dimension
-        grads = vmap(grads_loss,
-                     in_dims=(None, None, *([0] * len(batch))),
-                     randomness='different')(weights, buffers, *batch)
-        self.record_grads(vectorize_and_ignore_buffers(grads), model_id, inds)
-
-    def _featurize_iter(self, out_fn, model, batch, model_id, inds, batch_size=None) -> Tensor:
-        """Computes per-sample gradients of the model output function
-        This method does not leverage vectorization (and is hence much slower than
-        `_featurize_vmap`).
-        """
-        if batch_size is None:
-            # assuming batch is an iterable of torch Tensors, each of
-            # shape [batch_size, ...]
-            batch_size = batch[0].size(0)
-
-        grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
-        margin = out_fn(model, *batch)
-        for ind in range(batch_size):
-            grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
-                                                               self.grad_wrt,
-                                                               retain_graph=True))
-
-        self.record_grads(grads, model_id, inds)
-
-    def record_grads(self, grads, model_id, inds):
         grads = self.projector.project(grads.to(self.grad_dtype), model_id=model_id)
         self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=model_id)
-    
-    def _get_loss_grad_functional(self, loss_fn, weights, buffers, batch, model_id, inds):
-        """Computes
-        .. math::
-            \partial \ell / \partial \text{margin}
-        
-        """
-        self.saver.loss_set(loss_grads=loss_fn(weights, buffers, *batch),
-                            inds=inds,
-                            model_id=model_id)
 
-    def _get_loss_grad_iter(self, loss_fn, model, batch, model_id, inds):
-        """Computes
-        .. math::
-            \partial \ell / \partial \text{margin}
-        
-        """
-        self.saver.loss_set(loss_grads=loss_fn(model, *batch),
-                            inds=inds,
-                            model_id=model_id)
+        loss_grads = self.gradient_computer.compute_loss_grad(loss_fn=loss_fn,
+                                                              model_params=model_params,
+                                                              batch=batch,
+                                                              model_id=model_id)
+        self.saver.loss_set(loss_grads=loss_grads, inds=inds, model_id=model_id)
 
     def finalize(self):
         self.reweighter = BasicReweighter(device=self.device)

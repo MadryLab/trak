@@ -124,17 +124,18 @@ def test_cifar_acc():
 
     device = 'cuda:0'
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=10_000,
-                    grad_dtype=ch.float32,
-                    proj_dim=1000,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=10_000,
+                  grad_dtype=ch.float32,
+                  proj_dim=1000,
+                  device=device)
 
 
     for model_id, ckpt in enumerate(ckpts):
         model.load_state_dict(ckpt)
         model.eval()
         func_model, weights, buffers = make_functional_with_buffers(model)
+        model_params = weights, buffers
         def compute_outputs(weights, buffers, image, label):
             out = func_model(weights, buffers, image.unsqueeze(0))
             return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
@@ -146,15 +147,14 @@ def test_cifar_acc():
         for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
             inds = list(range(bind * loader_train.batch_size,
                             (bind + 1) * loader_train.batch_size))
-            traker.featurize(out_fn=compute_outputs,
-                            loss_fn=compute_out_to_loss,
-                            model=model,
-                            batch=batch,
-                            functional=True,
-                            model_id=model_id,
-                            inds=inds)
+            trak.featurize(out_fn=compute_outputs,
+                           loss_fn=compute_out_to_loss,
+                           model_params=model_params,
+                           batch=batch,
+                           model_id=model_id,
+                           inds=inds)
 
-    traker.finalize()
+    trak.finalize()
 
     scores = []
     for model_id, ckpt in enumerate(ckpts):
@@ -164,10 +164,10 @@ def test_cifar_acc():
         s = []
         for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
             s.append(
-                traker.score(out_fn=compute_outputs,
-                             batch=batch,
-                             model=model,
-                             model_id=model_id).cpu()
+                trak.score(out_fn=compute_outputs,
+                           batch=batch,
+                           model=model,
+                           model_id=model_id).cpu()
             )
         scores.append(ch.cat(s))
     scores = ch.stack(scores).mean(dim=0) # average influence matrices

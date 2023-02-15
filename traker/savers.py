@@ -89,6 +89,7 @@ class KeepInRAMSaver(AbstractSaver):
         self.grads = grads
         self.loss_grads = loss_grads
 
+
 class ZarrSaver(AbstractSaver):
     def __init__(self, save_dir, device) -> None:
         super().__init__(save_dir, device)

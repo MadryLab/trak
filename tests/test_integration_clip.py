@@ -21,12 +21,12 @@ def test_cifar10(device='cuda:0'):
 
     logit_scale = [v for (k, v) in model.named_parameters() if k == 'logit_scale'][0]
     modelout_fn = CLIPModelOutput(device=device, temperature=logit_scale)
-    traker = TRAKer(model=model,
-                    grad_wrt=[x[1] for x in model.named_parameters() if x[0] != 'logit_scale'],
-                    device=device,
-                    train_set_size=len(ds_train),
-                    functional=False,
-                    proj_dim=100)
+    trak = TRAKer(model=model,
+                  grad_wrt=[x[1] for x in model.named_parameters() if x[0] != 'logit_scale'],
+                  device=device,
+                  train_set_size=len(ds_train),
+                  functional=False,
+                  proj_dim=100)
 
 
     def compute_outputs(model, imgs, txt_tokens):
@@ -46,12 +46,11 @@ def test_cifar10(device='cuda:0'):
         # selecting (wlog) the first out of 5 captions
         y = tokenizer(captions[0]).to(device)
 
-        traker.featurize(out_fn=compute_outputs,
-                         loss_fn=compute_out_to_loss,
-                         model=model,
-                         batch=(x, y),
-                         model_id=0,
-                         functional=False)
+        trak.featurize(out_fn=compute_outputs,
+                       loss_fn=compute_out_to_loss,
+                        model_params=list(model.parameters()),
+                        batch=(x, y),
+                        model_id=0)
 
         if bind == 20:
             break

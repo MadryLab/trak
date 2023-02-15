@@ -21,10 +21,10 @@ def test_cifar10(device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=50_000,
-                    grad_dtype=ch.float32,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=50_000,
+                  grad_dtype=ch.float32,
+                  device=device)
 
     func_model, weights, buffers = make_functional_with_buffers(model)
     def compute_outputs(weights, buffers, image, label):
@@ -38,6 +38,7 @@ def test_cifar10(device='cpu'):
         return modelout_fn.get_out_to_loss(out, labels)
 
     ckpts = [None, None]
+    model_params = (weights, buffers)
     for model_id, ckpt in enumerate(ckpts):
         # load state dict here if we actually had checkpoints
         # model.load_state_dict(ckpt)
@@ -46,17 +47,16 @@ def test_cifar10(device='cpu'):
             batch = [x.to(device) for x in batch]
             inds = list(range(bind * loader_train.batch_size,
                             (bind + 1) * loader_train.batch_size))
-            traker.featurize(out_fn=compute_outputs,
-                            loss_fn=compute_out_to_loss,
-                            model=model,
-                            batch=batch,
-                            functional=True,
-                            model_id=model_id,
-                            inds=inds)
+            trak.featurize(out_fn=compute_outputs,
+                           loss_fn=compute_out_to_loss,
+                           model_params=model_params,
+                           batch=batch,
+                           model_id=model_id,
+                           inds=inds)
             if bind == 2:
                 break # a CPU pass takes too long lol
     
-    traker.finalize()
+    trak.finalize()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
@@ -67,7 +67,7 @@ def test_cifar10(device='cpu'):
         # update weights, buffers; etc
         for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
             batch = [x.to(device) for x in batch]
-            traker.score(out_fn=compute_outputs,
+            trak.score(out_fn=compute_outputs,
                          batch=batch,
                          model=model,
                          model_id=model_id)
@@ -93,15 +93,13 @@ def test_cifar10_iter(device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=50_000,
-                    grad_dtype=ch.float32,
-                    functional=False,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=50_000,
+                  grad_dtype=ch.float32,
+                  functional=False,
+                  device=device)
 
     def compute_outputs(model, images, labels):
-        # we are only allowed to pass in tensors to vmap,
-        # thus func_model is used from above
         out = model(images)
         return modelout_fn.get_output(out, labels)
 
@@ -109,27 +107,27 @@ def test_cifar10_iter(device='cpu'):
         out = model(images)
         return modelout_fn.get_out_to_loss(out, labels)
 
+    model_params = list(model.parameters())
     for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
         batch = [x.to(device) for x in batch]
         inds = list(range(bind * loader_train.batch_size,
                           (bind + 1) * loader_train.batch_size))
-        traker.featurize(out_fn=compute_outputs,
-                         loss_fn=compute_out_to_loss,
-                         model=model,
-                         batch=batch,
-                         functional=False,
-                         inds=inds)
+        trak.featurize(out_fn=compute_outputs,
+                       loss_fn=compute_out_to_loss,
+                       model_params=model_params,
+                       batch=batch,
+                       inds=inds)
         if bind == 2:
             break # a CPU pass takes too long lol
     
-    traker.finalize()
+    trak.finalize()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.to(device) for x in batch]
-        s = traker.score(out_fn=compute_outputs, batch=batch, model=model)
+        s = trak.score(out_fn=compute_outputs, batch=batch, model=model)
         if bind == 2:
             break
 
