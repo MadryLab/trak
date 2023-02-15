@@ -45,7 +45,7 @@ torch::Tensor fast_jl(
     uint32_t num_required_batches = (B - 1) / effective_batch_size + 1;
     uint32_t num_batch_dim = num_required_batches * effective_batch_size;
 
-    auto output = torch::empty({num_batch_dim, num_feature_tiles, N},
+    auto output = torch::zeros({num_batch_dim, num_feature_tiles, N},
                                torch::TensorOptions().device(input.device()));
 
     for (uint32_t meta_batch=0; meta_batch < num_required_batches; meta_batch++) {
@@ -75,7 +75,7 @@ torch::Tensor fast_jl(
                     seed, num_feature_tiles);
         }
     }
-
+    return output;
     return output.index({Slice({0, B})}).sum(1);
 }
 

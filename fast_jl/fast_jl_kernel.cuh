@@ -75,9 +75,9 @@ project_kernel(const InputType *__restrict__ input,
                uint32_t feature_tile_size) {
 
     // Which column(=JL Dim) of the output this thread is responsible for
-    uint32_t col_output = blockIdx.x    * (gridDim.z * gridDim.y * gridDim.x)
-                          + threadIdx.z * (            gridDim.y * gridDim.x)
-                          + threadIdx.y * (                        gridDim.x)
+    uint32_t col_output = blockIdx.x    * (blockDim.z * blockDim.y * blockDim.x)
+                          + threadIdx.z * (            blockDim.y * blockDim.x)
+                          + threadIdx.y * (                        blockDim.x)
                           + threadIdx.x;
 
     // Init Random State
@@ -129,12 +129,15 @@ project_kernel(const InputType *__restrict__ input,
         __syncthreads();
     }
 
+
     for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
-        fill_fragment(accumulator[batch], 1.0f);
+        uint32_t col_output_warp = blockIdx.x * (blockDim.z * blockDim.y * blockDim.x)
+                                   + threadIdx.z * (blockDim.y * blockDim.x)
+                                   + blockIdx.y * output_dims;
         store_matrix_sync(
                 output
-                + batch * (CHUNK_ROW * output_dims * gridDim.y)
-                + col_output,
+                + batch * (output_dims * gridDim.y * CHUNK_ROW)
+                + col_output_warp,
                 accumulator[batch], output_dims * gridDim.y, mem_row_major);
     }
 }
