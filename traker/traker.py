@@ -2,11 +2,11 @@ from typing import Iterable, Optional
 from pathlib import Path
 import torch as ch
 from torch import Tensor
-from trak.projectors import BasicProjector, ProjectionType
-from trak.reweighters import BasicReweighter
-from trak.scorers import FunctionalScorer, IterScorer
-from trak.savers import KeepInRAMSaver
-from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers, AverageMeter
+from .projectors import BasicProjector, ProjectionType
+from .reweighters import BasicReweighter
+from .scorers import FunctionalScorer, IterScorer
+from .savers import KeepInRAMSaver
+from .utils import parameters_to_vector, vectorize_and_ignore_buffers, AverageMeter
 try:
     from functorch import grad, vmap, make_functional_with_buffers
 except ImportError:

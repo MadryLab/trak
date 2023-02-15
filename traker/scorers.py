@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-import math
 from torch import Tensor
 import torch as ch
-from trak.utils import parameters_to_vector, vectorize_and_ignore_buffers
+from .utils import parameters_to_vector, vectorize_and_ignore_buffers
 try:
     from functorch import make_functional_with_buffers, vmap, grad
 except:

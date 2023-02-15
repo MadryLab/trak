@@ -4,8 +4,8 @@ from tqdm import tqdm
 from torchvision import datasets
 import open_clip
 
-from trak.traker import TRAKer
-from trak.modelout_functions import CLIPModelOutput
+from traker.traker import TRAKer
+from traker.modelout_functions import CLIPModelOutput
 
 @pytest.mark.cuda
 def test_cifar10(device='cuda:0'):

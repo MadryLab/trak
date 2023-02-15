@@ -5,8 +5,8 @@ from tqdm import tqdm
 from pathlib import Path
 from functorch import make_functional_with_buffers
 
-from trak.traker import TRAKer
-from trak.modelout_functions import CrossEntropyModelOutput
+from traker.traker import TRAKer
+from traker.modelout_functions import CrossEntropyModelOutput
 
 from typing import List
 import torch as ch

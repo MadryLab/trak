@@ -5,7 +5,7 @@ import numpy as np
 import torch as ch
 from torch import testing
 
-from trak.projectors import CudaProjector, BasicProjector
+from traker.projectors import CudaProjector, BasicProjector
 BasicProjector = CudaProjector
 
 PARAM = list(product([0, 1, 10**8], # seed
