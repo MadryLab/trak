@@ -14,7 +14,7 @@ setup(name='TRAK',
     author='MadryLab',
     author_email='krisgrg@mit.edu',
     license_files=('LICENSE.txt', ),
-    packages=['trak'],
+    packages=['traker'],
     install_requires=
         ['torch',
         'numpy',
