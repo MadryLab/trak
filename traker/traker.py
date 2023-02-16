@@ -20,7 +20,7 @@ class TRAKer():
                  save_dir: str='/tmp/trak_results',
                  device=None,
                  train_set_size=1,
-                 grad_dtype=ch.float16,
+                 grad_dtype=ch.float32,
                  functional=True,
                  ):
         """ Main class for computing TRAK scores.

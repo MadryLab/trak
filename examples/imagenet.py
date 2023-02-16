@@ -10,10 +10,7 @@ from traker.modelout_functions import CrossEntropyModelOutput
 def init_model_and_data(device='cuda:0'):
     model = models.resnet18(weights='DEFAULT').to(device)
     model.eval()
-    transform = transforms.Compose([transforms.Resize(256),
-                                    transforms.CenterCrop(224),
-                                    transforms.ToTensor(),
-                                    transforms.
+    transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor(),
                                     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
     ds_train = datasets.ImageFolder(root='/mnt/cfs/datasets/pytorch_imagenet/train', transform=transform)
     # taking the first 1000 examples
@@ -32,9 +29,7 @@ if __name__ == "__main__":
 
     modelout_fn = CrossEntropyModelOutput(device=device)
     trak = TRAKer(model=model,
-                  train_set_size=10_000,
-                  grad_dtype=ch.float32,
-                  proj_dim=2000,
+                  train_set_size=1000,
                   save_dir='./trak_results',
                   device=device)
 
