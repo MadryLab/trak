@@ -48,10 +48,12 @@ void load_into_shared_memory(
             batch * CHUNK_ROW
             + threadIdx.y);
 
+    uint32_t max_feature = min(features, blockIdx.y * feature_tile_size + feature_tile_size);
+
     for (uint32_t iter=0; iter < CHUNK_ROW; iter++) {
         half value;
 
-        if (current_col >= features || current_row >= channels) {
+        if (current_col >= max_feature || current_row >= channels) {
             value = __float2half(0.0f);
         } else {
             const InputType *my_input = (input

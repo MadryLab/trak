@@ -74,6 +74,7 @@ torch::Tensor fast_jl(
                     seed, num_feature_tiles);
         }
     }
+
     return output.index({Slice({0, B})});
 }
 
