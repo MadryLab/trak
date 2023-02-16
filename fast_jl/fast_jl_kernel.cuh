@@ -122,7 +122,6 @@ project_kernel(const InputType *__restrict__ input,
 #pragma unroll
             for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
                 load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 16);
-                fill_fragment(factors_fragment, __float2half(1.0));
                 mma_sync(accumulator[batch], data_fragment, factors_fragment, accumulator[batch]);
             }
         }
@@ -136,7 +135,6 @@ project_kernel(const InputType *__restrict__ input,
         uint32_t col_output_warp = blockIdx.x * (blockDim.z * blockDim.y * blockDim.x)
                                    + threadIdx.z * (blockDim.y * blockDim.x)
                                    + blockIdx.y * output_dims;
-        fill_fragment(accumulator[batch], batch + 1);
         store_matrix_sync(
                 output
                 + batch * (output_dims * gridDim.y * CHUNK_ROW)
