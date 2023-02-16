@@ -61,7 +61,7 @@ void load_into_shared_memory(
             value = convert<InputType>(*my_input);
         }
         input_buffer[threadIdx.z][threadIdx.y + blockDim.y * iter][threadIdx.x] = value;
-        current_col += blockDim.y;
+        current_row += 1;
     }
 }
 
@@ -121,7 +121,7 @@ project_kernel(const InputType *__restrict__ input,
             load_matrix_sync(factors_fragment, warp_factors , CHUNK_COL);
 #pragma unroll
             for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
-                load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 16);
+                load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 32);
                 mma_sync(accumulator[batch], data_fragment, factors_fragment, accumulator[batch]);
             }
         }
