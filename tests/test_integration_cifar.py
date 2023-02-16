@@ -38,18 +38,17 @@ def test_cifar10(device='cpu'):
         return modelout_fn.get_out_to_loss(out, labels)
 
     ckpts = [None, None]
-    model_params = (weights, buffers)
     for model_id, ckpt in enumerate(ckpts):
         # load state dict here if we actually had checkpoints
         # model.load_state_dict(ckpt)
         # update weights, buffers; etc
+        trak.load_params(model_params=(weights, buffers), model_id=model_id)
         for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
             batch = [x.to(device) for x in batch]
             inds = list(range(bind * loader_train.batch_size,
                             (bind + 1) * loader_train.batch_size))
             trak.featurize(out_fn=compute_outputs,
                            loss_fn=compute_out_to_loss,
-                           model_params=model_params,
                            batch=batch,
                            model_id=model_id,
                            inds=inds)
@@ -108,13 +107,14 @@ def test_cifar10_iter(device='cpu'):
         return modelout_fn.get_out_to_loss(out, labels)
 
     model_params = list(model.parameters())
+    trak.load_params(model_params)
+
     for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
         batch = [x.to(device) for x in batch]
         inds = list(range(bind * loader_train.batch_size,
                           (bind + 1) * loader_train.batch_size))
         trak.featurize(out_fn=compute_outputs,
                        loss_fn=compute_out_to_loss,
-                       model_params=model_params,
                        batch=batch,
                        inds=inds)
         if bind == 2:

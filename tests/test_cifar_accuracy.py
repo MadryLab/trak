@@ -135,7 +135,8 @@ def test_cifar_acc():
         model.load_state_dict(ckpt)
         model.eval()
         func_model, weights, buffers = make_functional_with_buffers(model)
-        model_params = weights, buffers
+        trak.load_params(model_params=(weights, buffers), model_id=model_id)
+
         def compute_outputs(weights, buffers, image, label):
             out = func_model(weights, buffers, image.unsqueeze(0))
             return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
@@ -149,7 +150,6 @@ def test_cifar_acc():
                             (bind + 1) * loader_train.batch_size))
             trak.featurize(out_fn=compute_outputs,
                            loss_fn=compute_out_to_loss,
-                           model_params=model_params,
                            batch=batch,
                            model_id=model_id,
                            inds=inds)

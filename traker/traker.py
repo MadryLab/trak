@@ -54,6 +54,7 @@ class TRAKer():
             self.grad_dim = parameters_to_vector(self.grad_wrt).numel()
         else:
             self.grad_dim = parameters_to_vector(self.model.parameters()).numel()
+        self.model_params = {}
 
         if projector is None:
             projector = BasicProjector
@@ -93,10 +94,13 @@ class TRAKer():
         self.features = {}
         self.loss_grads = AverageMeter()
     
+    def load_params(self, model_params, model_id:int = 0):
+        self.model_params[model_id] = model_params
+        self.gradient_computer.model_params[model_id] = model_params
+
     def featurize(self,
                   out_fn,
                   loss_fn,
-                  model_params,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]]=None,
                   model_id: Optional[int]=0,
@@ -104,7 +108,6 @@ class TRAKer():
         """
         """
         grads = self.gradient_computer.compute_per_sample_grad(out_fn=out_fn,
-                                                               model_params=model_params,
                                                                batch=batch,
                                                                grad_wrt=self.grad_wrt,
                                                                model_id=model_id)
@@ -113,7 +116,6 @@ class TRAKer():
         self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=model_id)
 
         loss_grads = self.gradient_computer.compute_loss_grad(loss_fn=loss_fn,
-                                                              model_params=model_params,
                                                               batch=batch,
                                                               model_id=model_id)
         self.saver.loss_set(loss_grads=loss_grads, inds=inds, model_id=model_id)

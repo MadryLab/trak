@@ -18,6 +18,7 @@ class AbstractGradientComputer(ABC):
     def __init__(self,
                  device) -> None:
         self.device = device
+        self.model_params = {}
 
     @abstractmethod
     def compute_per_sample_grad(self, out_fn, model_params,
@@ -37,11 +38,11 @@ class FunctionalGradientComputer(AbstractGradientComputer):
     def register_model(self, func_model, model_id) -> None:
         self.func_models[model_id] = func_model
 
-    def compute_per_sample_grad(self, out_fn, model_params,
+    def compute_per_sample_grad(self, out_fn, 
                                 batch: Iterable[Tensor],
                                 grad_wrt: Optional[Tensor],
                                 model_id: int) -> Tensor:
-        weights, buffers = model_params
+        weights, buffers = self.model_params[model_id]
         grads_loss = grad(out_fn, has_aux=False)
         # map over batch dimension
         grads = vmap(grads_loss,
@@ -49,13 +50,13 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                      randomness='different')(weights, buffers, *batch)
         return vectorize_and_ignore_buffers(grads, self.params_dict)
     
-    def compute_loss_grad(self, loss_fn, model_params, batch, model_id: int) -> Tensor:
+    def compute_loss_grad(self, loss_fn, batch, model_id: int) -> Tensor:
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
         
         """
-        weights, buffers = model_params
+        weights, buffers = self.model_params[model_id]
         return loss_fn(weights, buffers, *batch)
 
 
@@ -69,7 +70,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
     def register_model(self, model, model_id) -> None:
         self.models[model_id] = model
 
-    def compute_per_sample_grad(self, out_fn, model_params,
+    def compute_per_sample_grad(self, out_fn,
                                 batch: Iterable[Tensor],
                                 grad_wrt: Optional[Tensor],
                                 model_id: int) -> Tensor:
@@ -81,7 +82,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
         # shape [batch_size, ...]
         batch_size = batch[0].size(0)
         if grad_wrt is None:
-            grad_wrt = model_params
+            grad_wrt = self.model_params[model_id]
 
         grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
         margin = out_fn(self.models[model_id], *batch)
@@ -91,7 +92,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
                                                                retain_graph=True))
         return grads
     
-    def compute_loss_grad(self, loss_fn, model_params, batch, model_id: int) -> Tensor:
+    def compute_loss_grad(self, loss_fn, batch, model_id: int) -> Tensor:
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}

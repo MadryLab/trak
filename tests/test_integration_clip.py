@@ -41,6 +41,7 @@ def test_cifar10(device='cuda:0'):
                                preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
                                preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
 
+    trak.load_params(list(model.parameters()))
     for bind, (img, captions) in enumerate(tqdm(ds_train)):
         x = preprocess(img).to(device).unsqueeze(0)
         # selecting (wlog) the first out of 5 captions
@@ -48,9 +49,7 @@ def test_cifar10(device='cuda:0'):
 
         trak.featurize(out_fn=compute_outputs,
                        loss_fn=compute_out_to_loss,
-                        model_params=list(model.parameters()),
-                        batch=(x, y),
-                        model_id=0)
+                       batch=(x, y))
 
         if bind == 20:
             break
