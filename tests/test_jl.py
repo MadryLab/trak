@@ -9,16 +9,17 @@ from traker.projectors import CudaProjector, ProjectionType
 BasicProjector = CudaProjector
 
 PARAM = list(product([0, 1, 10**8], # seed
-                     # ['normal', 'rademacher'], # proj type
-                     [ProjectionType.rademacher],  # proj type
-                     # [ch.float16, ch.float32], # dtype
-                     [ch.float16], # dtype
+                     [ProjectionType.rademacher, ProjectionType.normal],  # proj type
+                     [ch.float16, ch.float32], # dtype
                      [
-                      (8, 10_000),
-                      (16, 10_002),
-                      ], # input shape
-                     [2048], # proj dim
-        ))
+                         (8, 10_000),
+                         (16, 10_002),
+                         (9, 10_002),
+                         (16, 10_001),
+                         (45, 1049),
+                     ], # input shape
+                     [2048, 1024], # proj dim
+                     ))
 
 # will OOM for BasicProjector
 PARAM_HEAVY = list(product([0, 1], # seed
@@ -27,9 +28,9 @@ PARAM_HEAVY = list(product([0, 1], # seed
                            [(1, int(1e10)),
                             (10, int(1e10)),
                             (100, int(1e10)),
-                           ], # input shape
+                            ], # input shape
                            [20_000], # proj dim
-        ))
+                           ))
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
@@ -174,7 +175,7 @@ def test_prod_preservation(seed,
         t = (15 * np.sqrt(proj_dim) * eps * n).abs().item()
         # if NaN, just give up and count as success
         num_successes += max(int(res <= t), math.isinf(res), math.isinf(t))
-        
+
     assert num_successes >= num_trials * (1 - 2 * delta)
 
 
@@ -297,12 +298,12 @@ def test_orthogonality(seed,
         pass
     else:
         proj = BasicProjector(grad_dim=input_shape[-1],
-                            proj_dim=proj_dim,
-                            proj_type=proj_type,
-                            seed=seed,
-                            device='cuda:0',
-                            dtype=dtype
-                            )
+                              proj_dim=proj_dim,
+                              proj_type=proj_type,
+                              seed=seed,
+                              device='cuda:0',
+                              dtype=dtype
+                              )
 
         num_successes = 0
         num_trials = 100
