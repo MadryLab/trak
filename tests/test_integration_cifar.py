@@ -23,6 +23,7 @@ def test_cifar10(device='cpu'):
     modelout_fn = CrossEntropyModelOutput(device=device)
     trak = TRAKer(model=model,
                   train_set_size=50_000,
+                  proj_dim=10,
                   grad_dtype=ch.float32,
                   device=device)
 
@@ -94,6 +95,7 @@ def test_cifar10_iter(device='cpu'):
     modelout_fn = CrossEntropyModelOutput(device=device)
     trak = TRAKer(model=model,
                   train_set_size=50_000,
+                  proj_dim=10,
                   grad_dtype=ch.float32,
                   functional=False,
                   device=device)

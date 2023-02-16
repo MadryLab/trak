@@ -7,4 +7,5 @@ def test_class_init():
     model = resnet18()
     modelout_fn = CrossEntropyModelOutput(device='CPU')
     traker = TRAKer(save_dir='.',
-                    model=model)
+                    model=model,
+                    proj_dim=10)
