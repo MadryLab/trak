@@ -51,11 +51,11 @@ namespace jl_random {
     __device__ void generate_factors_fragment<Normal>(half* dst, curandStateXORWOW_t  &random_state) {
         half2 *__restrict__ dst2 = reinterpret_cast<half2*>(dst);
         half2 toto;
-        for (uint32_t x = 0; x < 4; x++) {
+        for (uint32_t x = 0; x < 8; x++) {
             toto.x = __float2half(curand_normal(&random_state));
             toto.y = __float2half(curand_normal(&random_state));
-            dst2[threadIdx.x] = toto;
-            dst2 += 16;
+            dst2[threadIdx.x + threadIdx.y * 16] = toto;
+            dst2 += 32;
         }
     }
 
