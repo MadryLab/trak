@@ -18,7 +18,7 @@ def test_shape(bs: int, input_size: int, output_size: int, seed:int):
     print(output_size)
     input_data = ch.ones((bs, input_size), dtype=ch.float16, device="cuda:0")
 
-    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128).sum(1)
+    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128)
     assert_that(result.shape).is_equal_to((bs, output_size))
 
 @pytest.mark.cuda
@@ -29,7 +29,7 @@ def test_running():
     output_size = 512
     input_data = ch.ones((bs, input_size), dtype=ch.float16, device="cuda:0")
 
-    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128).sum(1)
+    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128)
     print(result)
     print(result.sum())
 
@@ -41,7 +41,7 @@ def test_even():
     output_size = 1024
     input_data = ch.ones((bs, input_size), dtype=ch.float16, device="cuda:0")
 
-    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128).sum(1)
+    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128)
     assert_that(ch.all(result % 2 == 0)).is_true()
 
 @pytest.mark.cuda
@@ -52,6 +52,6 @@ def test_odd():
     output_size = 2048
     input_data = ch.ones((bs, input_size), dtype=ch.float16, device="cuda:0")
 
-    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128).sum(1)
+    result = fast_jl.project_rademacher_32(input_data, output_size, seed, 128)
     assert_that(ch.all(result % 2 == 1)).is_true()
 

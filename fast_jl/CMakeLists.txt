@@ -8,4 +8,4 @@ include_directories( /home/guillaumeleclerc/miniconda3/envs/fastjl/lib/python3.1
 
 add_executable(fast_jl
         fast_jl.cu
-        fast_jl_kernel.cuh)
+        fast_jl_kernel.cuh data_loading.cuh)

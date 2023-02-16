@@ -7,88 +7,46 @@
 #include <cuda_pipeline.h>
 #include <mma.h>
 
-#include "random.cuh"
-#include "error_handling.cuh"
-#include "types.cuh"
-
 #define WARP_SIZE 32
 #define CHUNK_COL 32
 #define CHUNK_ROW 8
 
+#include "random.cuh"
+#include "error_handling.cuh"
+#include "data_loading.cuh"
+#include "types.cuh"
+
+
 using namespace std;
 using namespace nvcuda::wmma;
 
-template <typename InputType>
-__device__ half convert(InputType t);
-
-template<>
-__device__ half convert<half>(half t) {return t;}
-
-template<>
-__device__ half convert<float>(float t) {return __float2half(t);}
-
-template<typename InputType, uint32_t CHUNKS_PER_TILE>
-__device__
-void load_into_shared_memory(
-        const InputType* __restrict__ input,
-        half input_buffer[CHUNKS_PER_TILE][CHUNK_ROW][CHUNK_COL],
-        uint32_t channels,
-        uint32_t features,
-        uint32_t feature_tile_size,
-        uint32_t iteration,
-        uint32_t batch) {
-
-    uint32_t current_col = (
-            blockIdx.y * feature_tile_size
-            + threadIdx.z * CHUNK_COL
-            + threadIdx.x
-            + iteration);
-
-    uint32_t current_row = (
-            batch * CHUNK_ROW
-            + threadIdx.y);
-
-    uint32_t max_feature = min(features, blockIdx.y * feature_tile_size + feature_tile_size);
-
-    for (uint32_t iter=0; iter < CHUNK_ROW; iter++) {
-        half value;
-
-        if (current_col >= max_feature || current_row >= channels) {
-            value = __float2half(0.0f);
-        } else {
-            const InputType *my_input = (input
-                                         + current_row * features
-                                         + current_col
-            );
-            value = convert<InputType>(*my_input);
-        }
-        input_buffer[threadIdx.z][threadIdx.y + blockDim.y * iter][threadIdx.x] = value;
-        current_row += 1;
-    }
-}
 
 template<typename InputType, ProjectionType p_type, uint32_t NUM_BATCHES, uint32_t CHUNKS_PER_TILE>
 __global__ void
-project_kernel(const InputType *__restrict__ input,
+project_kernel(InputType *__restrict__ input,
                float *__restrict__ output,
                uint32_t channels,
                uint32_t features,
                uint32_t output_dims,
                uint32_t seed,
-               uint32_t feature_tile_size) {
+               uint32_t feature_tile_size,
+               float *__restrict__ basis) {
+
+    uint32_t lane_id = threadIdx.x + blockDim.x * threadIdx.y;
 
     // Which column(=JL Dim) of the output this thread is responsible for
-    uint32_t col_output = blockIdx.x    * (blockDim.z * blockDim.y * blockDim.x)
-                          + threadIdx.z * (            blockDim.y * blockDim.x)
-                          + threadIdx.y * (                        blockDim.x)
-                          + threadIdx.x;
+    uint32_t col_output = (
+            lane_id
+            + threadIdx.z * (WARP_SIZE)
+            + blockIdx.x  * (WARP_SIZE * blockDim.z)
+    );
 
     // Init Random State
     curandStateXORWOW_t random_state;
-    jl_random::init(random_state, col_output, blockIdx.y, seed);
+    auto my_seed = jl_random::init(random_state, col_output, blockIdx.y, output_dims, seed);
 
-    __shared__ half input_buffer[NUM_BATCHES][CHUNKS_PER_TILE][CHUNK_ROW][CHUNK_COL];
-    __shared__ half factors[CHUNKS_PER_TILE][CHUNK_ROW][CHUNK_COL];
+    __shared__ half input_buffer[NUM_BATCHES][CHUNKS_PER_TILE][CHUNK_ROW][16];
+    __shared__ half factors[CHUNKS_PER_TILE][16][CHUNK_COL];
     // Pointer to the location where this warp will store its random coefficients
     half* warp_factors = &factors[threadIdx.z][0][0];
 
@@ -100,7 +58,7 @@ project_kernel(const InputType *__restrict__ input,
         fill_fragment((accumulator[batch]), 0.0f);
     }
 
-    for (uint32_t iteration = 0; iteration < feature_tile_size; iteration += CHUNK_COL * CHUNKS_PER_TILE) {
+    for (uint32_t iteration = 0; iteration < feature_tile_size; iteration += 16 * CHUNKS_PER_TILE) {
         // We load all the data for all the batches and all the chunks
         for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
             load_into_shared_memory<InputType, CHUNKS_PER_TILE>(
@@ -121,9 +79,10 @@ project_kernel(const InputType *__restrict__ input,
             // Generate and load the random coefficients (These are shared for all the batches)
             jl_random::generate_factors_fragment<p_type>(warp_factors, random_state);
             load_matrix_sync(factors_fragment, warp_factors , CHUNK_COL);
+
 #pragma unroll
             for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
-                load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 32);
+                load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 16);
                 mma_sync(accumulator[batch], data_fragment, factors_fragment, accumulator[batch]);
             }
         }
@@ -132,11 +91,12 @@ project_kernel(const InputType *__restrict__ input,
         __syncthreads();
     }
 
-
     for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
-        uint32_t col_output_warp = blockIdx.x * (blockDim.z * blockDim.y * blockDim.x)
-                                   + threadIdx.z * (blockDim.y * blockDim.x)
-                                   + blockIdx.y * output_dims;
+        uint32_t col_output_warp = (
+                threadIdx.z * WARP_SIZE
+                + blockIdx.x * (WARP_SIZE * blockDim.z)
+                + blockIdx.y * output_dims);
+
         store_matrix_sync(
                 output
                 + batch * (output_dims * gridDim.y * CHUNK_ROW)
@@ -146,10 +106,10 @@ project_kernel(const InputType *__restrict__ input,
 }
 
 template<typename InputType, ProjectionType p_type, uint32_t NUM_BATCHES, uint32_t CHUNKS_PER_TILE>
-void project(const InputType *__restrict__ input,
+void project(InputType *__restrict__ input,
                float* output,
                uint32_t channels, uint32_t features, uint32_t output_dims,
-               uint32_t seed, uint32_t num_feature_tiles) {
+               uint32_t seed, uint32_t num_feature_tiles, float* basis) {
 
     if (output_dims % (WARP_SIZE * CHUNKS_PER_TILE) != 0) {
         throw invalid_argument(string("Invalid Number of JL dimensions it has to be a multiple of ") + to_string(WARP_SIZE * CHUNKS_PER_TILE) );
@@ -164,7 +124,7 @@ void project(const InputType *__restrict__ input,
 
     uint32_t feature_tile_size = (features - 1) / (num_feature_tiles) + 1;
 
-    dim3 blockSize(CHUNK_COL, WARP_SIZE / CHUNK_COL, CHUNKS_PER_TILE);
+    dim3 blockSize(16, WARP_SIZE / 16, CHUNKS_PER_TILE);
     dim3 gridSize(num_jl_tiles, num_feature_tiles , 1);
 
     cout << blockSize.x << ", " << blockSize.y << ", " << blockSize.z << std::endl;
@@ -173,5 +133,5 @@ void project(const InputType *__restrict__ input,
 
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
-            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
+            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size, basis);
 }

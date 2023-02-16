@@ -47,6 +47,8 @@ torch::Tensor fast_jl(
     auto output = torch::zeros({num_batch_dim, num_feature_tiles, N},
                                torch::TensorOptions().device(input.device()));
 
+    auto basis = torch::zeros({F, N}, torch::TensorOptions().device(input.device()));
+
     for (uint32_t meta_batch=0; meta_batch < num_required_batches; meta_batch++) {
         uint32_t batch_start = meta_batch * effective_batch_size;
         uint32_t batch_end = (meta_batch + 1) * effective_batch_size;
@@ -62,20 +64,21 @@ torch::Tensor fast_jl(
 
         if (input.dtype() == torch::kFloat16) {
             project<__half, p_type, NUM_BATCHES, 16>(
-                    (const __half*) current_input.data_ptr<at::Half>(),
+                    (__half*) current_input.data_ptr<at::Half>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles);
+                    seed, num_feature_tiles, basis.data_ptr<float>());
         } else {
             project<float, p_type, NUM_BATCHES, 16>(
                     current_input.data_ptr<float>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles);
+                    seed, num_feature_tiles,basis.data_ptr<float>());
+
         }
     }
 
-    return output.index({Slice({0, B})});
+    return output.index({Slice({0, B})}).sum(1);
 }
 
 torch::Tensor proj_rademacher_8(torch::Tensor input, uint32_t N, uint32_t seed, uint32_t num_feature_tiles) {
@@ -96,6 +99,8 @@ torch::Tensor proj_normal_16(torch::Tensor input, uint32_t N, uint32_t seed, uin
 torch::Tensor proj_normal_32(torch::Tensor input, uint32_t N, uint32_t seed, uint32_t num_feature_tiles) {
     return fast_jl<Normal, 4>(input, N, seed, num_feature_tiles);
 }
+
+
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("project_rademacher_8", &proj_rademacher_8, "Fast Random Projection (CUDA)");
