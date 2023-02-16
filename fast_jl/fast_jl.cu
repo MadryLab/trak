@@ -23,10 +23,9 @@ using namespace torch::indexing;
 #define CHECK_CUDA(x) AT_ASSERTM(x.is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_BIG(x) AT_ASSERTM(x.size(1) >= 256, #x " must have at least 256 components")
-#define CHECK_EVEN(x) AT_ASSERTM(x.size(1) % 2 == 0, #x " must have an even number of features if of type fp16")
 #define CHECK_2D(x) AT_ASSERTM(x.dim() == 2, #x " must be 2D")
 #define CHECK_HALF(x) AT_ASSERTM(x.dtype() == torch::kFloat16 || x.dtype() == torch::kFloat32, #x " must be fp16 or fp32")
-#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x); CHECK_BIG(x); CHECK_EVEN(x)
+#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x); CHECK_BIG(x);
 
 template<ProjectionType p_type, uint32_t NUM_BATCHES>
 torch::Tensor fast_jl(
@@ -75,8 +74,8 @@ torch::Tensor fast_jl(
                     seed, num_feature_tiles);
         }
     }
-    return output;
-    return output.index({Slice({0, B})}).sum(1);
+
+    return output.index({Slice({0, B})});
 }
 
 torch::Tensor proj_rademacher_8(torch::Tensor input, uint32_t N, uint32_t seed, uint32_t num_feature_tiles) {

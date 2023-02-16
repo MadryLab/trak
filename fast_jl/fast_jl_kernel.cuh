@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <type_traits>
 #include <cuda_fp16.h>
 #include <vector_types.h>
@@ -121,6 +122,7 @@ project_kernel(const InputType *__restrict__ input,
 #pragma unroll
             for (uint32_t batch = 0 ; batch < NUM_BATCHES; batch++) {
                 load_matrix_sync(data_fragment, &input_buffer[batch][cur_chunk][0][0], 16);
+                fill_fragment(factors_fragment, __float2half(1.0));
                 mma_sync(accumulator[batch], data_fragment, factors_fragment, accumulator[batch]);
             }
         }
@@ -134,6 +136,7 @@ project_kernel(const InputType *__restrict__ input,
         uint32_t col_output_warp = blockIdx.x * (blockDim.z * blockDim.y * blockDim.x)
                                    + threadIdx.z * (blockDim.y * blockDim.x)
                                    + blockIdx.y * output_dims;
+        fill_fragment(accumulator[batch], batch + 1);
         store_matrix_sync(
                 output
                 + batch * (output_dims * gridDim.y * CHUNK_ROW)
@@ -147,6 +150,10 @@ void project(const InputType *__restrict__ input,
                float* output,
                uint32_t channels, uint32_t features, uint32_t output_dims,
                uint32_t seed, uint32_t num_feature_tiles) {
+
+    if (output_dims % (WARP_SIZE * CHUNKS_PER_TILE) != 0) {
+        throw invalid_argument(string("Invalid Number of JL dimensions it has to be a multiple of ") + to_string(WARP_SIZE * CHUNKS_PER_TILE) );
+    }
 
     if (channels == 0 || channels > CHUNK_ROW * NUM_BATCHES) {
         throw invalid_argument("Invalid number of channels (has to be in [1, 8 * NUM_BATCHES])");
