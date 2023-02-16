@@ -38,7 +38,7 @@ class FunctionalScorer(AbstractScorer):
         grads = self.projector.project(vectorize_and_ignore_buffers(grads).to(self.grad_dtype),
                                        model_id=model_id)
 
-        return grads.detach().clone() @ features[model_id].T
+        return grads.detach().clone() @ features.T
 
 class IterScorer(AbstractScorer):
     def __init__(self, device, projector, grad_dtype=ch.float16,
@@ -62,4 +62,4 @@ class IterScorer(AbstractScorer):
                                                                retain_graph=True))
 
         grads = self.projector.project(grads.to(self.grad_dtype), model_id=model_id)
-        return grads.detach().clone() @ features[model_id].T
+        return grads.detach().clone() @ features.T

@@ -128,6 +128,7 @@ def test_cifar_acc():
                   train_set_size=10_000,
                   grad_dtype=ch.float32,
                   proj_dim=1000,
+                  save_dir='./trak_results',
                   device=device)
 
 
@@ -155,6 +156,15 @@ def test_cifar_acc():
                            inds=inds)
 
     trak.finalize()
+    trak.save()
+
+    trak = TRAKer(model=model,
+                  train_set_size=10_000,
+                  grad_dtype=ch.float32,
+                  proj_dim=1000,
+                  save_dir='./trak_results',
+                  device=device)
+    trak.load()
 
     scores = []
     for model_id, ckpt in enumerate(ckpts):

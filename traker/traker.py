@@ -17,7 +17,7 @@ class TRAKer():
                  proj_dim=10,
                  proj_type=ProjectionType.normal,
                  proj_seed=0,
-                 save_dir: str='./trak_results',
+                 save_dir: str='/tmp/trak_results',
                  device=None,
                  train_set_size=1,
                  grad_dtype=ch.float16,
@@ -128,13 +128,18 @@ class TRAKer():
         for model_id in self.saver.model_ids:
             xtx = self.reweighter.reweight(self.saver.grad_get(model_id=model_id))
             g = self.saver.grad_get(model_id=model_id)
-            self.features[model_id] = self.reweighter.finalize(g, xtx) * self.loss_grads.avg
+            features = self.reweighter.finalize(g, xtx) * self.loss_grads.avg
+            self.saver.features_set(features=features, model_id=model_id)
 
     def score(self, out_fn, model, batch, model_id=0) -> Tensor:
-        return self.scorer.score(self.features, out_fn, model, model_id, batch)
+        return self.scorer.score(self.saver.features_get(model_id=model_id),
+                                 out_fn,
+                                 model,
+                                 model_id,
+                                 batch)
 
-    def save(self):
-        self.saver.save(self.features)
+    def save(self, features_only=False):
+        self.saver.save(features_only=features_only)
         
-    def load(self, path):
-        self.features = self.saver.load(path)
+    def load(self, path=None, features_only=True):
+        self.saver.load(load_from=path, features_only=features_only)
