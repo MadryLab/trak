@@ -43,7 +43,7 @@ project_kernel(InputType *__restrict__ input,
 
     // Init Random State
     curandStateXORWOW_t random_state;
-    auto my_seed = jl_random::init(random_state, col_output, blockIdx.y, output_dims, seed);
+    my_seed = jl_random::init(random_state, col_output, blockIdx.y, output_dims, seed);
 
     __shared__ half input_buffer[NUM_BATCHES][CHUNKS_PER_TILE][CHUNK_ROW][16];
     __shared__ half factors[CHUNKS_PER_TILE][16][CHUNK_COL];
@@ -127,9 +127,9 @@ void project(InputType *__restrict__ input,
     dim3 blockSize(16, WARP_SIZE / 16, CHUNKS_PER_TILE);
     dim3 gridSize(num_jl_tiles, num_feature_tiles , 1);
 
-    cout << blockSize.x << ", " << blockSize.y << ", " << blockSize.z << std::endl;
-    cout << gridSize.x << ", " << gridSize.y << ", " << gridSize.z << std::endl;
-    cout << "FTS " << feature_tile_size << endl;
+    // cout << blockSize.x << ", " << blockSize.y << ", " << blockSize.z << std::endl;
+    // cout << gridSize.x << ", " << gridSize.y << ", " << gridSize.z << std::endl;
+    // cout << "FTS " << feature_tile_size << endl;
 
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
