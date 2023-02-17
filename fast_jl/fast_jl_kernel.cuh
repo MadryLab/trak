@@ -43,7 +43,7 @@ project_kernel(InputType *__restrict__ input,
 
     // Init Random State
     curandStateXORWOW_t random_state;
-    my_seed = jl_random::init(random_state, col_output, blockIdx.y, output_dims, seed);
+    jl_random::init(random_state, col_output, blockIdx.y, output_dims, seed);
 
     __shared__ half input_buffer[NUM_BATCHES][CHUNKS_PER_TILE][CHUNK_ROW][16];
     __shared__ half factors[CHUNKS_PER_TILE][16][CHUNK_COL];

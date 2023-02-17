@@ -12,6 +12,7 @@ PARAM = list(product([0, 1, 10**8], # seed
                      [ProjectionType.rademacher, ProjectionType.normal],  # proj type
                      [ch.float16, ch.float32], # dtype
                      [
+                         (1, 25),
                          (8, 10_000),
                          (16, 10_002),
                          (9, 10_002),

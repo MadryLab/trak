@@ -22,10 +22,9 @@ using namespace torch::indexing;
 // NOTE: AT_ASSERT has become AT_CHECK on master after 0.4.
 #define CHECK_CUDA(x) AT_ASSERTM(x.is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) AT_ASSERTM(x.is_contiguous(), #x " must be contiguous")
-#define CHECK_BIG(x) AT_ASSERTM(x.size(1) >= 256, #x " must have at least 256 components")
 #define CHECK_2D(x) AT_ASSERTM(x.dim() == 2, #x " must be 2D")
 #define CHECK_HALF(x) AT_ASSERTM(x.dtype() == torch::kFloat16 || x.dtype() == torch::kFloat32, #x " must be fp16 or fp32")
-#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x); CHECK_BIG(x);
+#define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x); CHECK_2D(x); CHECK_HALF(x);
 
 template<ProjectionType p_type, uint32_t NUM_BATCHES>
 torch::Tensor fast_jl(
@@ -39,6 +38,8 @@ torch::Tensor fast_jl(
 
     uint32_t B = input.size(0);
     uint32_t F = input.size(1);
+
+    num_feature_tiles = min(F, num_feature_tiles);
 
     uint32_t effective_batch_size = 8 * NUM_BATCHES;
     uint32_t num_required_batches = (B - 1) / effective_batch_size + 1;
