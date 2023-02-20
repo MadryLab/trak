@@ -4,7 +4,6 @@ from torch import Tensor
 from torch.nn import Module
 import torch as ch
 
-
 class AbstractModelOutput(ABC):
     """
     ModelOutputFunction classes must implement a `get_output` method that takes
@@ -97,27 +96,31 @@ class NLPModelOutput(AbstractModelOutput):
 
 
 class CLIPModelOutput(AbstractModelOutput):
-    def __init__(self, device, temperature=1., simulated_batch_size=50) -> None:
+    def __init__(self, device, temperature=1., simulated_batch_size=300) -> None:
         super().__init__(device)
         self.partial_loss_fn = ch.nn.Softmax(-1)
         self.sim_batch_size = simulated_batch_size
         self.temperature = temperature
     
-    def get_embeddings(self, model, loader, size=50_000, embedding_dim=1024,
+    def get_embeddings(self, model, loader, batch_size, size=50_000, embedding_dim=1024,
                        preprocess_fn_img=None, preprocess_fn_txt=None):
         img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
                              ch.zeros(size, embedding_dim).cuda()
         
+        cutoff = batch_size
         with ch.no_grad():
             for ind, (images, text) in enumerate(loader):
                 if preprocess_fn_img is not None:
                     images = preprocess_fn_img(images)
                 if preprocess_fn_txt is not None:
                     text = preprocess_fn_txt(text)
+                st, ed = ind * batch_size, min((ind + 1) * batch_size, size)
+                if ed == size:
+                    cutoff = size - ind * batch_size
                 image_embeddings, text_embeddings, _ = model(images, text)
-                img_embs[ind] = image_embeddings.mean(dim=0).clone().detach()
-                txt_embs[ind] += text_embeddings.mean(dim=0).clone().detach()
-                if ind == size - 1:
+                img_embs[st: ed] = image_embeddings[:cutoff].clone().detach()
+                txt_embs[st: ed] = text_embeddings[:cutoff].clone().detach()
+                if (ind + 1) * batch_size >= size:
                     break
 
         self.all_image_fts = img_embs

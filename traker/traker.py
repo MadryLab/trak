@@ -17,6 +17,7 @@ class TRAKer():
                  proj_dim=1000,
                  proj_type=ProjectionType.rademacher,
                  proj_seed=0,
+                 proj_num_blocks=1,
                  save_dir: str='/tmp/trak_results',
                  device=None,
                  train_set_size=1,
@@ -62,6 +63,7 @@ class TRAKer():
                                        proj_dim=proj_dim,
                                        grad_dim=self.grad_dim,
                                        proj_type=proj_type,
+                                       num_blocks=proj_num_blocks,
                                        dtype=self.grad_dtype,
                                        device=self.device)
         else:

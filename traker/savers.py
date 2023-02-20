@@ -95,7 +95,10 @@ class KeepInRAMSaver(AbstractSaver):
 
     def features_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
         if inds == None:
-            return self.features[model_id]
+            if self.features.get(model_id) is not None:
+                return self.features[model_id]
+            else:
+                return ch.tensor([])
         else:
             return self.features[model_id][inds]
 

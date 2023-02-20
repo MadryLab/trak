@@ -8,7 +8,7 @@ from traker.traker import TRAKer
 from traker.modelout_functions import CLIPModelOutput
 
 @pytest.mark.cuda
-def test_cifar10(device='cuda:0'):
+def test_mscoco(device='cuda:0'):
     model, _, preprocess = open_clip.create_model_and_transforms('RN50')
     model = model.to(device)
     model.eval()
@@ -37,7 +37,7 @@ def test_cifar10(device='cuda:0'):
         img_ft, txt_ft, _ = model(imgs, txt_tokens)
         return modelout_fn.get_out_to_loss(img_ft, txt_ft)
 
-    modelout_fn.get_embeddings(model, ds_train, size=100,
+    modelout_fn.get_embeddings(model, ds_train, batch_size=1, size=100,
                                preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
                                preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
 
