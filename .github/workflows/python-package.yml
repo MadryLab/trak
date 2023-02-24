@@ -24,6 +24,8 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - name: cuda-toolkit
+      uses: Jimver/cuda-toolkit@v0.2.8
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
