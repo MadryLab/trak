@@ -8,7 +8,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 environ['TORCH_CUDA_ARCH_LIST']="7.0+PTX"
 
-setup(name='traker',
+setup(name='trak',
       version='0.1.0',
       description="TRAK: Understanding Model Predictions at Scale",
       author='MadryLab',
