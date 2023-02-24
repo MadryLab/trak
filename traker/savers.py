@@ -72,11 +72,14 @@ class KeepInRAMSaver(AbstractSaver):
     def init_tensor(self, shape, device):
         return ch.zeros(shape, device=device)
     
-    def grad_set(self, grads: Tensor, inds: Tensor, model_id=0) -> None:
+    def grad_set(self, grads: Tensor, inds: Tensor=None, model_id=0) -> None:
         if self.grads.get(model_id) is None:
             self.model_ids.add(model_id)
             self.grads[model_id] = self.init_tensor(shape=self.grads_shape, device=self.device)
-        self.grads[model_id][inds] = grads
+        if inds is not None:
+            self.grads[model_id][inds] = grads
+        else:
+            self.grads[model_id][:] = grads
 
     def grad_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
         if inds == None:
@@ -102,11 +105,14 @@ class KeepInRAMSaver(AbstractSaver):
         else:
             return self.features[model_id][inds]
 
-    def loss_set(self, loss_grads: Tensor, inds: Tensor, model_id=0) -> None:
+    def loss_set(self, loss_grads: Tensor, inds: Tensor=None, model_id=0) -> None:
         if self.loss_grads.get(model_id) is None:
             self.model_ids.add(model_id)
             self.loss_grads[model_id] = self.init_tensor(shape=self.loss_shape, device=self.device)
-        self.loss_grads[model_id][inds] = loss_grads.unsqueeze(-1)
+        if inds is not None:
+            self.loss_grads[model_id][inds] = loss_grads.unsqueeze(-1)
+        else:
+            self.loss_grads[model_id][:] = loss_grads
 
     def loss_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
         if inds == None:
