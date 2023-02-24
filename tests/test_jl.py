@@ -5,19 +5,21 @@ import numpy as np
 import torch as ch
 from torch import testing
 
-from traker.projectors import CudaProjector, BasicProjector
-# BasicProjector = CudaProjector
+from traker.projectors import CudaProjector, ProjectionType
+BasicProjector = CudaProjector
 
 PARAM = list(product([0, 1, 10**8], # seed
-                     ['normal', 'rademacher'], # proj type
-                    #  ['rademacher'],  # proj type
+                     [ProjectionType.normal, ProjectionType.rademacher], # proj type
                      [ch.float16, ch.float32], # dtype
-                    #  [ch.float16], # dtype
                      [
-                      (8, 10_000),
-                      (16, 10_002),
-                      ], # input shape
-                     [2048], # proj dim
+                         (1, 25),
+                         (8, 10_000),
+                         (16, 10_002),
+                         (9, 10_002),
+                         (16, 10_001),
+                         (45, 1049),
+                     ], # input shape
+                     [2048, 1024], # proj dim
         ))
 
 # will OOM for BasicProjector
