@@ -118,26 +118,27 @@ def test_cifar_acc():
     loader_train = get_dataloader(batch_size=100, split='train')
     loader_val = get_dataloader(batch_size=100, split='val')
 
-    CKPT_PATH = '/mnt/xfs/projects/traker/checkpoints/resnet9_cifar2/debug'
+    CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     device = 'cuda:0'
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=10_000,
-                    grad_dtype=ch.float32,
-                    proj_dim=1000,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=10_000,
+                  grad_dtype=ch.float32,
+                  proj_dim=1000,
+                  save_dir='./trak_results',
+                  device=device)
 
 
     for model_id, ckpt in enumerate(ckpts):
         model.load_state_dict(ckpt)
         model.eval()
         func_model, weights, buffers = make_functional_with_buffers(model)
+        trak.load_params(model_params=(weights, buffers), model_id=model_id)
+
         def compute_outputs(weights, buffers, image, label):
-            # we are only allowed to pass in tensors to vmap,
-            # thus func_model is used from above
             out = func_model(weights, buffers, image.unsqueeze(0))
             return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
 
@@ -148,23 +149,37 @@ def test_cifar_acc():
         for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
             inds = list(range(bind * loader_train.batch_size,
                             (bind + 1) * loader_train.batch_size))
-            traker.featurize(out_fn=compute_outputs,
-                            loss_fn=compute_out_to_loss,
-                            model=(func_model, weights, buffers),
-                            batch=batch,
-                            functional=True,
-                            model_id=model_id,
-                            inds=inds)
+            trak.featurize(out_fn=compute_outputs,
+                           loss_fn=compute_out_to_loss,
+                           batch=batch,
+                           model_id=model_id,
+                           inds=inds)
 
-    traker.finalize()
+    trak.finalize()
+    trak.save()
+
+    trak = TRAKer(model=model,
+                  train_set_size=10_000,
+                  grad_dtype=ch.float32,
+                  proj_dim=1000,
+                  save_dir='./trak_results',
+                  device=device)
+    trak.load()
 
     scores = []
-    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-        scores.append(
-            traker.score(out_fn=compute_outputs, batch=batch,
-                     model=(func_model, weights, buffers))
-        )
-    print(scores[0].shape)
-    scores = ch.cat(scores)
+    for model_id, ckpt in enumerate(ckpts):
+        model.load_state_dict(ckpt)
+        model.eval()
+        func_model, weights, buffers = make_functional_with_buffers(model)
+        s = []
+        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
+            s.append(
+                trak.score(out_fn=compute_outputs,
+                           batch=batch,
+                           model=model,
+                           model_id=model_id).cpu()
+            )
+        scores.append(ch.cat(s))
+    scores = ch.stack(scores).mean(dim=0) # average influence matrices
     SAVE_DIR = '/mnt/cfs/projects/better_tracin/estimators/CIFAR2/debug2/estimates.npy'
     np.save(SAVE_DIR, scores.cpu().numpy().T)

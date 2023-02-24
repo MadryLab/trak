@@ -34,3 +34,23 @@ def vectorize_and_ignore_buffers(g, params_dict=None):
         for b in range(batch_size):
             out.append(ch.cat([x[b].flatten() for x in g]))
     return ch.stack(out)
+ 
+
+class AverageMeter():
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.avg = None
+        self.sum = None
+        self.count = 0
+
+    def update(self, val):
+        self.count += 1
+        if self.avg is None:
+            self.avg = val
+            self.sum = val
+        else:
+            self.sum += val
+            self.avg = self.sum / self.count

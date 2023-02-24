@@ -18,13 +18,14 @@ def test_cifar10(device='cpu'):
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     ds_train = datasets.CIFAR10(root='/tmp', download=True, train=True, transform=transform)
-    loader_train = DataLoader(ds_train, batch_size=64, shuffle=False)
+    loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=50_000,
-                    grad_dtype=ch.float32,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=50_000,
+                  proj_dim=10,
+                  grad_dtype=ch.float32,
+                  device=device)
 
     func_model, weights, buffers = make_functional_with_buffers(model)
     def compute_outputs(weights, buffers, image, label):
@@ -42,31 +43,36 @@ def test_cifar10(device='cpu'):
         # load state dict here if we actually had checkpoints
         # model.load_state_dict(ckpt)
         # update weights, buffers; etc
+        trak.load_params(model_params=(weights, buffers), model_id=model_id)
         for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
             batch = [x.to(device) for x in batch]
             inds = list(range(bind * loader_train.batch_size,
                             (bind + 1) * loader_train.batch_size))
-            traker.featurize(out_fn=compute_outputs,
-                            loss_fn=compute_out_to_loss,
-                            model=(func_model, weights, buffers),
-                            batch=batch,
-                            functional=True,
-                            model_id=model_id,
-                            inds=inds)
-            if bind == 5:
+            trak.featurize(out_fn=compute_outputs,
+                           loss_fn=compute_out_to_loss,
+                           batch=batch,
+                           model_id=model_id,
+                           inds=inds)
+            if bind == 2:
                 break # a CPU pass takes too long lol
     
-    traker.finalize()
+    trak.finalize()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
-    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-        batch = [x.to(device) for x in batch]
-        traker.score(out_fn=compute_outputs, batch=batch,
-                     model=(func_model, weights, buffers))
-        if bind == 5:
-            break
+    for model_id, ckpt in enumerate(ckpts):
+        # load state dict here if we actually had checkpoints
+        # model.load_state_dict(ckpt)
+        # update weights, buffers; etc
+        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
+            batch = [x.to(device) for x in batch]
+            trak.score(out_fn=compute_outputs,
+                         batch=batch,
+                         model=model,
+                         model_id=model_id)
+            if bind == 2:
+                break
 
 
 @pytest.mark.cuda
@@ -87,14 +93,14 @@ def test_cifar10_iter(device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    traker = TRAKer(model=model,
-                    train_set_size=50_000,
-                    grad_dtype=ch.float32,
-                    device=device)
+    trak = TRAKer(model=model,
+                  train_set_size=50_000,
+                  proj_dim=10,
+                  grad_dtype=ch.float32,
+                  functional=False,
+                  device=device)
 
     def compute_outputs(model, images, labels):
-        # we are only allowed to pass in tensors to vmap,
-        # thus func_model is used from above
         out = model(images)
         return modelout_fn.get_output(out, labels)
 
@@ -102,29 +108,29 @@ def test_cifar10_iter(device='cpu'):
         out = model(images)
         return modelout_fn.get_out_to_loss(out, labels)
 
+    model_params = list(model.parameters())
+    trak.load_params(model_params)
+
     for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
         batch = [x.to(device) for x in batch]
         inds = list(range(bind * loader_train.batch_size,
                           (bind + 1) * loader_train.batch_size))
-        traker.featurize(out_fn=compute_outputs,
-                         loss_fn=compute_out_to_loss,
-                         model=model,
-                         batch=batch,
-                         functional=False,
-                         inds=inds)
-        if bind == 5:
+        trak.featurize(out_fn=compute_outputs,
+                       loss_fn=compute_out_to_loss,
+                       batch=batch,
+                       inds=inds)
+        if bind == 2:
             break # a CPU pass takes too long lol
     
-    traker.finalize()
+    trak.finalize()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.to(device) for x in batch]
-        s = traker.score(out_fn=compute_outputs, batch=batch,
-                         model=model, functional=False)
-        if bind == 5:
+        s = trak.score(out_fn=compute_outputs, batch=batch, model=model)
+        if bind == 2:
             break
 
 @pytest.mark.cuda

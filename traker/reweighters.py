@@ -41,7 +41,7 @@ class BasicReweighter(AbstractReweighter):
     """ An implementation of Reweighter that computes the matrix product in a
     block-wise manner.
     """
-    def __init__(self, device, dtype=ch.float16, CUDA_MAX_DIM_SIZE=500_000) -> None:
+    def __init__(self, device, dtype=ch.float16, CUDA_MAX_DIM_SIZE=100_000) -> None:
         super().__init__(device)
         self.dtype = dtype
         self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
