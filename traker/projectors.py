@@ -147,24 +147,31 @@ class CudaProjector(AbstractProjector):
     An implementation of the project for cuda (with compute capability >= 7.0)
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float16) -> None:
+                 ProjectionType, device, *args, **kwargs) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
-        self.dtype = dtype
+        if isinstance(device, str):
+            device = ch.device(device)
 
-        if self.dtype != ch.float16:
-            raise NotImplementedError("Only float16 supported with the CudaProjector for now")
+        if device.type != 'cuda':
+            raise ValueError("CudaProjector only works on a cuda device")
 
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
-            raise NotImplementedError(f"{self.proj_type} not implemented yet for CudaProjector")
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
-            pass
-        else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+        self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
 
+        try:
+            import fast_jl
+        except ImportError:
+            raise ModuleNotFoundError("You should make sure you install the cuda projetor for traker (called fast_jl)")
+
+    def project(self, grads: Tensor) -> Tensor:
+        batch_size = grads.shape[0]
+        ebs = 32
+        if batch_size <= 8:
+            ebs = 8
+        if batch_size <= 16:
+            ebs = 16
+
+        function_name = f"project_{self.proj_type.value}_{ebs}"
         import fast_jl
-        self.projection_function = fast_jl.rademacher
-
-    def project(self, grads: Tensor, model_id: int) -> Tensor:
-        result = self.projection_function(grads, self.proj_dim, self.seed + int(1e5) * model_id)
-        return result
+        fn = getattr(fast_jl, function_name)
+        return fn(grads, self.proj_dim, self.seed, self.num_sms)
