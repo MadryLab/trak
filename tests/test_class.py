@@ -1,11 +1,11 @@
 import pytest
 from traker.traker import TRAKer
-from traker.modelout_functions import CrossEntropyModelOutput
 from torchvision.models import resnet18
 
 def test_class_init():
     model = resnet18()
-    modelout_fn = CrossEntropyModelOutput(device='CPU')
-    traker = TRAKer(save_dir='.',
-                    model=model,
-                    proj_dim=10)
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir='./trak_test_class_results',
+                    train_set_size=20,
+                    device='cuda:0')
