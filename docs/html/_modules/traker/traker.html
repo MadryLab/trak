@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>traker.traker &#8212; TRAK 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for traker.traker</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">ch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">.projectors</span> <span class="kn">import</span> <span class="n">BasicProjector</span><span class="p">,</span> <span class="n">ProjectionType</span>
+<span class="kn">from</span> <span class="nn">.reweighters</span> <span class="kn">import</span> <span class="n">BasicReweighter</span>
+<span class="kn">from</span> <span class="nn">.gradient_computers</span> <span class="kn">import</span> <span class="n">FunctionalGradientComputer</span><span class="p">,</span> <span class="n">IterativeGradientComputer</span>
+<span class="kn">from</span> <span class="nn">.scorers</span> <span class="kn">import</span> <span class="n">FunctionalScorer</span><span class="p">,</span> <span class="n">IterScorer</span>
+<span class="kn">from</span> <span class="nn">.savers</span> <span class="kn">import</span> <span class="n">KeepInRAMSaver</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">parameters_to_vector</span><span class="p">,</span> <span class="n">AverageMeter</span>
+
+<div class="viewcode-block" id="TRAKer"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer">[docs]</a><span class="k">class</span> <span class="nc">TRAKer</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">model</span><span class="p">,</span>
+                 <span class="n">grad_wrt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">projector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">proj_dim</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">proj_type</span><span class="o">=</span><span class="n">ProjectionType</span><span class="o">.</span><span class="n">rademacher</span><span class="p">,</span>
+                 <span class="n">proj_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;/tmp/trak_results&#39;</span><span class="p">,</span>
+                 <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">train_set_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">grad_dtype</span><span class="o">=</span><span class="n">ch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                 <span class="n">functional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Main class for computing TRAK scores.</span>
+<span class="sd">        See [User guide link here] for detailed examples.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_dir : str, default=&#39;./trak_results&#39;</span>
+<span class="sd">            Directory to save TRAK scores and intermediate values</span>
+<span class="sd">            like projected gradients of the train set samples and</span>
+<span class="sd">            targets.</span>
+
+<span class="sd">        you can  either</span>
+<span class="sd">        1) specify an already initialized `projector`</span>
+<span class="sd">        2) specify `proj_dim`, `proj_type`, and `proj_seed` and</span>
+<span class="sd">           a projector will be initialized for you</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_wrt</span> <span class="o">=</span> <span class="n">grad_wrt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_dtype</span> <span class="o">=</span> <span class="n">grad_dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functional</span> <span class="o">=</span> <span class="n">functional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span> <span class="o">=</span> <span class="n">train_set_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_dict</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">())]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_wrt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_wrt</span><span class="p">)</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span> <span class="o">=</span> <span class="n">parameters_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">projector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">projector</span> <span class="o">=</span> <span class="n">BasicProjector</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">projector</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">proj_seed</span><span class="p">,</span>
+                                       <span class="n">proj_dim</span><span class="o">=</span><span class="n">proj_dim</span><span class="p">,</span>
+                                       <span class="n">grad_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span>
+                                       <span class="n">proj_type</span><span class="o">=</span><span class="n">proj_type</span><span class="p">,</span>
+                                       <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dtype</span><span class="p">,</span>
+                                       <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">projector</span>
+        
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver</span> <span class="o">=</span> <span class="n">KeepInRAMSaver</span><span class="p">(</span><span class="n">grads_shape</span><span class="o">=</span><span class="p">[</span><span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">],</span>
+                                    <span class="n">save_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span>
+                                    <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">functional</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gradient_computer</span> <span class="o">=</span> <span class="n">FunctionalGradientComputer</span><span class="p">(</span><span class="n">func_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                                                                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                                                <span class="n">params_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params_dict</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="o">=</span> <span class="n">FunctionalScorer</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                           <span class="n">projector</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="p">,</span>
+                                           <span class="n">grad_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gradient_computer</span> <span class="o">=</span> <span class="n">IterativeGradientComputer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                                                               <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                                               <span class="n">grad_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="o">=</span> <span class="n">IterScorer</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                     <span class="n">projector</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="p">,</span>
+                                     <span class="n">grad_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dtype</span><span class="p">,</span>
+                                     <span class="n">grad_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span>
+                                     <span class="n">grad_wrt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_wrt</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_grads</span> <span class="o">=</span> <span class="n">AverageMeter</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="TRAKer.load_params"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.load_params">[docs]</a>    <span class="k">def</span> <span class="nf">load_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_params</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span><span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="n">model_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gradient_computer</span><span class="o">.</span><span class="n">model_params</span><span class="p">[</span><span class="n">model_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_params</span></div>
+
+<div class="viewcode-block" id="TRAKer.featurize"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.featurize">[docs]</a>    <span class="k">def</span> <span class="nf">featurize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">out_fn</span><span class="p">,</span>
+                  <span class="n">loss_fn</span><span class="p">,</span>
+                  <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                  <span class="n">inds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">model_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_computer</span><span class="o">.</span><span class="n">compute_per_sample_grad</span><span class="p">(</span><span class="n">out_fn</span><span class="o">=</span><span class="n">out_fn</span><span class="p">,</span>
+                                                               <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
+                                                               <span class="n">grad_wrt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_wrt</span><span class="p">,</span>
+                                                               <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+
+        <span class="n">grads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projector</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">grads</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dtype</span><span class="p">),</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">grad_set</span><span class="p">(</span><span class="n">grads</span><span class="o">=</span><span class="n">grads</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">inds</span><span class="o">=</span><span class="n">inds</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+
+        <span class="n">loss_grads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_computer</span><span class="o">.</span><span class="n">compute_loss_grad</span><span class="p">(</span><span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+                                                              <span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
+                                                              <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">loss_set</span><span class="p">(</span><span class="n">loss_grads</span><span class="o">=</span><span class="n">loss_grads</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="n">inds</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TRAKer.finalize"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reweighter</span> <span class="o">=</span> <span class="n">BasicReweighter</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">model_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">model_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_grads</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">loss_get</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">model_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">model_ids</span><span class="p">:</span>
+            <span class="n">xtx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reweighter</span><span class="o">.</span><span class="n">reweight</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">grad_get</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">))</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">grad_get</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reweighter</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">xtx</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_grads</span><span class="o">.</span><span class="n">avg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">features_set</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TRAKer.score"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.score">[docs]</a>    <span class="k">def</span> <span class="nf">score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_fn</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">features_get</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">),</span>
+                                 <span class="n">out_fn</span><span class="p">,</span>
+                                 <span class="n">model</span><span class="p">,</span>
+                                 <span class="n">model_id</span><span class="p">,</span>
+                                 <span class="n">batch</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TRAKer.save"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">features_only</span><span class="o">=</span><span class="n">features_only</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="TRAKer.load"><a class="viewcode-back" href="../../traker.html#traker.traker.TRAKer.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">features_only</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">load_from</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">features_only</span><span class="o">=</span><span class="n">features_only</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">TRAK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Kristian Georgiev.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

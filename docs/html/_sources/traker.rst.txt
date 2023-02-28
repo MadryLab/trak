@@ -1,0 +1,77 @@
+traker package
+==============
+
+Submodules
+----------
+
+traker.gradient\_computers module
+---------------------------------
+
+.. automodule:: traker.gradient_computers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.modelout\_functions module
+---------------------------------
+
+.. automodule:: traker.modelout_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.projectors module
+------------------------
+
+.. automodule:: traker.projectors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.reweighters module
+-------------------------
+
+.. automodule:: traker.reweighters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.savers module
+--------------------
+
+.. automodule:: traker.savers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.scorers module
+---------------------
+
+.. automodule:: traker.scorers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.traker module
+--------------------
+
+.. automodule:: traker.traker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+traker.utils module
+-------------------
+
+.. automodule:: traker.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: traker
+   :members:
+   :undoc-members:
+   :show-inheritance:
