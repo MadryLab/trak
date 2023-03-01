@@ -158,16 +158,24 @@ class TRAKer():
 
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
-    def finalize_features(self):
+    def finalize_features(self, model_ids: Iterable[int]=None):
+        """_summary_
+
+        Args:
+            model_ids (Iterable[int], optional): _description_. Defaults to None.
+        """
+        if model_ids is None:
+            model_ids = self.saver.model_ids
+
         self.reweighter = BasicReweighter(device=self.device)
-        for model_id in self.saver.model_ids:
-            self.loss_grads.update(self.saver.loss_get(model_id=model_id))
 
         for model_id in self.saver.model_ids:
-            xtx = self.reweighter.reweight(self.saver.grad_get(model_id=model_id))
-            g = self.saver.grad_get(model_id=model_id)
-            features = self.reweighter.finalize(g, xtx) * self.loss_grads.avg
-            self.saver.features_set(features=features, model_id=model_id)
+            self.saver.load_store(model_id)
+
+            g = ch.tensor(self.saver.current_grads)
+            xtx = self.reweighter.reweight(g)
+
+            self.saver.current_features = self.reweighter.finalize(g, xtx)
 
     def score(self, out_fn, model, batch, model_id=0) -> Tensor:
         return self.scorer.score(self.saver.features_get(model_id=model_id),

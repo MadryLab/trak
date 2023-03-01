@@ -48,3 +48,18 @@ def test_featurize(tmp_path):
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
     traker.featurize(batch, num_samples=N)
+
+@pytest.mark.cuda
+def test_finalize_features(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+    traker.finalize_features()

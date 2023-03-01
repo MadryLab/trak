@@ -59,8 +59,6 @@ torch::Tensor fast_jl(
         uint32_t real_batch_end = std::min(batch_end, B) % effective_batch_size;
         if (real_batch_end == 0) real_batch_end = effective_batch_size;
 
-        std::cout << batch_start << ", " << batch_end << ", " << real_batch_end << std::endl;
-
         if (input.dtype() == torch::kFloat16) {
             project<__half, p_type, NUM_BATCHES, 16>(
                     (__half*) current_input.data_ptr<at::Half>(),

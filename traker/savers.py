@@ -59,19 +59,23 @@ class MmapSaver(AbstractSaver):
             os.makedirs(prefix)
         except:
             raise ModelIDException(f'model id folder {prefix} already exists')
+
+        self.load_store(model_id, mode='w+')
+    
+    def load_store(self, model_id, mode='r+') -> None:
+        prefix = self.save_dir.joinpath(str(model_id))
         self.current_grads = open_memmap(filename=prefix.joinpath('grads.mmap'),
-                                         mode='w+',
+                                         mode=mode,
                                          shape=(self.grad_dim, self.proj_dim),
                                          dtype=np.float32)
 
         self.current_out_to_loss = open_memmap(filename=prefix.joinpath('out_to_loss.mmap'),
-                                               mode='w+',
+                                               mode=mode,
                                                shape=(self.grad_dim, 1),
                                                dtype=np.float32)
-    
-    def init_feature_store(self, model_id) -> None:
+
         self.current_features = open_memmap(filename=prefix.joinpath('features.mmap'),
-                                            mode='w+',
+                                            mode=mode,
                                             shape=(self.grad_dim, self.proj_dim),
                                             dtype=np.float32)
     
@@ -79,7 +83,9 @@ class MmapSaver(AbstractSaver):
         self.current_model_id = model_id
 
         if self.current_model_id in self.model_ids:
-            raise ModelIDException(f'model id {model_id} is already registered. Check {self.save_dir}.')
+            err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
+            raise ModelIDException(err_msg)
+        self.model_ids.add(self.current_model_id)
 
         self.init_store(self.current_model_id)
         with open(self.model_ids_file, 'a+') as f:

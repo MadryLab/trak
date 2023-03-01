@@ -126,10 +126,6 @@ void project(InputType *__restrict__ input,
     dim3 blockSize(16, WARP_SIZE / 16, CHUNKS_PER_TILE);
     dim3 gridSize(num_jl_tiles, num_feature_tiles , 1);
 
-    // cout << blockSize.x << ", " << blockSize.y << ", " << blockSize.z << std::endl;
-    // cout << gridSize.x << ", " << gridSize.y << ", " << gridSize.z << std::endl;
-    // cout << "FTS " << feature_tile_size << endl;
-
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
             (input, output, channels, features, output_dims, seed, feature_tile_size);
