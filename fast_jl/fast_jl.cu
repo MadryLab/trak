@@ -48,8 +48,6 @@ torch::Tensor fast_jl(
     auto output = torch::zeros({num_batch_dim, num_feature_tiles, N},
                                torch::TensorOptions().device(input.device()));
 
-    auto basis = torch::zeros({F, N}, torch::TensorOptions().device(input.device()));
-
     for (uint32_t meta_batch=0; meta_batch < num_required_batches; meta_batch++) {
         uint32_t batch_start = meta_batch * effective_batch_size;
         uint32_t batch_end = (meta_batch + 1) * effective_batch_size;
@@ -68,13 +66,13 @@ torch::Tensor fast_jl(
                     (__half*) current_input.data_ptr<at::Half>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles, basis.data_ptr<float>());
+                    seed, num_feature_tiles);
         } else {
             project<float, p_type, NUM_BATCHES, 16>(
                     current_input.data_ptr<float>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles,basis.data_ptr<float>());
+                    seed, num_feature_tiles);
 
         }
     }

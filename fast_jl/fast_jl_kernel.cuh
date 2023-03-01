@@ -29,8 +29,7 @@ project_kernel(InputType *__restrict__ input,
                uint32_t features,
                uint32_t output_dims,
                uint32_t seed,
-               uint32_t feature_tile_size,
-               float *__restrict__ basis) {
+               uint32_t feature_tile_size) {
 
     uint32_t lane_id = threadIdx.x + blockDim.x * threadIdx.y;
 
@@ -109,7 +108,7 @@ template<typename InputType, ProjectionType p_type, uint32_t NUM_BATCHES, uint32
 void project(InputType *__restrict__ input,
                float* output,
                uint32_t channels, uint32_t features, uint32_t output_dims,
-               uint32_t seed, uint32_t num_feature_tiles, float* basis) {
+               uint32_t seed, uint32_t num_feature_tiles) {
 
     if (output_dims % (WARP_SIZE * CHUNKS_PER_TILE) != 0) {
         throw invalid_argument(string("Invalid Number of JL dimensions it has to be a multiple of ") + to_string(WARP_SIZE * CHUNKS_PER_TILE) );
@@ -133,5 +132,5 @@ void project(InputType *__restrict__ input,
 
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
-            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size, basis);
+            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
 }
