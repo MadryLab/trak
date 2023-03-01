@@ -39,8 +39,6 @@ class AbstractSaver(ABC):
     def register_model_id(self, model_id:int):
         ...
 
-    # TODO: create abstract getters and setters
-
 
 class ModelIDException(Exception):
     pass

@@ -16,60 +16,52 @@ class AbstractGradientComputer(ABC):
     """
     @abstractmethod
     def __init__(self,
+                 modelout_fn,
                  device) -> None:
         self.device = device
+        self.modelout_fn = modelout_fn
         self.model_params = {}
 
     @abstractmethod
-    def compute_per_sample_grad(self, out_fn, model_params,
-                                batch: Iterable[Tensor],
-                                grad_wrt: Optional[Tensor],
-                                model_id: int) -> Tensor:
+    def compute_per_sample_grad(self, model_params,
+                                batch: Iterable[Tensor]) -> Tensor:
         ...
 
 
 class FunctionalGradientComputer(AbstractGradientComputer):
-    def __init__(self, func_model, device, params_dict, model_id: int=0) -> None:
-        super().__init__(device)
+    def __init__(self, func_model, modelout_fn, device, params_dict) -> None:
+        super().__init__(modelout_fn, device)
         self.params_dict = params_dict
-        self.func_models = {}
-        self.register_model(func_model, model_id)
+        self.modelout_fn = modelout_fn()
     
-    def register_model(self, func_model, model_id) -> None:
-        self.func_models[model_id] = func_model
-
-    def compute_per_sample_grad(self, out_fn, 
+    def compute_per_sample_grad(self,
+                                func_model,
+                                weights,
+                                buffers,
                                 batch: Iterable[Tensor],
-                                grad_wrt: Optional[Tensor],
-                                model_id: int) -> Tensor:
-        weights, buffers = self.model_params[model_id]
-        grads_loss = grad(out_fn, has_aux=False)
-        # map over batch dimension
+                                ) -> Tensor:
+        # taking the gradient wrt weights (second argument of get_output, hence argnums=1)
+        grads_loss = grad(self.modelout_fn.get_output, has_aux=False, argnums=1)
+        # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
         grads = vmap(grads_loss,
-                     in_dims=(None, None, *([0] * len(batch))),
-                     randomness='different')(weights, buffers, *batch)
+                     in_dims=(None, None, None, *([0] * len(batch))),
+                     randomness='different')(func_model, weights, buffers, *batch)
         return vectorize_and_ignore_buffers(grads, self.params_dict)
     
-    def compute_loss_grad(self, loss_fn, batch, model_id: int) -> Tensor:
+    def compute_loss_grad(self, func_model, weights, buffers, batch) -> Tensor:
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
         
         """
-        weights, buffers = self.model_params[model_id]
-        return loss_fn(weights, buffers, *batch)
+        return self.modelout_fn.get_out_to_loss_grad(func_model, weights, buffers, batch)
 
 
 class IterativeGradientComputer(AbstractGradientComputer):
-    def __init__(self, model, device, grad_dim: Tensor, model_id: int=0) -> None:
+    def __init__(self, model, modelout_fn, device, grad_dim: Tensor) -> None:
         super().__init__(device)
-        self.models = {}
-        self.register_model(model, model_id)
         self.grad_dim = grad_dim
     
-    def register_model(self, model, model_id) -> None:
-        self.models[model_id] = model
-
     def compute_per_sample_grad(self, out_fn,
                                 batch: Iterable[Tensor],
                                 grad_wrt: Optional[Tensor],
