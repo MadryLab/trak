@@ -4,32 +4,47 @@ import shutil
 from pathlib import Path
 from traker.traker import TRAKer
 from torchvision.models import resnet18
+import torch as ch
 
-def test_class_init():
+def test_class_init(tmp_path):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
-                    save_dir='./trak_test_class_results',
+                    save_dir=tmp_path,
                     train_set_size=20,
                     device='cuda:0')
     
-def test_load_ckpt():
+def test_load_ckpt(tmp_path):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
-                    save_dir='./trak_test_class_results',
+                    save_dir=tmp_path,
                     train_set_size=20,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
 
-def test_load_ckpt_repeat():
+def test_load_ckpt_repeat(tmp_path):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
-                    save_dir='./trak_test_class_results_2',
+                    save_dir=tmp_path,
                     train_set_size=20,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
     traker.load_checkpoint(ckpt, model_id=1)
+
+@pytest.mark.cuda
+def test_featurize(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=20,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)

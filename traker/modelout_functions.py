@@ -14,19 +14,19 @@ class AbstractModelOutput(ABC):
     model outputs above into the loss wrt the batch
     """
     @abstractmethod
-    def __init__(self, device) -> None:
-        self.device = device
+    def __init__(self) -> None:
+        pass
 
     @abstractmethod
     def get_output(self,
-                   model_params: Iterable[Tensor],
+                   model,
                    batch: Iterable[Tensor]) -> Tensor:
         ...
     
     @abstractmethod
-    def get_out_to_loss(self,
-                        model_params: Iterable[Tensor],
-                        batch: Iterable[Tensor]) -> Tensor:
+    def get_out_to_loss_grad(self,
+                             model,
+                             batch: Iterable[Tensor]) -> Tensor:
         ...
 
 
@@ -42,25 +42,25 @@ class ImageClassificationModelOutput(AbstractModelOutput):
     and Datamodels via Harmonic Analysis'
     """
 
-    def __init__(self, device, func_model, temperature=1.) -> None:
-        super().__init__(device)
+    def __init__(self, temperature=1.) -> None:
+        super().__init__()
         self.softmax = ch.nn.Softmax(-1)
-        self.func_model = func_model
         self.loss_temperature = temperature
 
-    def get_output(self,
+    @staticmethod 
+    def get_output(func_model,
                    weights: Iterable[Tensor],
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor) -> Tensor:
-        logits = self.func_model(weights, buffers, image.unsqueeze(0))
-        bindex = ch.arange(logits.shape[0]).to(self.device, non_blocking=False)
+        logits = func_model(weights, buffers, image.unsqueeze(0))
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
-        cloned_logits = logits.clone().to(self.device, non_blocking=False)
+        cloned_logits = logits.clone()
         # a hacky way to remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(self.device)
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(logits.device)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
@@ -69,14 +69,13 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         images, _ = batch
         return model(images)
 
-    def get_out_to_loss_grad(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
-        # TODO: fix this method
-        logits = self.forward(model, batch)
-        _, labels = batch
+    def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+        images, labels = batch
+        logits = func_model(weights, buffers, images)
         # here we are directly implementing the gradient instead of relying on autodiff to do
         # that for us
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
-        return (1 - ps).clone().detach()
+        return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 class IterImageClassificationModelOutput(AbstractModelOutput):

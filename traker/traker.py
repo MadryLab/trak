@@ -3,6 +3,7 @@ TODO
 """
 from typing import Iterable, Optional, Union
 from pathlib import Path
+import numpy as np
 import torch
 ch = torch
 from torch import Tensor
@@ -27,7 +28,7 @@ class TRAKer():
                  projector: Optional[AbstractProjector]=None,
                  device: Union[str, torch.device]=None,
                  functional: bool=True,
-                 proj_dim: int=2000, # either set proj_dim and
+                 proj_dim: int=2048, # either set proj_dim and
                  # a CudaProjector Rademacher projector will be used
                  # or give a custom Projector class and leave proj_dim to None
                 #  grad_dtype=ch.float32,
@@ -66,10 +67,12 @@ class TRAKer():
             self.func_model, _, _ = make_functional_with_buffers(model)
             self.params_dict = get_params_dict(self.model)
             self.gradient_computer = FunctionalGradientComputer(func_model=self.func_model,
+                                                                modelout_fn=self.modelout_fn,
                                                                 device=self.device,
                                                                 params_dict=self.params_dict)
         else:
             self.gradient_computer = IterativeGradientComputer(model=self.model,
+                                                               modelout_fn=self.modelout_fn,
                                                                device=self.device,
                                                                grad_dim=self.grad_dim)
 
@@ -113,27 +116,47 @@ class TRAKer():
         else:
             self.model_params = list(self.model.parameters())
 
+        self._last_ind = 0
+
     def featurize(self,
-                  out_fn,
-                  loss_fn,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]]=None,
-                  model_id: Optional[int]=0,
+                  num_samples: Optional[int]=None
                   ) -> Tensor:
-        """
-        """
-        grads = self.gradient_computer.compute_per_sample_grad(out_fn=out_fn,
-                                                               batch=batch,
-                                                               grad_wrt=self.grad_wrt,
-                                                               model_id=model_id)
+        """ Featurizes a batch (TODO: actual summary here)
 
-        grads = self.projector.project(grads.to(self.grad_dtype), model_id=model_id)
-        self.saver.grad_set(grads=grads.detach().clone(), inds=inds, model_id=model_id)
+        Either inds or num_samples must be specified. Using num_samples will write
+        sequentially into the internal store of the TRAKer.
 
-        loss_grads = self.gradient_computer.compute_loss_grad(loss_fn=loss_fn,
-                                                              batch=batch,
-                                                              model_id=model_id)
-        self.saver.loss_set(loss_grads=loss_grads, inds=inds, model_id=model_id)
+        Args:
+            batch (Iterable[Tensor]): _description_
+            inds (Optional[Iterable[int]], optional): _description_. Defaults to None.
+            num_samples (Optional[int], optional): _description_. Defaults to None.
+
+        Returns:
+            Tensor: _description_
+        """
+        assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
+        assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
+        if num_samples is not None:
+            inds = np.arange(self._last_ind, self._last_ind + num_samples)
+            self._last_ind += num_samples
+
+        grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
+                                                               weights=self.weights,
+                                                               buffers=self.buffers,
+                                                               batch=batch)
+        grads = self.projector.project(grads,
+                                       model_id=self.saver.current_model_id)
+
+        self.saver.current_grads[inds] = grads.cpu().clone().detach()
+
+        loss_grads = self.gradient_computer.compute_loss_grad(self.func_model,
+                                                              self.weights,
+                                                              self.buffers,
+                                                              batch)
+
+        self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
     def finalize_features(self):
         self.reweighter = BasicReweighter(device=self.device)
