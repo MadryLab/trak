@@ -110,3 +110,21 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("project_normal_16", &proj_normal_16, "Fast Random Projection (CUDA)");
     m.def("project_normal_32", &proj_normal_32, "Fast Random Projection (CUDA)");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

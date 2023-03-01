@@ -132,5 +132,5 @@ void project(InputType *__restrict__ input,
 
     project_kernel<InputType, p_type, NUM_BATCHES, CHUNKS_PER_TILE>
             <<<gridSize, blockSize>>>
-            (input, output, CHUNK_ROW * NUM_BATCHES, features, output_dims, seed, feature_tile_size);
+            (input, output, channels, features, output_dims, seed, feature_tile_size);
 }
