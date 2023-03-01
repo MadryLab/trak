@@ -87,13 +87,31 @@ class TRAKer():
                                            proj_type=ProjectionType.rademacher,
                                            device=self.device)
 
-    def load_checkpoint(self, checkpoint, model_id:Optional[int]=None):
-        # if checkpoint is string or posix path, load it
-        # if it is an iterable of tensors, load it
-        if model_id is None:
-            get_model_id(checkpoint)
-        self.model_params[model_id] = model_params
-        self.gradient_computer.model_params[model_id] = model_params
+    def load_checkpoint(self, checkpoint: Iterable[Tensor], model_id:int,
+                        populate_batch_norm_buffers :bool=False, loader_for_bn=None):
+        """ Loads state dictionary for the given checkpoint, initializes arrays to store
+        TRAK features for that checkpoint, tied to the model id.
+
+        Args:
+            checkpoint (Iterable[Tensor]): _description_
+            model_id (int): _description_
+            populate_batch_norm_buffers (bool, optional): _description_. Defaults to False.
+            loader_for_bn (_type_, optional): _description_. Defaults to None.
+        """
+        self.saver.register_model_id(model_id)
+        self.model.load_state_dict(checkpoint)
+        self.model.eval()
+
+        if populate_batch_norm_buffers:
+            with ch.no_grad():
+                for batch in loader_for_bn:
+                    # TODO: fix
+                    self.modelout_fn.forward(model, batch)
+
+        if self.functional:
+            self.func_model, self.weights, self.buffers = make_functional_with_buffers(self.model)
+        else:
+            self.model_params = list(self.model.parameters())
 
     def featurize(self,
                   out_fn,

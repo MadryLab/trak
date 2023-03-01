@@ -64,11 +64,15 @@ class ImageClassificationModelOutput(AbstractModelOutput):
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
-    
+
+    def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
+        images, _ = batch
+        return model(images)
+
     def get_out_to_loss_grad(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
         # TODO: fix this method
-        images, labels = batch
-        logits = model(images)
+        logits = self.forward(model, batch)
+        _, labels = batch
         # here we are directly implementing the gradient instead of relying on autodiff to do
         # that for us
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
