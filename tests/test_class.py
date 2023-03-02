@@ -94,5 +94,7 @@ def test_score_finalize(tmp_path):
     traker.load_checkpoint(ckpt, model_id=0)
     traker.featurize(batch, num_samples=N)
     traker.finalize_features()
+
+    traker.load_checkpoint(ckpt, model_id=0)
     traker.score(batch, ckpt, model_id=0, num_samples=N)
     traker.finalize_scores()

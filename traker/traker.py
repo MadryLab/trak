@@ -16,7 +16,7 @@ from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
 from .reweighters import BasicReweighter
 from .gradient_computers import FunctionalGradientComputer, IterativeGradientComputer
-from .savers import MmapSaver
+from .savers import MmapSaver, ModelIDException
 from .utils import get_num_params, get_params_dict
 
 class TRAKer():
@@ -77,7 +77,6 @@ class TRAKer():
                                                                grad_dim=self.grad_dim)
 
         self._score_checkpoint = None
-        self._last_ind_target = 0
 
     def init_projector(self, projector):
         """Initialize the projector for a traker class
@@ -168,13 +167,19 @@ class TRAKer():
             model_ids (Iterable[int], optional): _description_. Defaults to None.
         """
         if model_ids is None:
-            model_ids = self.saver.model_ids
+            model_ids = list(self.saver.model_ids.keys())
 
         self._last_ind = 0
 
         self.reweighter = BasicReweighter(device=self.device)
 
-        for model_id in self.saver.model_ids:
+        for model_id in model_ids:
+            if self.saver.model_ids.get(model_id) is None:
+                raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
+            elif self.saver.model_ids[model_id]['finalized'] == 1:
+                print(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
+                continue
+
             self.saver.load_store(model_id)
 
             g = ch.tensor(self.saver.current_grads)

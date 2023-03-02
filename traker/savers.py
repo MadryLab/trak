@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import os
+import json
 from torch import Tensor
 import numpy as np
 from numpy.lib.format import open_memmap
@@ -22,17 +23,19 @@ class AbstractSaver(ABC):
         self.save_dir = Path(save_dir).resolve() 
         os.makedirs(self.save_dir, exist_ok=True)
 
-        self.model_ids = set()
+        self.model_ids = {}
         # check if there are existing model ids in the save_dir
-        self.model_ids_file = self.save_dir.joinpath('ids.txt')
+        self.model_ids_file = self.save_dir.joinpath('ids.json')
         if self.model_ids_file.is_file():
             with open(self.model_ids_file, 'r') as f:
-                existing_ids = [int(id) for id in f.readlines()]
+                existing_ids = json.loads(f)
             self.model_ids.update(existing_ids)
+
         # init ids metadata
         else:
             with open(self.model_ids_file, 'w+') as f:
-                pass
+                json.dump(self.model_ids, f)
+
 
 
     @abstractmethod
@@ -52,6 +55,7 @@ class MmapSaver(AbstractSaver):
         self.current_grads = None
         self.current_out_to_loss = None
         self.current_features = None
+        self.current_target_grads = None
     
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))
@@ -78,27 +82,41 @@ class MmapSaver(AbstractSaver):
                                             mode=mode,
                                             shape=(self.grad_dim, self.proj_dim),
                                             dtype=np.float32)
-        self.current_target_grads = {}
+        self.current_target_grads_dict = {}
 
-    def finalize_target_grads(self):
-        """ Go from a indices-to-target-grads dictionary to a torch tensor
+    def finalize_target_grads(self, model_id):
+        """ Go from a indices-to-target-grads dictionary to a torch tensor, and save
+        to a mmap
         """
-        inds = ch.cat(tuple(self.current_target_grads.keys()))
-        self.current_target_grads = ch.cat(tuple(self.current_target_grads.values()))[inds]
+        inds = ch.cat(tuple(self.current_target_grads_dict.keys()))
+        _current_target_grads_data = ch.cat(tuple(self.current_target_grads_dict.values()))[inds]
+
+        prefix = self.save_dir.joinpath(str(model_id))
+        self.current_target_grads = open_memmap(filename=prefix.joinpath('grads_target.mmap'),
+                                                mode='w+',
+                                                shape=(inds.shape[0], self.proj_dim),
+                                                dtype=np.float32)
+        self.current_target_grads[:] = _current_target_grads_data[:]
     
     def register_model_id(self, model_id:int):
         self.current_model_id = model_id
 
-        if self.current_model_id in self.model_ids:
+        if self.current_model_id in self.model_ids.keys():
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
-        self.model_ids.add(self.current_model_id)
+        self.model_ids[self.current_model_id] = {'featurized': 0,
+                                                 'finalized': 0,
+                                                 'scored': 0}
 
         self.init_store(self.current_model_id)
         with open(self.model_ids_file, 'a+') as f:
             f.write(str(self.current_model_id) + '\n')
         
-    def del_grads(self, model_id):
-        prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
+    def del_grads(self, model_id, target=False):
+        if target:
+            prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
+        else:
+            prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
+
         # delete grads memmap
         grads_file.unlink()
