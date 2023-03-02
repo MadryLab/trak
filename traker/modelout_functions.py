@@ -90,36 +90,34 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
     and Datamodels via Harmonic Analysis'
     """
 
-    def __init__(self, device, temperature=1.) -> None:
-        super().__init__(device)
+    def __init__(self, temperature=1.) -> None:
+        super().__init__()
         self.softmax = ch.nn.Softmax(-1)
         self.loss_temperature = temperature
 
     def get_output(self,
                    model: Module,
-                   image: Tensor,
-                   label: Tensor) -> Tensor:
-        # TODO: fix this method
-        logits = model(image.unsqueeze(0))
-        bindex = ch.arange(logits.shape[0]).to(self.device, non_blocking=False)
-        logits_correct = logits[bindex, label.unsqueeze(0)]
+                   images: Tensor,
+                   labels: Tensor) -> Tensor:
+        logits = model(images)
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
+        logits_correct = logits[bindex, labels]
 
-        cloned_logits = logits.clone().to(self.device, non_blocking=False)
+        cloned_logits = logits.clone()
         # a hacky way to remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(self.device)
+        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).to(logits.device)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
-        return margins.sum()
+        return margins
     
     def get_out_to_loss_grad(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
-        # TODO: fix this method
         images, labels = batch
         logits = model(images)
         # here we are directly implementing the gradient instead of relying on autodiff to do
         # that for us
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
-        return (1 - ps).clone().detach()
+        return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 class CLIPModelOutput(AbstractModelOutput):

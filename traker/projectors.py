@@ -79,7 +79,7 @@ class BasicProjector(AbstractProjector):
     matmul blockwise if needed.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, num_blocks: int=2, dtype=ch.float16,
+                 ProjectionType, device, num_blocks: int=2, dtype=ch.float32,
                  model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 

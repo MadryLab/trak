@@ -52,8 +52,7 @@ class TRAKer():
         self.device = device
 
         self.num_params = get_num_params(self.model)
-        self.proj_dim = proj_dim
-        self.init_projector(projector)
+        self.init_projector(projector, proj_dim)
 
         self.save_dir = Path(save_dir).resolve()
         self.saver = MmapSaver(grads_shape=[self.train_set_size, self.proj_dim],
@@ -74,18 +73,22 @@ class TRAKer():
             self.gradient_computer = IterativeGradientComputer(model=self.model,
                                                                modelout_fn=self.modelout_fn,
                                                                device=self.device,
-                                                               grad_dim=self.grad_dim)
+                                                               grad_dim=self.num_params)
 
         self._score_checkpoint = None
 
-    def init_projector(self, projector):
+    def init_projector(self, projector, proj_dim):
         """Initialize the projector for a traker class
 
         Args:
             projector (AbstractProjector): _description_
         """
+
         self.projector = projector
-        if self.projector is None:
+        if projector is not None:
+            self.proj_dim = self.projector.proj_dim
+        else:
+            self.proj_dim = proj_dim
             self.projector = CudaProjector(grad_dim=self.num_params,
                                            proj_dim=self.proj_dim,
                                            seed=0,
@@ -150,20 +153,32 @@ class TRAKer():
         if num_samples is not None:
             inds = np.arange(self._last_ind, self._last_ind + num_samples)
             self._last_ind += num_samples
+        else:
+            num_samples = inds.reshape(-1).shape[0]
 
-        grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
-                                                               weights=self.weights,
-                                                               buffers=self.buffers,
-                                                               batch=batch)
+        if self.functional:
+            grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
+                                                                weights=self.weights,
+                                                                buffers=self.buffers,
+                                                                batch=batch)
+        else:
+            grads = self.gradient_computer.compute_per_sample_grad(model=self.model,
+                                                                   batch=batch,
+                                                                   batch_size=num_samples)
+
         grads = self.projector.project(grads,
                                        model_id=self.saver.current_model_id)
 
         self.saver.current_grads[inds] = grads.cpu().clone().detach()
 
-        loss_grads = self.gradient_computer.compute_loss_grad(self.func_model,
-                                                              self.weights,
-                                                              self.buffers,
-                                                              batch)
+        if self.functional:
+            loss_grads = self.gradient_computer.compute_loss_grad(self.func_model,
+                                                                self.weights,
+                                                                self.buffers,
+                                                                batch)
+        else:
+            loss_grads = self.gradient_computer.compute_loss_grad(self.model,
+                                                                  batch)
 
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
@@ -198,38 +213,35 @@ class TRAKer():
 
     def score(self,
               batch: Iterable[Tensor],
-              checkpoint: Iterable[Tensor],
-              model_id: int,
               inds: Optional[Iterable[int]]=None,
               num_samples: Optional[int]=None,
               _serialize_target_grads=True,
               ) -> Tensor:
-        if not checkpoint is self._score_checkpoint:
-            self._score_checkpoint = checkpoint
-            self.model.load_state_dict(self._score_checkpoint)
-            self.model.eval()
-            self.func_model, self.weights, self.buffers = make_functional_with_buffers(self.model) 
-            # reset counter for inds
-            self._last_ind_target = 0
-
         assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
         assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
         if num_samples is not None:
             inds = np.arange(self._last_ind_target, self._last_ind_target + num_samples)
             self._last_ind_target += num_samples
+        else:
+            num_samples = inds.reshape(-1).shape[0]
 
-        
-        grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
-                                                               weights=self.weights,
-                                                               buffers=self.buffers,
-                                                               batch=batch)
+        if self.functional:
+            grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
+                                                                weights=self.weights,
+                                                                buffers=self.buffers,
+                                                                batch=batch)
+        else:
+            grads = self.gradient_computer.compute_per_sample_grad(model=self.model,
+                                                                   batch=batch,
+                                                                   batch_size=num_samples)
+
 
         grads = self.projector.project(grads,
-                                    model_id=self.saver.current_model_id)
+                                       model_id=self.saver.current_model_id)
 
         self.saver.current_target_grads_dict[ch.as_tensor(inds)] = grads.cpu().clone().detach()
         if _serialize_target_grads:
-            self.saver.finalize_target_grads(model_id)
+            self.saver.finalize_target_grads(self.saver.current_model_id)
 
     
     def finalize_scores(self, model_ids: Iterable[int]=None, save_grads_to_mmap=False, del_grads=False) -> None:

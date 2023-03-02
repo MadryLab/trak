@@ -59,35 +59,33 @@ class FunctionalGradientComputer(AbstractGradientComputer):
 
 class IterativeGradientComputer(AbstractGradientComputer):
     def __init__(self, model, modelout_fn, device, grad_dim: Tensor) -> None:
-        super().__init__(device)
+        super().__init__(modelout_fn, device)
         self.grad_dim = grad_dim
+        self.modelout_fn = modelout_fn()
     
-    def compute_per_sample_grad(self, out_fn,
+    def compute_per_sample_grad(self,
+                                model,
                                 batch: Iterable[Tensor],
-                                grad_wrt: Optional[Tensor],
-                                model_id: int) -> Tensor:
+                                batch_size: int,
+                                ) -> Tensor:
         """Computes per-sample gradients of the model output function
         This method does not leverage vectorization (and is hence much slower than
         `_featurize_vmap`).
         """
-        # assuming batch is an iterable of torch Tensors, each of
-        # shape [batch_size, ...]
-        batch_size = batch[0].size(0)
-        if grad_wrt is None:
-            grad_wrt = self.model_params[model_id]
-
+        model_params = list(model.parameters())
         grads = ch.zeros(batch_size, self.grad_dim).to(self.device)
-        margin = out_fn(self.models[model_id], *batch)
+
+        margin = self.modelout_fn.get_output(model, *batch)
         for ind in range(batch_size):
             grads[ind] = parameters_to_vector(ch.autograd.grad(margin[ind],
-                                                               grad_wrt,
+                                                               model_params,
                                                                retain_graph=True))
         return grads
     
-    def compute_loss_grad(self, loss_fn, batch, model_id: int) -> Tensor:
+    def compute_loss_grad(self, model, batch: Iterable[Tensor]) -> Tensor:
         """Computes
         .. math::
             \partial \ell / \partial \text{margin}
         
         """
-        return loss_fn(self.models[model_id], *batch)
+        return self.modelout_fn.get_out_to_loss_grad(model, batch)

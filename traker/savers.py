@@ -28,7 +28,7 @@ class AbstractSaver(ABC):
         self.model_ids_file = self.save_dir.joinpath('ids.json')
         if self.model_ids_file.is_file():
             with open(self.model_ids_file, 'r') as f:
-                existing_ids = json.loads(f)
+                existing_ids = json.load(f)
             self.model_ids.update(existing_ids)
 
         # init ids metadata
@@ -109,8 +109,8 @@ class MmapSaver(AbstractSaver):
                                                  'scored': 0}
 
         self.init_store(self.current_model_id)
-        with open(self.model_ids_file, 'a+') as f:
-            f.write(str(self.current_model_id) + '\n')
+        with open(self.model_ids_file, 'w+') as f:
+            json.dump(self.model_ids, f)
         
     def del_grads(self, model_id, target=False):
         if target:
