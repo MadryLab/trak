@@ -93,7 +93,8 @@ class TRAKer():
                                            device=self.device)
 
     def load_checkpoint(self, checkpoint: Iterable[Tensor], model_id:int,
-                        populate_batch_norm_buffers :bool=False, loader_for_bn=None):
+                        populate_batch_norm_buffers :bool=False, loader_for_bn=None,
+                        _allow_featurizing_already_registered=None):
         """ Loads state dictionary for the given checkpoint, initializes arrays to store
         TRAK features for that checkpoint, tied to the model id.
 
@@ -102,8 +103,13 @@ class TRAKer():
             model_id (int): _description_
             populate_batch_norm_buffers (bool, optional): _description_. Defaults to False.
             loader_for_bn (_type_, optional): _description_. Defaults to None.
+            _allow_featurizing_already_registered (bool, optional): Only use if you want
+            to override the default behaviour that `featurize` is forbidden on already
+            registered model ids. Defaults to None.
         """
-        self.saver.register_model_id(model_id)
+        if self.saver.model_ids.get(model_id) is None:
+            self.saver.register_model_id(model_id)
+
         self.model.load_state_dict(checkpoint)
         self.model.eval()
 
@@ -119,6 +125,7 @@ class TRAKer():
             self.model_params = list(self.model.parameters())
 
         self._last_ind = 0
+        self._last_ind_target = 0
 
     def featurize(self,
                   batch: Iterable[Tensor],
@@ -182,7 +189,7 @@ class TRAKer():
 
             self.saver.load_store(model_id)
 
-            g = ch.tensor(self.saver.current_grads)
+            g = ch.as_tensor(self.saver.current_grads)
             xtx = self.reweighter.reweight(g)
 
             self.saver.current_features = self.reweighter.finalize(g, xtx)
@@ -194,7 +201,8 @@ class TRAKer():
               checkpoint: Iterable[Tensor],
               model_id: int,
               inds: Optional[Iterable[int]]=None,
-              num_samples: Optional[int]=None
+              num_samples: Optional[int]=None,
+              _serialize_target_grads=True,
               ) -> Tensor:
         if not checkpoint is self._score_checkpoint:
             self._score_checkpoint = checkpoint
@@ -219,12 +227,32 @@ class TRAKer():
         grads = self.projector.project(grads,
                                     model_id=self.saver.current_model_id)
 
-        self.saver.current_target_grads[ch.tensor(inds)] = grads.cpu().clone().detach()
-        # TODO: avg out scores
+        self.saver.current_target_grads_dict[ch.as_tensor(inds)] = grads.cpu().clone().detach()
+        if _serialize_target_grads:
+            self.saver.finalize_target_grads(model_id)
+
     
-    def finalize_scores(self, model_ids: Iterable[int]=None) -> None:
-        self.saver.finalize_target_grads()
+    def finalize_scores(self, model_ids: Iterable[int]=None, save_grads_to_mmap=False, del_grads=False) -> None:
+        # reset counter for inds used for scoring
         self._last_ind_target = 0
 
-        # TODO: multiply out out_to_losses
-        # TODO: avg out scores
+        if model_ids is None:
+            model_ids = self.saver.model_ids
+
+        targets_size = self.saver.current_target_grads.shape[0]
+        _scores = ch.empty(len(model_ids), self.train_set_size, targets_size)
+
+        _avg_out_to_losses = ch.ones_like(ch.as_tensor(self.saver.current_out_to_loss))
+        for ii, model_id in enumerate(self.saver.model_ids):
+            self.saver.load_store(model_id)
+            g = ch.as_tensor(self.saver.current_grads)
+            g_target = ch.as_tensor(self.saver.current_target_grads)
+            _scores[ii] = g @ g_target.T
+            if del_grads:
+                self.saver.del_grads(model_id, target=True)
+            
+            _avg_out_to_losses *= ch.as_tensor(self.saver.current_out_to_loss)
+
+        _scores = _scores.mean(dim=0)
+        self.scores = _scores * _avg_out_to_losses
+        return self.scores
