@@ -114,9 +114,9 @@ class MmapSaver(AbstractSaver):
         
     def del_grads(self, model_id, target=False):
         if target:
-            prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
+            grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
         else:
-            prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
+            grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
 
         # delete grads memmap
         grads_file.unlink()
