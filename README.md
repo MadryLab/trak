@@ -11,7 +11,6 @@ from traker import TRAKer
 model, checkpoints = ...
 train_loader = ...
 
-model_output_fn = CrossEntropyModelOutput()
 trak = TRAKer(model=model,
               task='image_classification',
               train_set_size=50_000,
