@@ -78,6 +78,13 @@ class MmapSaver(AbstractSaver):
                                             mode=mode,
                                             shape=(self.grad_dim, self.proj_dim),
                                             dtype=np.float32)
+        self.current_target_grads = {}
+
+    def finalize_target_grads(self):
+        """ Go from a indices-to-target-grads dictionary to a torch tensor
+        """
+        inds = ch.cat(tuple(self.current_target_grads.keys()))
+        self.current_target_grads = ch.cat(tuple(self.current_target_grads.values()))[inds]
     
     def register_model_id(self, model_id:int):
         self.current_model_id = model_id
@@ -90,3 +97,8 @@ class MmapSaver(AbstractSaver):
         self.init_store(self.current_model_id)
         with open(self.model_ids_file, 'a+') as f:
             f.write(str(self.current_model_id) + '\n')
+        
+    def del_grads(self, model_id):
+        prefix = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
+        # delete grads memmap
+        grads_file.unlink()

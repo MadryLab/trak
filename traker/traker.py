@@ -76,6 +76,9 @@ class TRAKer():
                                                                device=self.device,
                                                                grad_dim=self.grad_dim)
 
+        self._score_checkpoint = None
+        self._last_ind_target = 0
+
     def init_projector(self, projector):
         """Initialize the projector for a traker class
 
@@ -158,7 +161,7 @@ class TRAKer():
 
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
-    def finalize_features(self, model_ids: Iterable[int]=None):
+    def finalize_features(self, model_ids: Iterable[int]=None, del_grads=False):
         """_summary_
 
         Args:
@@ -166,6 +169,8 @@ class TRAKer():
         """
         if model_ids is None:
             model_ids = self.saver.model_ids
+
+        self._last_ind = 0
 
         self.reweighter = BasicReweighter(device=self.device)
 
@@ -176,13 +181,45 @@ class TRAKer():
             xtx = self.reweighter.reweight(g)
 
             self.saver.current_features = self.reweighter.finalize(g, xtx)
+            if del_grads:
+                self.saver.del_grads(model_id)
 
-    def score(self, out_fn, model, batch, model_id=0) -> Tensor:
-        return self.scorer.score(self.saver.features_get(model_id=model_id),
-                                 out_fn,
-                                 model,
-                                 model_id,
-                                 batch)
+    def score(self,
+              batch: Iterable[Tensor],
+              checkpoint: Iterable[Tensor],
+              model_id: int,
+              inds: Optional[Iterable[int]]=None,
+              num_samples: Optional[int]=None
+              ) -> Tensor:
+        if not checkpoint is self._score_checkpoint:
+            self._score_checkpoint = checkpoint
+            self.model.load_state_dict(self._score_checkpoint)
+            self.model.eval()
+            self.func_model, self.weights, self.buffers = make_functional_with_buffers(self.model) 
+            # reset counter for inds
+            self._last_ind_target = 0
+
+        assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
+        assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
+        if num_samples is not None:
+            inds = np.arange(self._last_ind_target, self._last_ind_target + num_samples)
+            self._last_ind_target += num_samples
+
+        
+        grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
+                                                               weights=self.weights,
+                                                               buffers=self.buffers,
+                                                               batch=batch)
+
+        grads = self.projector.project(grads,
+                                    model_id=self.saver.current_model_id)
+
+        self.saver.current_target_grads[ch.tensor(inds)] = grads.cpu().clone().detach()
+        # TODO: avg out scores
     
-    def finalize_score(self):
-        pass
+    def finalize_scores(self, model_ids: Iterable[int]=None) -> None:
+        self.saver.finalize_target_grads()
+        self._last_ind_target = 0
+
+        # TODO: multiply out out_to_losses
+        # TODO: avg out scores
