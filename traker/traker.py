@@ -119,8 +119,8 @@ class TRAKer():
         if populate_batch_norm_buffers:
             with ch.no_grad():
                 for batch in loader_for_bn:
-                    # TODO: fix
-                    self.modelout_fn.forward(model, batch)
+                    # TODO: fix this
+                    self.modelout_fn.forward(self.model, batch)
 
         if self.functional:
             self.func_model, self.weights, self.buffers = make_functional_with_buffers(self.model)
