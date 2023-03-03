@@ -5,30 +5,43 @@ from pathlib import Path
 from traker.traker import TRAKer
 from torchvision.models import resnet18
 import torch as ch
+from traker.projectors import BasicProjector
 
-def test_class_init(tmp_path):
+@pytest.fixture
+def cpu_proj():
+    projector =  BasicProjector(grad_dim=11689512,
+                                proj_dim=20,
+                                seed=0,
+                                proj_type='rademacher',
+                                device='cpu')
+    return projector
+
+def test_class_init(tmp_path, cpu_proj):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir=tmp_path,
+                    projector=cpu_proj,
                     train_set_size=20,
                     device='cuda:0')
     
-def test_load_ckpt(tmp_path):
+def test_load_ckpt(tmp_path, cpu_proj):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir=tmp_path,
+                    projector=cpu_proj,
                     train_set_size=20,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
 
-def test_load_ckpt_repeat(tmp_path):
+def test_load_ckpt_repeat(tmp_path, cpu_proj):
     model = resnet18()
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir=tmp_path,
+                    projector=cpu_proj,
                     train_set_size=20,
                     device='cuda:0')
     ckpt = model.state_dict()
