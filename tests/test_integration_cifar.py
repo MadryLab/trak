@@ -20,7 +20,7 @@ def test_cifar10(tmp_path, device='cpu'):
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
     if device == 'cpu':
         # the default CudaProjector does not work on cpu
-        projector = BasicProjector(grad_dim=11689512,
+        projector = BasicProjector(grad_dim=sum(x.numel() for x in model.parameters()),
                                    proj_dim=20,
                                    seed=0,
                                    proj_type='rademacher',

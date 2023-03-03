@@ -150,6 +150,13 @@ class TRAKer():
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
+        if self.saver.model_ids[self.saver.current_model_id]['featurized'] == 0:
+            # TODO: it might be better to set featurized to 1 only after
+            # we've featurized all of the train set (as opposed to at the start like
+            # we do now)
+            self.saver.model_ids[self.saver.current_model_id]['featurized'] = 1
+            self.saver.serialize_model_id_metadata()
+
     def finalize_features(self, model_ids: Iterable[int]=None, del_grads=False):
         """_summary_
 
@@ -178,6 +185,10 @@ class TRAKer():
             self.saver.current_features[:] = self.reweighter.finalize(g, xtx).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
+
+            self.saver.model_ids[self.saver.current_model_id]['finalized'] = 1
+
+        self.saver.serialize_model_id_metadata()
 
     def score(self,
               batch: Iterable[Tensor],
@@ -217,6 +228,9 @@ class TRAKer():
         _avg_out_to_losses = ch.ones_like(ch.as_tensor(self.saver.current_out_to_loss))
         for ii, model_id in enumerate(self.saver.model_ids):
             self.saver.load_store(model_id)
+            if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
+                print(f'model id {self.saver.current_model_id} not finalized, cannot score')
+                continue
             g = ch.as_tensor(self.saver.current_features)
             g_target = ch.as_tensor(self.saver.current_target_grads)
             _scores[ii] = g @ g_target.T

@@ -64,10 +64,16 @@ class MmapSaver(AbstractSaver):
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
         self.model_ids[self.current_model_id] = {'featurized': 0,
-                                                 'finalized': 0,
-                                                 'scored': 0}
+                                                 'finalized': 0}
 
         self.init_store(self.current_model_id)
+        with open(self.model_ids_file, 'w+') as f:
+            json.dump(self.model_ids, f)
+    
+    def serialize_model_id_metadata(self):
+        # TODO: this will be problematic if we have multiple
+        # threads writing the featurized/finalized bits in parallel;
+        # we should fix that in the future
         with open(self.model_ids_file, 'w+') as f:
             json.dump(self.model_ids, f)
     
