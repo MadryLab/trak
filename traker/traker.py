@@ -112,6 +112,8 @@ class TRAKer():
         """
         if self.saver.model_ids.get(model_id) is None:
             self.saver.register_model_id(model_id)
+        else:
+            self.saver.load_store(model_id)
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
@@ -166,8 +168,7 @@ class TRAKer():
                                                                    batch=batch,
                                                                    batch_size=num_samples)
 
-        grads = self.projector.project(grads,
-                                       model_id=self.saver.current_model_id)
+        grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
         self.saver.current_grads[inds] = grads.cpu().clone().detach()
 
@@ -207,7 +208,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_grads)
             xtx = self.reweighter.reweight(g)
 
-            self.saver.current_features = self.reweighter.finalize(g, xtx)
+            self.saver.current_features[:] = self.reweighter.finalize(g, xtx).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
 
@@ -236,8 +237,7 @@ class TRAKer():
                                                                    batch_size=num_samples)
 
 
-        grads = self.projector.project(grads,
-                                       model_id=self.saver.current_model_id)
+        grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
         self.saver.current_target_grads_dict[ch.as_tensor(inds)] = grads.cpu().clone().detach()
         if _serialize_target_grads:
@@ -257,9 +257,10 @@ class TRAKer():
         _avg_out_to_losses = ch.ones_like(ch.as_tensor(self.saver.current_out_to_loss))
         for ii, model_id in enumerate(self.saver.model_ids):
             self.saver.load_store(model_id)
-            g = ch.as_tensor(self.saver.current_grads)
+            g = ch.as_tensor(self.saver.current_features)
             g_target = ch.as_tensor(self.saver.current_target_grads)
             _scores[ii] = g @ g_target.T
+
             if del_grads:
                 self.saver.del_grads(model_id, target=True)
             

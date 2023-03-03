@@ -67,6 +67,8 @@ class MmapSaver(AbstractSaver):
         self.load_store(model_id, mode='w+')
     
     def load_store(self, model_id, mode='r+') -> None:
+        self.current_model_id = model_id
+
         prefix = self.save_dir.joinpath(str(model_id))
         self.current_grads = open_memmap(filename=prefix.joinpath('grads.mmap'),
                                          mode=mode,
