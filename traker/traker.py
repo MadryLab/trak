@@ -7,17 +7,13 @@ import numpy as np
 import torch
 ch = torch
 from torch import Tensor
-try:
-    from functorch import make_functional_with_buffers
-except:
-    print('functorch could not be imported, running TRAKer in functional mode will not work')
 
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
 from .reweighters import BasicReweighter
-from .gradient_computers import FunctionalGradientComputer, IterativeGradientComputer
+from .gradient_computers import FunctionalGradientComputer, AbstractGradientComputer
 from .savers import MmapSaver, ModelIDException
-from .utils import get_num_params, get_params_dict
+from .utils import get_num_params
 
 class TRAKer():
     def __init__(self,
@@ -27,7 +23,7 @@ class TRAKer():
                  save_dir: str='/tmp/trak_results',
                  projector: Optional[AbstractProjector]=None,
                  device: Union[str, torch.device]=None,
-                 functional: bool=True,
+                 gradient_computer: AbstractGradientComputer=FunctionalGradientComputer,
                  proj_dim: int=2048, # either set proj_dim and
                  # a CudaProjector Rademacher projector will be used
                  # or give a custom Projector class and leave proj_dim to None
@@ -48,7 +44,6 @@ class TRAKer():
         self.model = model
         self.task = task
         self.train_set_size = train_set_size
-        self.functional = functional
         self.device = device
 
         self.num_params = get_num_params(self.model)
@@ -60,20 +55,12 @@ class TRAKer():
                                device=self.device)
 
         if type(self.task) is str:
-            self.modelout_fn = TASK_TO_MODELOUT[(self.task, self.functional)]
+            self.modelout_fn = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
         
-        if self.functional:
-            self.func_model, _, _ = make_functional_with_buffers(model)
-            self.params_dict = get_params_dict(self.model)
-            self.gradient_computer = FunctionalGradientComputer(func_model=self.func_model,
-                                                                modelout_fn=self.modelout_fn,
-                                                                device=self.device,
-                                                                params_dict=self.params_dict)
-        else:
-            self.gradient_computer = IterativeGradientComputer(model=self.model,
-                                                               modelout_fn=self.modelout_fn,
-                                                               device=self.device,
-                                                               grad_dim=self.num_params)
+        self.gradient_computer = gradient_computer(model=self.model,
+                                                   modelout_fn=self.modelout_fn,
+                                                   device=self.device,
+                                                   grad_dim=self.num_params)
 
         self._score_checkpoint = None
 
@@ -124,10 +111,7 @@ class TRAKer():
                     # TODO: fix this
                     self.modelout_fn.forward(self.model, batch)
 
-        if self.functional:
-            self.func_model, self.weights, self.buffers = make_functional_with_buffers(self.model)
-        else:
-            self.model_params = list(self.model.parameters())
+        self.gradient_computer.load_model_params(self.model)
 
         self._last_ind = 0
         self._last_ind_target = 0
@@ -158,29 +142,12 @@ class TRAKer():
         else:
             num_samples = inds.reshape(-1).shape[0]
 
-        if self.functional:
-            grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
-                                                                weights=self.weights,
-                                                                buffers=self.buffers,
-                                                                batch=batch)
-        else:
-            grads = self.gradient_computer.compute_per_sample_grad(model=self.model,
-                                                                   batch=batch,
-                                                                   batch_size=num_samples)
-
+        grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
+                                                               batch_size=num_samples)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
-
         self.saver.current_grads[inds] = grads.cpu().clone().detach()
 
-        if self.functional:
-            loss_grads = self.gradient_computer.compute_loss_grad(self.func_model,
-                                                                self.weights,
-                                                                self.buffers,
-                                                                batch)
-        else:
-            loss_grads = self.gradient_computer.compute_loss_grad(self.model,
-                                                                  batch)
-
+        loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
     def finalize_features(self, model_ids: Iterable[int]=None, del_grads=False):
@@ -226,15 +193,8 @@ class TRAKer():
         else:
             num_samples = inds.reshape(-1).shape[0]
 
-        if self.functional:
-            grads = self.gradient_computer.compute_per_sample_grad(func_model=self.func_model,
-                                                                weights=self.weights,
-                                                                buffers=self.buffers,
-                                                                batch=batch)
-        else:
-            grads = self.gradient_computer.compute_per_sample_grad(model=self.model,
-                                                                   batch=batch,
-                                                                   batch_size=num_samples)
+        grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
+                                                               batch_size=num_samples)
 
 
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)

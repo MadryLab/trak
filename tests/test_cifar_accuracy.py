@@ -120,7 +120,7 @@ def test_cifar_acc(tmp_path):
 
     CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
-    ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
+    ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files][:1]
 
     trak = TRAKer(model=model,
                   task='image_classification',

@@ -6,6 +6,7 @@ from torchvision import datasets, models, transforms
 
 from traker.projectors import BasicProjector
 from traker.traker import TRAKer
+from traker.gradient_computers import IterativeGradientComputer
 
 def test_cifar10(tmp_path, device='cpu'):
     model = models.resnet18(weights='DEFAULT')
@@ -28,7 +29,7 @@ def test_cifar10(tmp_path, device='cpu'):
         projector = None 
     trak = TRAKer(model=model,
                   task='image_classification',
-                  train_set_size=50_000,
+                  train_set_size=len(ds_train),
                   projector=projector,
                   save_dir=tmp_path,
                   device=device)
@@ -82,7 +83,7 @@ def test_cifar10_iter(tmp_path, device='cpu'):
 
     if device == 'cpu':
         # the default CudaProjector does not work on cpu
-        projector = BasicProjector(grad_dim=11689512,
+        projector = BasicProjector(grad_dim=sum(x.numel() for x in model.parameters()),
                                    proj_dim=20,
                                    seed=0,
                                    proj_type='rademacher',
@@ -92,10 +93,10 @@ def test_cifar10_iter(tmp_path, device='cpu'):
 
     trak = TRAKer(model=model,
                   task='image_classification',
-                  train_set_size=50_000,
+                  train_set_size=len(ds_train),
                   save_dir=tmp_path,
                   projector=projector,
-                  functional=False,
+                  gradient_computer=IterativeGradientComputer,
                   device=device)
 
     trak.load_checkpoint(model.state_dict(), model_id=0)

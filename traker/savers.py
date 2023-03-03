@@ -56,6 +56,20 @@ class MmapSaver(AbstractSaver):
         self.current_out_to_loss = None
         self.current_features = None
         self.current_target_grads = None
+
+    def register_model_id(self, model_id:int):
+        self.current_model_id = model_id
+
+        if self.current_model_id in self.model_ids.keys():
+            err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
+            raise ModelIDException(err_msg)
+        self.model_ids[self.current_model_id] = {'featurized': 0,
+                                                 'finalized': 0,
+                                                 'scored': 0}
+
+        self.init_store(self.current_model_id)
+        with open(self.model_ids_file, 'w+') as f:
+            json.dump(self.model_ids, f)
     
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))
@@ -99,21 +113,7 @@ class MmapSaver(AbstractSaver):
                                                 shape=(inds.shape[0], self.proj_dim),
                                                 dtype=np.float32)
         self.current_target_grads[:] = _current_target_grads_data[:]
-    
-    def register_model_id(self, model_id:int):
-        self.current_model_id = model_id
-
-        if self.current_model_id in self.model_ids.keys():
-            err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
-            raise ModelIDException(err_msg)
-        self.model_ids[self.current_model_id] = {'featurized': 0,
-                                                 'finalized': 0,
-                                                 'scored': 0}
-
-        self.init_store(self.current_model_id)
-        with open(self.model_ids_file, 'w+') as f:
-            json.dump(self.model_ids, f)
-        
+     
     def del_grads(self, model_id, target=False):
         if target:
             grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
