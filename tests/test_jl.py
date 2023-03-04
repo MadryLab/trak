@@ -191,7 +191,6 @@ def test_single_nonzero_feature(seed,
     """
     Check that output takes into account every feature.
     """
-    print(dtype)
     g = ch.zeros(*input_shape, device='cuda:0', dtype=dtype)
     for ind in range(input_shape[0]):
         coord = np.random.choice(range(input_shape[1]))

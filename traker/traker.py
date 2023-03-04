@@ -198,6 +198,11 @@ class TRAKer():
               ) -> Tensor:
         assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
         assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
+
+        if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
+            print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
+            return None
+
         if num_samples is not None:
             inds = np.arange(self._last_ind_target, self._last_ind_target + num_samples)
             self._last_ind_target += num_samples
@@ -215,7 +220,7 @@ class TRAKer():
             self.saver.finalize_target_grads(self.saver.current_model_id)
 
     
-    def finalize_scores(self, model_ids: Iterable[int]=None, save_grads_to_mmap=False, del_grads=False) -> None:
+    def finalize_scores(self, model_ids: Iterable[int]=None, del_grads=False) -> None:
         # reset counter for inds used for scoring
         self._last_ind_target = 0
 
@@ -224,22 +229,28 @@ class TRAKer():
 
         targets_size = self.saver.current_target_grads.shape[0]
         _scores = ch.empty(len(model_ids), self.train_set_size, targets_size)
+        _avg_out_to_losses = ch.zeros_like(ch.as_tensor(self.saver.current_out_to_loss))
 
-        _avg_out_to_losses = ch.ones_like(ch.as_tensor(self.saver.current_out_to_loss))
-        for ii, model_id in enumerate(self.saver.model_ids):
+        _num_models_used = 0
+        for ii, model_id in enumerate(model_ids):
             self.saver.load_store(model_id)
+
             if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
-                print(f'model id {self.saver.current_model_id} not finalized, cannot score')
+                print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
+
             g = ch.as_tensor(self.saver.current_features)
             g_target = ch.as_tensor(self.saver.current_target_grads)
+
             _scores[ii] = g @ g_target.T
+            _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss).clone().detach()
+            _num_models_used += 1
 
             if del_grads:
                 self.saver.del_grads(model_id, target=True)
-            
-            _avg_out_to_losses *= ch.as_tensor(self.saver.current_out_to_loss)
 
+            self.saver.clear_target_grad_count(model_id)
+            
         _scores = _scores.mean(dim=0)
-        self.scores = _scores * _avg_out_to_losses
+        self.scores = _scores * (_avg_out_to_losses / _num_models_used)
         return self.scores

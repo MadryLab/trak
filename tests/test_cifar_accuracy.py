@@ -3,6 +3,7 @@ import torch as ch
 import pytest
 from tqdm import tqdm
 from pathlib import Path
+import json
 
 from traker.traker import TRAKer
 
@@ -120,7 +121,7 @@ def test_cifar_acc(tmp_path):
 
     CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
-    ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files][:2]
+    ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     trak = TRAKer(model=model,
                   task='image_classification',
@@ -135,10 +136,12 @@ def test_cifar_acc(tmp_path):
 
     trak.finalize_features()
 
+
     for model_id, ckpt in enumerate(ckpts):
         trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_val, desc='Scoring...'):
                 trak.score(batch=batch, num_samples=N)
+
     scores = trak.finalize_scores()
 
     SAVE_DIR = '/mnt/cfs/projects/better_tracin/estimators/CIFAR2/debug2/estimates.npy'

@@ -64,7 +64,8 @@ class MmapSaver(AbstractSaver):
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
         self.model_ids[self.current_model_id] = {'featurized': 0,
-                                                 'finalized': 0}
+                                                 'finalized': 0,
+                                                 'num_target_grads': 0}
 
         self.init_store(self.current_model_id)
         with open(self.model_ids_file, 'w+') as f:
@@ -88,23 +89,35 @@ class MmapSaver(AbstractSaver):
     
     def load_store(self, model_id, mode='r+') -> None:
         self.current_model_id = model_id
-
         prefix = self.save_dir.joinpath(str(model_id))
-        self.current_grads = open_memmap(filename=prefix.joinpath('grads.mmap'),
+
+        self.current_grads_path = prefix.joinpath('grads.mmap')
+        self.current_grads = open_memmap(filename=self.current_grads_path,
                                          mode=mode,
                                          shape=(self.grad_dim, self.proj_dim),
                                          dtype=np.float32)
 
-        self.current_out_to_loss = open_memmap(filename=prefix.joinpath('out_to_loss.mmap'),
+        self.current_out_to_loss_path = prefix.joinpath('out_to_loss.mmap')
+        self.current_out_to_loss = open_memmap(filename=self.current_out_to_loss_path,
                                                mode=mode,
                                                shape=(self.grad_dim, 1),
                                                dtype=np.float32)
 
-        self.current_features = open_memmap(filename=prefix.joinpath('features.mmap'),
+        self.current_features_path = prefix.joinpath('features.mmap')
+        self.current_features = open_memmap(filename=self.current_features_path,
                                             mode=mode,
                                             shape=(self.grad_dim, self.proj_dim),
                                             dtype=np.float32)
+
         self.current_target_grads_dict = {}
+
+        self.current_num_target_grads = self.model_ids[model_id]['num_target_grads']
+        if self.current_num_target_grads > 0:
+            self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
+            self.current_target_grads = open_memmap(filename=self.current_target_grads_path,
+                                                    mode=mode,
+                                                    shape=(self.current_num_target_grads, self.proj_dim),
+                                                    dtype=np.float32)
 
     def finalize_target_grads(self, model_id):
         """ Go from a indices-to-target-grads dictionary to a torch tensor, and save
@@ -118,7 +131,9 @@ class MmapSaver(AbstractSaver):
                                                 mode='w+',
                                                 shape=(inds.shape[0], self.proj_dim),
                                                 dtype=np.float32)
-        self.current_target_grads[:] = _current_target_grads_data[:]
+        self.current_target_grads[:] = _current_target_grads_data
+        self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
+        self.model_ids[model_id]['num_target_grads'] = len(self.current_target_grads)
      
     def del_grads(self, model_id, target=False):
         if target:
@@ -128,3 +143,8 @@ class MmapSaver(AbstractSaver):
 
         # delete grads memmap
         grads_file.unlink()
+
+    def clear_target_grad_count(self, model_id):
+        self.model_ids[model_id]['num_target_grads'] = 0
+        if model_id == self.current_model_id:
+            self.current_num_target_grads = 0

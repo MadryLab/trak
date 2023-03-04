@@ -56,16 +56,15 @@ class BasicReweighter(AbstractReweighter):
 
         return result
 
-    def finalize(self, grads: Tensor, xtx: Tensor, recompute_xtx_inv: bool=True) -> None:
-        """ Update matrix of (reweighted) dot products in-place
+    def finalize(self, grads: Tensor, xtx: Tensor) -> None:
+        """ Update matrix of (reweighted) dot products
         """
         blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
-        if recompute_xtx_inv:
-            self.xtx_inv = ch.linalg.inv(xtx)
+        xtx_inv = ch.linalg.inv(xtx)
 
-        result = ch.zeros(grads.shape[0], self.xtx_inv.shape[1], device=self.device)
+        result = ch.zeros(grads.shape[0], xtx_inv.shape[1], device=self.device)
         for i, block in enumerate(blocks):
             start = i * self.CUDA_MAX_DIM_SIZE
             end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[start : end] += (block.to(self.device) @ self.xtx_inv)
+            result[start : end] += (block.to(self.device) @ xtx_inv)
         return result
