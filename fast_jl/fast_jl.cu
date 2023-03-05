@@ -48,8 +48,6 @@ torch::Tensor fast_jl(
     auto output = torch::zeros({num_batch_dim, num_feature_tiles, N},
                                torch::TensorOptions().device(input.device()));
 
-    auto basis = torch::zeros({F, N}, torch::TensorOptions().device(input.device()));
-
     for (uint32_t meta_batch=0; meta_batch < num_required_batches; meta_batch++) {
         uint32_t batch_start = meta_batch * effective_batch_size;
         uint32_t batch_end = (meta_batch + 1) * effective_batch_size;
@@ -61,20 +59,18 @@ torch::Tensor fast_jl(
         uint32_t real_batch_end = std::min(batch_end, B) % effective_batch_size;
         if (real_batch_end == 0) real_batch_end = effective_batch_size;
 
-        std::cout << batch_start << ", " << batch_end << ", " << real_batch_end << std::endl;
-
         if (input.dtype() == torch::kFloat16) {
             project<__half, p_type, NUM_BATCHES, 16>(
                     (__half*) current_input.data_ptr<at::Half>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles, basis.data_ptr<float>());
+                    seed, num_feature_tiles);
         } else {
             project<float, p_type, NUM_BATCHES, 16>(
                     current_input.data_ptr<float>(),
                     current_output.data_ptr<float>(),
                     real_batch_end, F, N,
-                    seed, num_feature_tiles,basis.data_ptr<float>());
+                    seed, num_feature_tiles);
 
         }
     }
@@ -112,3 +108,21 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("project_normal_16", &proj_normal_16, "Fast Random Projection (CUDA)");
     m.def("project_normal_32", &proj_normal_32, "Fast Random Projection (CUDA)");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

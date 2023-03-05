@@ -6,32 +6,21 @@
 
 ### Setting up TRAK scorer
 ```python
-from traker import TRAKer, CrossEntropyModelOutput
+from traker import TRAKer
 
 model, checkpoints = ...
 train_loader = ...
 
-model_output_fn = CrossEntropyModelOutput()
-trak = TRAKer(model, save_dir='/tmp', device='cuda:0')
-
-func_model, weights, buffers = make_functional_with_buffers(model)
-def compute_model_output(weights, buffers, image, label):
-  out = func_model(weights, buffers, image.unsqueeze(0))
-  return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
-
-def compute_out_to_loss(weights, buffers, images, labels):
-    out = func_model(weights, buffers, images)
-    return modelout_fn.get_out_to_loss(out, labels)
+trak = TRAKer(model=model,
+              task='image_classification',
+              train_set_size=50_000,
+              device='cuda:0')
 
 for model_id, checkpoint in enumerate(checkpoints):
-  # load checkpoint here, get new weights & buffers ...
-  trak.load_params(model_params=(weights, buffers))
+  trak.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in loader_train:
-      inds = ...  # if loading in sequential order, this can be skipped
-      trak.featurize(out_fn=compute_outputs, loss_fn=compute_out_to_loss,
-                     batch=batch, model_id=model_id, inds=inds)
-trak.finalize()
-trak.save()
+      trak.featurize(batch=batch, num_samples=loader_train.batch_size)
+trak.finalize_features()
 ```
 
 ### Evaluating TRAK scores
@@ -41,12 +30,15 @@ from traker import TRAKer
 model, checkpoints = ...
 val_loader = ...
 
-trak = TRAKer('/tmp')
-trak.load()
+trak = TRAKer(model=model,
+              task='image_classification',
+              train_set_size=50_000,
+              device='cuda:0')
 
 for model_id, checkpoint in enumerate(checkpoints):
-  # load checkpoint here ...
+  trak.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in val_loader:
-    scores.append(trak.score(out_fn=compute_outputs, batch=batch,
-                             model=model, model_id=model_id).cpu())
+    trak.score(batch=batch, num_samples=loader_val.batch_size)
+
+scores = trak.finalize_scores()
 ```

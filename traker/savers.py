@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 import os
+import json
 from torch import Tensor
 import numpy as np
+from numpy.lib.format import open_memmap
 import torch as ch
 from typing import Optional, Iterable
 from pathlib import Path
@@ -21,144 +23,128 @@ class AbstractSaver(ABC):
         self.save_dir = Path(save_dir).resolve() 
         os.makedirs(self.save_dir, exist_ok=True)
 
-        self.model_ids = set()
+        self.model_ids = {}
+        # check if there are existing model ids in the save_dir
+        self.model_ids_file = self.save_dir.joinpath('ids.json')
+        if self.model_ids_file.is_file():
+            with open(self.model_ids_file, 'r') as f:
+                existing_ids = json.load(f)
+            self.model_ids.update(existing_ids)
+
+        # init ids metadata
+        else:
+            with open(self.model_ids_file, 'w+') as f:
+                json.dump(self.model_ids, f)
+
+
 
     @abstractmethod
-    def grad_set(self, grads: Tensor) -> None:
-        ...
-
-    @abstractmethod
-    def grad_get(self, inds: Optional[Tensor]) -> Tensor:
-        ...
-
-    @abstractmethod
-    def loss_set(self, loss_grads: Tensor) -> None:
-        ...
-
-    @abstractmethod
-    def loss_get(self, inds: Optional[Tensor]) -> Tensor:
-        ...
-
-    @abstractmethod
-    def features_set(self, features: Tensor) -> None:
-        ...
-
-    @abstractmethod
-    def features_get(self, inds: Optional[Tensor]) -> Tensor:
-        ...
-
-    @abstractmethod
-    def save(self, features_only=True) -> None:
-        ...
-
-    @abstractmethod
-    def load(self, path, features_only=False) -> Iterable[Tensor]:
+    def register_model_id(self, model_id:int):
         ...
 
 
-class KeepInRAMSaver(AbstractSaver):
-    """ A basic "saver" that does not serialize anything and
-    instead keeps all tensors in RAM.
-    """
+class ModelIDException(Exception):
+    pass
+
+
+class MmapSaver(AbstractSaver):
     def __init__(self, device, save_dir, grads_shape) -> None:
-        super().__init__(save_dir, device)
-        self.grads_shape = grads_shape
-        self.loss_shape = [grads_shape[0], 1]
-        self.grads = {}
-        self.loss_grads = {}
-        self.features = {}
-        self.model_ids.add(0)
+        super().__init__(device=device, save_dir=save_dir)
+        self.grad_dim, self.proj_dim = grads_shape
+        self.current_model_id = None
+        self.current_grads = None
+        self.current_out_to_loss = None
+        self.current_features = None
+        self.current_target_grads = None
+
+    def register_model_id(self, model_id:int):
+        self.current_model_id = model_id
+
+        if self.current_model_id in self.model_ids.keys():
+            err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
+            raise ModelIDException(err_msg)
+        self.model_ids[self.current_model_id] = {'featurized': 0,
+                                                 'finalized': 0,
+                                                 'num_target_grads': 0}
+
+        self.init_store(self.current_model_id)
+        with open(self.model_ids_file, 'w+') as f:
+            json.dump(self.model_ids, f)
     
-    def init_tensor(self, shape, device):
-        return ch.zeros(shape, device=device)
+    def serialize_model_id_metadata(self):
+        # TODO: this will be problematic if we have multiple
+        # threads writing the featurized/finalized bits in parallel;
+        # we should fix that in the future
+        with open(self.model_ids_file, 'w+') as f:
+            json.dump(self.model_ids, f)
     
-    def grad_set(self, grads: Tensor, inds: Tensor=None, model_id=0) -> None:
-        if self.grads.get(model_id) is None:
-            self.model_ids.add(model_id)
-            self.grads[model_id] = self.init_tensor(shape=self.grads_shape, device=self.device)
-        if inds is not None:
-            self.grads[model_id][inds] = grads
-        else:
-            self.grads[model_id][:] = grads
+    def init_store(self, model_id) -> None:
+        prefix = self.save_dir.joinpath(str(model_id))
+        try:
+            os.makedirs(prefix)
+        except:
+            raise ModelIDException(f'model id folder {prefix} already exists')
 
-    def grad_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
-        if inds == None:
-            return self.grads[model_id]
-        else:
-            return self.grads[model_id][inds]
-
-    def features_set(self, features: Tensor, inds: Tensor=None, model_id=0) -> None:
-        if self.features.get(model_id) is None:
-            self.model_ids.add(model_id)
-            self.features[model_id] = self.init_tensor(shape=self.grads_shape, device=self.device)
-        if inds is not None:
-            self.features[model_id][inds] = features
-        else:
-            self.features[model_id][:] = features
-
-    def features_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
-        if inds == None:
-            if self.features.get(model_id) is not None:
-                return self.features[model_id]
-            else:
-                return ch.tensor([])
-        else:
-            return self.features[model_id][inds]
-
-    def loss_set(self, loss_grads: Tensor, inds: Tensor=None, model_id=0) -> None:
-        if self.loss_grads.get(model_id) is None:
-            self.model_ids.add(model_id)
-            self.loss_grads[model_id] = self.init_tensor(shape=self.loss_shape, device=self.device)
-        if inds is not None:
-            self.loss_grads[model_id][inds] = loss_grads.unsqueeze(-1)
-        else:
-            self.loss_grads[model_id][:] = loss_grads
-
-    def loss_get(self, inds: Optional[Tensor]=None, model_id=0) -> Tensor:
-        if inds == None:
-            return self.loss_grads[model_id]
-        else:
-            return self.loss_grads[model_id][inds]
-
-    def save(self, features_only) -> None:
-        for model_id in self.model_ids:
-            if not features_only:
-                f_grads = self.save_dir.joinpath(f'gradients_{model_id}.npy')
-                np.save(f_grads, self.grad_get(model_id=model_id).cpu())
-                f_loss = self.save_dir.joinpath(f'loss_grads_{model_id}.npy')
-                np.save(f_loss, self.loss_get(model_id=model_id).cpu())
-            f_feat = self.save_dir.joinpath(f'features_{model_id}.npy')
-            np.save(f_feat, self.features_get(model_id=model_id).cpu())
-
-    def load(self, load_from=None, features_only=False) -> None:
-        if load_from is None:
-            load_from = self.save_dir
-        else:
-            load_from = Path(load_from).resolve()
-        if not features_only:
-            for f in load_from.rglob('gradients_*.npy'):
-                model_id = int(str(f).split('.npy')[0].split('_')[-1])
-                self.grad_set(ch.from_numpy(np.load(f)).to(self.device), model_id=model_id)
-            for f in load_from.rglob('loss_grads_*.npy'):
-                model_id = int(str(f).split('.npy')[0].split('_')[-1])
-                self.loss_set(ch.from_numpy(np.load(f)).to(self.device), model_id=model_id)
-        for f in load_from.rglob('features_*.npy'):
-            model_id = int(str(f).split('.npy')[0].split('_')[-1])
-            self.features_set(ch.from_numpy(np.load(f)).to(self.device), model_id=model_id)
-
-
-class ZarrSaver(AbstractSaver):
-    def __init__(self, save_dir, device) -> None:
-        super().__init__(save_dir, device)
+        self.load_store(model_id, mode='w+')
     
-    def grad_set(self, grads: Tensor) -> None:
-        return super().grad_set(grads)
+    def load_store(self, model_id, mode='r+') -> None:
+        self.current_model_id = model_id
+        prefix = self.save_dir.joinpath(str(model_id))
 
+        self.current_grads_path = prefix.joinpath('grads.mmap')
+        self.current_grads = open_memmap(filename=self.current_grads_path,
+                                         mode=mode,
+                                         shape=(self.grad_dim, self.proj_dim),
+                                         dtype=np.float32)
 
-class MmapSaver(KeepInRAMSaver):
-    def __init__(self, device, save_dir, grads_shape) -> None:
-        super().__init__(device=device, save_dir=save_dir, grads_shape=grads_shape)
-    
-    def init_tensor(self, shape, device, name='test.mmap') -> None:
-        obj = np.memmap(filename=name, shape=shape)
-        return obj.to(device)
+        self.current_out_to_loss_path = prefix.joinpath('out_to_loss.mmap')
+        self.current_out_to_loss = open_memmap(filename=self.current_out_to_loss_path,
+                                               mode=mode,
+                                               shape=(self.grad_dim, 1),
+                                               dtype=np.float32)
+
+        self.current_features_path = prefix.joinpath('features.mmap')
+        self.current_features = open_memmap(filename=self.current_features_path,
+                                            mode=mode,
+                                            shape=(self.grad_dim, self.proj_dim),
+                                            dtype=np.float32)
+
+        self.current_target_grads_dict = {}
+
+        self.current_num_target_grads = self.model_ids[model_id]['num_target_grads']
+        if self.current_num_target_grads > 0:
+            self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
+            self.current_target_grads = open_memmap(filename=self.current_target_grads_path,
+                                                    mode=mode,
+                                                    shape=(self.current_num_target_grads, self.proj_dim),
+                                                    dtype=np.float32)
+
+    def finalize_target_grads(self, model_id):
+        """ Go from a indices-to-target-grads dictionary to a torch tensor, and save
+        to a mmap
+        """
+        inds = ch.cat(tuple(self.current_target_grads_dict.keys()))
+        _current_target_grads_data = ch.cat(tuple(self.current_target_grads_dict.values()))[inds]
+
+        prefix = self.save_dir.joinpath(str(model_id))
+        self.current_target_grads = open_memmap(filename=prefix.joinpath('grads_target.mmap'),
+                                                mode='w+',
+                                                shape=(inds.shape[0], self.proj_dim),
+                                                dtype=np.float32)
+        self.current_target_grads[:] = _current_target_grads_data
+        self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
+        self.model_ids[model_id]['num_target_grads'] = len(self.current_target_grads)
+     
+    def del_grads(self, model_id, target=False):
+        if target:
+            grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
+        else:
+            grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
+
+        # delete grads memmap
+        grads_file.unlink()
+
+    def clear_target_grad_count(self, model_id):
+        self.model_ids[model_id]['num_target_grads'] = 0
+        if model_id == self.current_model_id:
+            self.current_num_target_grads = 0

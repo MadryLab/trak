@@ -6,30 +6,31 @@ import torch as ch
 
 class AbstractModelOutput(ABC):
     """
-    ModelOutputFunction classes must implement a `get_output` method that takes
-    in a batch of inputs and a model to produce "margins". Those margins will be
-    used by TRAK: the gradients for produciung the after kernel will be of the
-    margin, rather than the loss.  This is especially useful for exponentially
-    saturating loss f-ns like cross entropy.
+    ModelOutputFunction classes must implement:
+    - a `get_output` method that takes in a batch of inputs and model weights
+    to produce outputs that TRAK will be trained to predict.
+    - a `get_out_to_loss_grad` method that takes in a batch of inputs and
+    model weights to produce the gradient of the function that transforms the
+    model outputs above into the loss wrt the batch
     """
     @abstractmethod
-    def __init__(self, device) -> None:
-        self.device = device
+    def __init__(self) -> None:
+        pass
 
     @abstractmethod
     def get_output(self,
-                   model: Module,
+                   model,
                    batch: Iterable[Tensor]) -> Tensor:
         ...
     
     @abstractmethod
-    def get_out_to_loss(self,
-                        model: Module,
-                        batch: Iterable[Tensor]) -> Tensor:
+    def get_out_to_loss_grad(self,
+                             model,
+                             batch: Iterable[Tensor]) -> Tensor:
         ...
 
 
-class CrossEntropyModelOutput(AbstractModelOutput):
+class ImageClassificationModelOutput(AbstractModelOutput):
     """
     Margin for image classification.
 
@@ -37,62 +38,86 @@ class CrossEntropyModelOutput(AbstractModelOutput):
         \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
         \exp(\text{logit}[i])\right)
 
-    Version proposed in 'Understanding Influence Functions
+    Version of margin proposed in 'Understanding Influence Functions
     and Datamodels via Harmonic Analysis'
     """
 
-    def __init__(self, device, temperature=1.) -> None:
-        super().__init__(device)
-        self.partial_loss_fn = ch.nn.Softmax(-1)
+    def __init__(self, temperature=1.) -> None:
+        super().__init__()
+        self.softmax = ch.nn.Softmax(-1)
+        self.loss_temperature = temperature
+
+    @staticmethod 
+    def get_output(func_model,
+                   weights: Iterable[Tensor],
+                   buffers: Iterable[Tensor],
+                   image: Tensor,
+                   label: Tensor) -> Tensor:
+        logits = func_model(weights, buffers, image.unsqueeze(0))
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
+        logits_correct = logits[bindex, label.unsqueeze(0)]
+
+        cloned_logits = logits.clone()
+        # a hacky way to remove the logits of the correct labels from the sum
+        # in logsumexp by setting to -ch.inf
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(logits.device)
+
+        margins = logits_correct - cloned_logits.logsumexp(dim=-1)
+        return margins.sum()
+
+    def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
+        images, _ = batch
+        return model(images)
+
+    def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+        images, labels = batch
+        logits = func_model(weights, buffers, images)
+        # here we are directly implementing the gradient instead of relying on autodiff to do
+        # that for us
+        ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
+        return (1 - ps).clone().detach().unsqueeze(-1)
+
+
+class IterImageClassificationModelOutput(AbstractModelOutput):
+    """
+    Margin for image classification.
+
+    .. math::
+        \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
+        \exp(\text{logit}[i])\right)
+
+    Version of margin proposed in 'Understanding Influence Functions
+    and Datamodels via Harmonic Analysis'
+    """
+
+    def __init__(self, temperature=1.) -> None:
+        super().__init__()
+        self.softmax = ch.nn.Softmax(-1)
         self.loss_temperature = temperature
 
     def get_output(self,
-                   logits: Iterable[Tensor],
-                   labels: Optional[Tensor]) -> Tensor:
-        bindex = ch.arange(logits.shape[0]).to(self.device, non_blocking=False)
+                   model: Module,
+                   images: Tensor,
+                   labels: Tensor) -> Tensor:
+        logits = model(images)
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, labels]
 
-        cloned_logits = logits.clone().to(self.device, non_blocking=False)
+        cloned_logits = logits.clone()
         # a hacky way to remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).to(self.device)
+        cloned_logits[bindex, labels] = ch.tensor(-ch.inf).to(logits.device)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins
     
-    def get_out_to_loss(self, logits: Module, labels: Iterable[Tensor]) -> Tensor:
-        ps = self.partial_loss_fn(logits / self.loss_temperature)[ch.arange(logits.size(0)),
-                                                                  labels]
-        return (1 - ps).clone().detach()
-
-
-class NLPModelOutput(AbstractModelOutput):
-    """
-    Margin for fact-tracing in NLP.
-
-    Logits: [batch size, sequence length, vocab size]
-    Labels: [batch size, sequence length]
-    """
-
-    def __init__(self, device) -> None:
-        super().__init__(device)
-        self.inf = ch.tensor(-ch.inf).to(self.device)
-
-    def get_output(self,
-                   logits: Iterable[Tensor],
-                   labels: Optional[Tensor]) -> Tensor:
-        logits_correct = logits.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
-        cloned_logits = logits.clone()
-        inf = ch.tensor(-ch.inf).to(self.device)
-        if logits.shape[0] == 1:
-            r = ch.arange(logits.shape[1]).to(cloned_logits.device)
-            cloned_logits[0, r, labels] = inf
-            margins = logits_correct - cloned_logits.logsumexp(dim=-1)
-        else:
-            cloned_logits.scatter_(-1, labels.unsqueeze(-1), -ch.inf)
-            margins = logits_correct - cloned_logits.logsumexp(dim=-1)
-
-        return (margins * (labels != 0)).sum(-1) / (labels != 0).sum(-1)
+    def get_out_to_loss_grad(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
+        images, labels = batch
+        logits = model(images)
+        # here we are directly implementing the gradient instead of relying on autodiff to do
+        # that for us
+        ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
+        return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 class CLIPModelOutput(AbstractModelOutput):
@@ -146,3 +171,9 @@ class CLIPModelOutput(AbstractModelOutput):
         res = self.temperature * logits @ labels.T
         ps = (self.partial_loss_fn(res) + self.partial_loss_fn(res.T)).diag() / 2.
         return (1 - ps).clone().detach()
+
+
+TASK_TO_MODELOUT = {
+    ('image_classification', True): ImageClassificationModelOutput,
+    ('image_classification', False): IterImageClassificationModelOutput,
+}

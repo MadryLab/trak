@@ -11,6 +11,14 @@ def parameters_to_vector(parameters):
     return ch.cat(vec)
 
 
+def get_num_params(model: ch.nn.Module):
+    return parameters_to_vector(model.parameters()).numel()
+
+
+def get_params_dict(model):
+    return [x[0] for x in list(model.named_parameters())]
+
+
 def is_not_buffer(ind, params_dict):
     name = params_dict[ind]
     if ('running_mean' in name) or ('running_var' in name) or ('num_batches_tracked' in name):

@@ -6,6 +6,7 @@ import open_clip
 
 from traker.traker import TRAKer
 from traker.modelout_functions import CLIPModelOutput
+from traker.gradient_computers import IterativeGradientComputer
 
 @pytest.mark.cuda
 def test_mscoco(device='cuda:0'):
@@ -25,7 +26,7 @@ def test_mscoco(device='cuda:0'):
                   grad_wrt=[x[1] for x in model.named_parameters() if x[0] != 'logit_scale'],
                   device=device,
                   train_set_size=len(ds_train),
-                  functional=False,
+                  gradient_projector=IterativeGradientComputer,
                   proj_dim=100)
 
 

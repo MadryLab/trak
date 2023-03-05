@@ -3,10 +3,9 @@ import torch as ch
 import pytest
 from tqdm import tqdm
 from pathlib import Path
-from functorch import make_functional_with_buffers
+import json
 
 from traker.traker import TRAKer
-from traker.modelout_functions import CrossEntropyModelOutput
 
 from typing import List
 import torch as ch
@@ -111,75 +110,39 @@ def construct_rn9(num_classes=2):
     return model
 
 @pytest.mark.cuda
-def test_cifar_acc():
-    model = construct_rn9().to(memory_format=ch.channels_last).cuda()
+def test_cifar_acc(tmp_path):
+    device = 'cuda:0'
+    model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
-    loader_train = get_dataloader(batch_size=100, split='train')
-    loader_val = get_dataloader(batch_size=100, split='val')
+    N = 100
+    loader_train = get_dataloader(batch_size=N, split='train')
+    loader_val = get_dataloader(batch_size=N, split='val')
 
     CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
-    device = 'cuda:0'
-    modelout_fn = CrossEntropyModelOutput(device=device)
     trak = TRAKer(model=model,
+                  task='image_classification',
                   train_set_size=10_000,
-                  grad_dtype=ch.float32,
-                  proj_dim=1000,
-                  save_dir='./trak_results',
+                  save_dir=tmp_path,
                   device=device)
+
+    for model_id, ckpt in enumerate(ckpts):
+        trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
+        for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
+            trak.featurize(batch=batch, num_samples=N)
+
+    trak.finalize_features()
 
 
     for model_id, ckpt in enumerate(ckpts):
-        model.load_state_dict(ckpt)
-        model.eval()
-        func_model, weights, buffers = make_functional_with_buffers(model)
-        trak.load_params(model_params=(weights, buffers), model_id=model_id)
+        trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
+        for batch in tqdm(loader_val, desc='Scoring...'):
+                trak.score(batch=batch, num_samples=N)
 
-        def compute_outputs(weights, buffers, image, label):
-            out = func_model(weights, buffers, image.unsqueeze(0))
-            return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
+    scores = trak.finalize_scores()
 
-        def compute_out_to_loss(weights, buffers, images, labels):
-            out = func_model(weights, buffers, images)
-            return modelout_fn.get_out_to_loss(out, labels)
-
-        for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
-            inds = list(range(bind * loader_train.batch_size,
-                            (bind + 1) * loader_train.batch_size))
-            trak.featurize(out_fn=compute_outputs,
-                           loss_fn=compute_out_to_loss,
-                           batch=batch,
-                           model_id=model_id,
-                           inds=inds)
-
-    trak.finalize()
-    trak.save()
-
-    trak = TRAKer(model=model,
-                  train_set_size=10_000,
-                  grad_dtype=ch.float32,
-                  proj_dim=1000,
-                  save_dir='./trak_results',
-                  device=device)
-    trak.load()
-
-    scores = []
-    for model_id, ckpt in enumerate(ckpts):
-        model.load_state_dict(ckpt)
-        model.eval()
-        func_model, weights, buffers = make_functional_with_buffers(model)
-        s = []
-        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-            s.append(
-                trak.score(out_fn=compute_outputs,
-                           batch=batch,
-                           model=model,
-                           model_id=model_id).cpu()
-            )
-        scores.append(ch.cat(s))
-    scores = ch.stack(scores).mean(dim=0) # average influence matrices
     SAVE_DIR = '/mnt/cfs/projects/better_tracin/estimators/CIFAR2/debug2/estimates.npy'
-    np.save(SAVE_DIR, scores.cpu().numpy().T)
+    np.save(SAVE_DIR, scores.cpu().numpy())

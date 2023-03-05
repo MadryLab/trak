@@ -79,7 +79,7 @@ class BasicProjector(AbstractProjector):
     matmul blockwise if needed.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, num_blocks: int=2, dtype=ch.float16,
+                 ProjectionType, device, num_blocks: int=2, dtype=ch.float32,
                  model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
@@ -120,7 +120,7 @@ class BasicProjector(AbstractProjector):
         else:
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
     
-    def project(self, grads: Tensor, model_id: int=0) -> Tensor:
+    def project(self, grads: Tensor, model_id: int) -> Tensor:
         sketch = ch.zeros(size=(grads.size(0), self.proj_dim),
                           dtype=self.dtype, device=self.device)
 
@@ -154,7 +154,7 @@ class CudaProjector(AbstractProjector):
             device = ch.device(device)
 
         if device.type != 'cuda':
-            raise ValueError("CudaProjector only works on a cuda device")
+            raise ValueError("CudaProjector only works on a cuda device; Either switch to a cuda device, or use the BasicProjector")
 
         self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
 
@@ -163,15 +163,15 @@ class CudaProjector(AbstractProjector):
         except ImportError:
             raise ModuleNotFoundError("You should make sure you install the cuda projetor for traker (called fast_jl)")
 
-    def project(self, grads: Tensor) -> Tensor:
+    def project(self, grads: Tensor, model_id: int) -> Tensor:
         batch_size = grads.shape[0]
         ebs = 32
         if batch_size <= 8:
             ebs = 8
-        if batch_size <= 16:
+        elif batch_size <= 16:
             ebs = 16
 
         function_name = f"project_{self.proj_type.value}_{ebs}"
         import fast_jl
         fn = getattr(fast_jl, function_name)
-        return fn(grads, self.proj_dim, self.seed, self.num_sms)
+        return fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
