@@ -1,9 +1,12 @@
 import numpy as np
 import torch as ch
 import pytest
+import json
+import wget
 from tqdm import tqdm
 from pathlib import Path
-import json
+from itertools import product
+from scipy.stats import spearmanr
 
 from traker.traker import TRAKer
 
@@ -109,16 +112,60 @@ def construct_rn9(num_classes=2):
     )
     return model
 
+def eval_correlations(infls, tmp_path):
+    masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
+    margins_url = 'https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1'
+
+    masks_path = Path(tmp_path).joinpath('mask.npy')
+    wget.download(masks_url, out=str(masks_path), bar=None)
+    # num masks, num train samples
+    masks = ch.as_tensor(np.load(masks_path, mmap_mode='r')).float()
+
+    margins_path = Path(tmp_path).joinpath('val_margins.npy')
+    wget.download(margins_url, out=str(margins_path), bar=None)
+    # num , num val samples
+    margins = ch.as_tensor(np.load(margins_path, mmap_mode='r'))
+
+    val_inds = np.arange(2000)
+    preds = masks @ infls
+    rs = []
+    ps = []
+    for ind, j in tqdm(enumerate(val_inds)):
+        r, p = spearmanr(preds[:, ind], margins[:, j])
+        rs.append(r)
+        ps.append(p)
+    rs, ps = np.array(rs), np.array(ps)
+    print(f'Correlation: {rs.mean()} (avg p value {ps.mean()})')
+    return rs.mean()
+
+def get_projector(use_cuda_projector):
+    if use_cuda_projector:
+        return None
+    return BasicProjector(grad_dim=11689512, proj_dim=4096, seed=0, proj_type='rademacher',
+                          device='cuda:0')
+
+_PARAM = list(product([True, False], # serialize
+                     [True, False], # basic / cuda projector
+                     [1, 32, 100], # batch size
+        ))
+
+PARAM = list(product([False], # serialize
+                     [True], # cuda / basic projector
+                     [100], # batch size
+        ))
+
+@pytest.mark.parametrize("serialize, use_cuda_projector, batch_size", PARAM)
 @pytest.mark.cuda
-def test_cifar_acc(tmp_path):
+def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     device = 'cuda:0'
+    projector = get_projector(use_cuda_projector)
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
-    N = 100
-    loader_train = get_dataloader(batch_size=N, split='train')
-    loader_val = get_dataloader(batch_size=N, split='val')
+    loader_train = get_dataloader(batch_size=batch_size, split='train')
+    loader_val = get_dataloader(batch_size=batch_size, split='val')
 
+    # TODO: put this on dropbox as well
     CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
@@ -132,17 +179,24 @@ def test_cifar_acc(tmp_path):
     for model_id, ckpt in enumerate(ckpts):
         trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
-            trak.featurize(batch=batch, num_samples=N)
+            trak.featurize(batch=batch, num_samples=batch_size)
 
     trak.finalize_features()
 
+    if serialize:
+        del trak
+        trak = TRAKer(model=model,
+                    task='image_classification',
+                    train_set_size=10_000,
+                    save_dir=tmp_path,
+                    device=device)
 
     for model_id, ckpt in enumerate(ckpts):
         trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_val, desc='Scoring...'):
-                trak.score(batch=batch, num_samples=N)
+                trak.score(batch=batch, num_samples=batch_size)
 
     scores = trak.finalize_scores()
 
-    SAVE_DIR = '/mnt/cfs/projects/better_tracin/estimators/CIFAR2/debug2/estimates.npy'
-    np.save(SAVE_DIR, scores.cpu().numpy())
+    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+    assert avg_corr > 0.058, 'correlation with 3 CIFAR-2 models should be >= 0.058'
