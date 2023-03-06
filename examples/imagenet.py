@@ -4,8 +4,8 @@ from functorch import make_functional_with_buffers
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-from traker.traker import TRAKer
-from traker.modelout_functions import CrossEntropyModelOutput
+from trak import TRAKer
+from trak.modelout_functions import CrossEntropyModelOutput
 
 def init_model_and_data(device='cuda:0'):
     model = models.resnet18(weights='DEFAULT').to(device)
@@ -28,13 +28,13 @@ if __name__ == "__main__":
     model, loader_train, loader_val = init_model_and_data(device)
 
     modelout_fn = CrossEntropyModelOutput(device=device)
-    trak = TRAKer(model=model,
+    traker = TRAKer(model=model,
                   train_set_size=1000,
                   save_dir='./trak_results',
                   device=device)
 
     func_model, weights, buffers = make_functional_with_buffers(model)
-    trak.load_params(model_params=(weights, buffers))
+    traker.load_params(model_params=(weights, buffers))
 
     def compute_outputs(weights, buffers, image, label):
         out = func_model(weights, buffers, image.unsqueeze(0))
@@ -48,16 +48,16 @@ if __name__ == "__main__":
         batch = [x.cuda() for x in batch]
         inds = list(range(bind * loader_train.batch_size,
                         (bind + 1) * loader_train.batch_size))
-        trak.featurize(out_fn=compute_outputs,
+        traker.featurize(out_fn=compute_outputs,
                        loss_fn=compute_out_to_loss,
                        batch=batch,
                        inds=inds)
-    trak.finalize()
+    traker.finalize()
 
     scores = []
     for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
         batch = [x.cuda() for x in batch]
         scores.append(
-            trak.score(out_fn=compute_outputs, batch=batch, model=model).cpu()
+            traker.score(out_fn=compute_outputs, batch=batch, model=model).cpu()
         )
     scores = ch.cat(scores)

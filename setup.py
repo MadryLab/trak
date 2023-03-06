@@ -8,13 +8,13 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 environ['TORCH_CUDA_ARCH_LIST']="7.0+PTX"
 
-setup(name='trak',
+setup(name='traker',
       version='0.1.0',
       description="TRAK: Understanding Model Predictions at Scale",
       author='MadryLab',
       author_email='krisgrg@mit.edu',
       license_files=('LICENSE.txt', ),
-      packages=['traker'],
+      packages=['trak'],
       install_requires=
       ['torch',
        'numpy',
@@ -25,6 +25,7 @@ setup(name='trak',
               ["assertpy",
                "torchvision",
                "open_clip_torch",
+               "wget",
                ]},
       ext_modules=[
           CUDAExtension('fast_jl', ['fast_jl/fast_jl.cu']),

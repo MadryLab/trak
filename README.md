@@ -6,39 +6,39 @@
 
 ### Setting up TRAK scorer
 ```python
-from traker import TRAKer
+from trak import TRAKer
 
 model, checkpoints = ...
 train_loader = ...
 
-trak = TRAKer(model=model,
+traker = TRAKer(model=model,
               task='image_classification',
               train_set_size=50_000,
               device='cuda:0')
 
 for model_id, checkpoint in enumerate(checkpoints):
-  trak.load_checkpoint(ckeckpoint, model_id=model_id)
+  traker.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in loader_train:
-      trak.featurize(batch=batch, num_samples=loader_train.batch_size)
-trak.finalize_features()
+      traker.featurize(batch=batch, num_samples=loader_train.batch_size)
+traker.finalize_features()
 ```
 
 ### Evaluating TRAK scores
 ```python
-from traker import TRAKer
+from trak import TRAKer
 
 model, checkpoints = ...
 val_loader = ...
 
-trak = TRAKer(model=model,
+traker = TRAKer(model=model,
               task='image_classification',
               train_set_size=50_000,
               device='cuda:0')
 
 for model_id, checkpoint in enumerate(checkpoints):
-  trak.load_checkpoint(ckeckpoint, model_id=model_id)
+  traker.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in val_loader:
-    trak.score(batch=batch, num_samples=loader_val.batch_size)
+    traker.score(batch=batch, num_samples=loader_val.batch_size)
 
-scores = trak.finalize_scores()
+scores = traker.finalize_scores()
 ```

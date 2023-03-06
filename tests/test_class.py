@@ -2,10 +2,10 @@ import time
 import pytest
 import shutil
 from pathlib import Path
-from traker.traker import TRAKer
+from trak import TRAKer
 from torchvision.models import resnet18
 import torch as ch
-from traker.projectors import BasicProjector
+from trak.projectors import BasicProjector
 
 @pytest.fixture
 def cpu_proj():

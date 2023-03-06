@@ -8,7 +8,8 @@ from pathlib import Path
 from itertools import product
 from scipy.stats import spearmanr
 
-from traker.traker import TRAKer
+from trak import TRAKer
+from traker.projectors import BasicProjector
 
 from typing import List
 import torch as ch
@@ -170,33 +171,33 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
-    trak = TRAKer(model=model,
+    traker = TRAKer(model=model,
                   task='image_classification',
                   train_set_size=10_000,
                   save_dir=tmp_path,
                   device=device)
 
     for model_id, ckpt in enumerate(ckpts):
-        trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
+        traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
-            trak.featurize(batch=batch, num_samples=batch_size)
+            traker.featurize(batch=batch, num_samples=batch_size)
 
-    trak.finalize_features()
+    traker.finalize_features()
 
     if serialize:
         del trak
-        trak = TRAKer(model=model,
+        traker = TRAKer(model=model,
                     task='image_classification',
                     train_set_size=10_000,
                     save_dir=tmp_path,
                     device=device)
 
     for model_id, ckpt in enumerate(ckpts):
-        trak.load_checkpoint(checkpoint=ckpt, model_id=model_id)
+        traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_val, desc='Scoring...'):
-                trak.score(batch=batch, num_samples=batch_size)
+                traker.score(batch=batch, num_samples=batch_size)
 
-    scores = trak.finalize_scores()
+    scores = traker.finalize_scores()
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
     assert avg_corr > 0.058, 'correlation with 3 CIFAR-2 models should be >= 0.058'

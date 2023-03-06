@@ -4,9 +4,9 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-from traker.projectors import BasicProjector
-from traker.traker import TRAKer
-from traker.gradient_computers import IterativeGradientComputer
+from trak.projectors import BasicProjector
+from trak import TRAKer
+from trak.gradient_computers import IterativeGradientComputer
 
 def test_cifar10(tmp_path, device='cpu'):
     model = models.resnet18(weights='DEFAULT')
@@ -27,7 +27,7 @@ def test_cifar10(tmp_path, device='cpu'):
                                    device=device)
     else:
         projector = None 
-    trak = TRAKer(model=model,
+    traker = TRAKer(model=model,
                   task='image_classification',
                   train_set_size=len(ds_train),
                   projector=projector,
@@ -36,33 +36,33 @@ def test_cifar10(tmp_path, device='cpu'):
 
     ckpts = [model.state_dict(), model.state_dict()]
     for model_id, ckpt in enumerate(ckpts):
-        trak.load_checkpoint(ckpt, model_id=model_id)
+        traker.load_checkpoint(ckpt, model_id=model_id)
 
         counter = 0
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
             batch = [x.to(device) for x in batch]
-            trak.featurize(batch=batch,
+            traker.featurize(batch=batch,
                            num_samples=loader_train.batch_size)
             counter += 1
             if counter == 2:
                 break # a CPU pass takes too long lol
     
-    trak.finalize_features()
+    traker.finalize_features()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     for model_id, ckpt in enumerate(ckpts):
         counter = 0
-        trak.load_checkpoint(ckpt, model_id=model_id)
+        traker.load_checkpoint(ckpt, model_id=model_id)
         for batch in tqdm(loader_val, desc='Scoring...'):
             batch = [x.to(device) for x in batch]
-            trak.score(batch=batch,
+            traker.score(batch=batch,
                        num_samples=loader_val.batch_size)
             counter += 1
             if counter == 2:
                 break # a CPU pass takes too long lol
 
-    trak.finalize_scores()
+    traker.finalize_scores()
 
 
 @pytest.mark.cuda
@@ -91,7 +91,7 @@ def test_cifar10_iter(tmp_path, device='cpu'):
     else:
         projector = None 
 
-    trak = TRAKer(model=model,
+    traker = TRAKer(model=model,
                   task='image_classification',
                   train_set_size=len(ds_train),
                   save_dir=tmp_path,
@@ -99,17 +99,17 @@ def test_cifar10_iter(tmp_path, device='cpu'):
                   gradient_computer=IterativeGradientComputer,
                   device=device)
 
-    trak.load_checkpoint(model.state_dict(), model_id=0)
+    traker.load_checkpoint(model.state_dict(), model_id=0)
     counter = 0
     for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
         batch = [x.to(device) for x in batch]
-        trak.featurize(batch=batch,
+        traker.featurize(batch=batch,
                        num_samples=loader_train.batch_size)
         counter += 1
         if counter == 2:
             break # a CPU pass takes too long lol
     
-    trak.finalize_features()
+    traker.finalize_features()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
@@ -117,7 +117,7 @@ def test_cifar10_iter(tmp_path, device='cpu'):
     counter = 0
     for batch in tqdm(loader_val, desc='Scoring...'):
         batch = [x.to(device) for x in batch]
-        s = trak.score(batch=batch, num_samples=loader_val.batch_size)
+        s = traker.score(batch=batch, num_samples=loader_val.batch_size)
         counter += 1
         if counter == 2:
             break

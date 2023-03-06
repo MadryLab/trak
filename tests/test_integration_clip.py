@@ -4,9 +4,9 @@ from tqdm import tqdm
 from torchvision import datasets
 import open_clip
 
-from traker.traker import TRAKer
-from traker.modelout_functions import CLIPModelOutput
-from traker.gradient_computers import IterativeGradientComputer
+from trak import TRAKer
+from trak.modelout_functions import CLIPModelOutput
+from trak.gradient_computers import IterativeGradientComputer
 
 @pytest.mark.cuda
 def test_mscoco(device='cuda:0'):
@@ -22,7 +22,7 @@ def test_mscoco(device='cuda:0'):
 
     logit_scale = [v for (k, v) in model.named_parameters() if k == 'logit_scale'][0]
     modelout_fn = CLIPModelOutput(device=device, temperature=logit_scale)
-    trak = TRAKer(model=model,
+    traker = TRAKer(model=model,
                   grad_wrt=[x[1] for x in model.named_parameters() if x[0] != 'logit_scale'],
                   device=device,
                   train_set_size=len(ds_train),
@@ -42,13 +42,13 @@ def test_mscoco(device='cuda:0'):
                                preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
                                preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
 
-    trak.load_params(list(model.parameters()))
+    traker.load_params(list(model.parameters()))
     for bind, (img, captions) in enumerate(tqdm(ds_train)):
         x = preprocess(img).to(device).unsqueeze(0)
         # selecting (wlog) the first out of 5 captions
         y = tokenizer(captions[0]).to(device)
 
-        trak.featurize(out_fn=compute_outputs,
+        traker.featurize(out_fn=compute_outputs,
                        loss_fn=compute_out_to_loss,
                        batch=(x, y))
 
