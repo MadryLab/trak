@@ -32,7 +32,7 @@ setup(name='traker',
           CUDAExtension('fast_jl', ['fast_jl/fast_jl.cu']),
       ],
       include_package_data=True,
-      setup_requires = ['setuptools>=61.0', 'torch>=1.13'],
+      setup_requires = ['torch>=1.13'],
       cmdclass={
           'build_ext': BuildExtension
       })
