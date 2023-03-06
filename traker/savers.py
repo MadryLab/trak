@@ -29,6 +29,8 @@ class AbstractSaver(ABC):
         if self.model_ids_file.is_file():
             with open(self.model_ids_file, 'r') as f:
                 existing_ids = json.load(f)
+                # ids are converted to strings during serialization
+                existing_ids = {int(model_id): value for model_id, value in existing_ids.items()}
             self.model_ids.update(existing_ids)
 
         # init ids metadata
