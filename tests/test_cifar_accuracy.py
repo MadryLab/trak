@@ -9,7 +9,7 @@ from itertools import product
 from scipy.stats import spearmanr
 
 from trak import TRAKer
-from traker.projectors import BasicProjector
+from trak.projectors import BasicProjector
 
 from typing import List
 import torch as ch
