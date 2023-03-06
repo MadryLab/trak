@@ -145,14 +145,9 @@ def get_projector(use_cuda_projector):
     return BasicProjector(grad_dim=11689512, proj_dim=4096, seed=0, proj_type='rademacher',
                           device='cuda:0')
 
-_PARAM = list(product([True, False], # serialize
+PARAM = list(product([True, False], # serialize
                      [True, False], # basic / cuda projector
-                     [1, 32, 100], # batch size
-        ))
-
-PARAM = list(product([False], # serialize
-                     [True], # cuda / basic projector
-                     [100], # batch size
+                     [32, 100], # batch size
         ))
 
 @pytest.mark.parametrize("serialize, use_cuda_projector, batch_size", PARAM)
@@ -180,12 +175,12 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
-            traker.featurize(batch=batch, num_samples=batch_size)
+            traker.featurize(batch=batch, num_samples=len(batch[0]))
 
     traker.finalize_features()
 
     if serialize:
-        del trak
+        del traker
         traker = TRAKer(model=model,
                     task='image_classification',
                     train_set_size=10_000,
@@ -195,7 +190,7 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_val, desc='Scoring...'):
-                traker.score(batch=batch, num_samples=batch_size)
+                traker.score(batch=batch, num_samples=len(batch[0]))
 
     scores = traker.finalize_scores()
 

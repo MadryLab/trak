@@ -79,12 +79,12 @@ class BasicProjector(AbstractProjector):
     matmul blockwise if needed.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, num_blocks: int=2, dtype=ch.float32,
+                 ProjectionType, device, block_size: int=200, dtype=ch.float32,
                  model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
-        self.num_blocks = num_blocks
-        self.block_size = math.ceil(self.proj_dim / self.num_blocks)
+        self.block_size = block_size
+        self.num_blocks = math.ceil(self.proj_dim / self.block_size)
         self.dtype = dtype
         self.proj_type = proj_type
         self.model_id = model_id
