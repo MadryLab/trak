@@ -26,6 +26,7 @@ setup(name='traker',
                "torchvision",
                "open_clip_torch",
                "wget",
+               "scipy",
                ]},
       ext_modules=[
           CUDAExtension('fast_jl', ['fast_jl/fast_jl.cu']),
