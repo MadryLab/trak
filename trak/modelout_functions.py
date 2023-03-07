@@ -6,6 +6,8 @@ import torch as ch
 
 class AbstractModelOutput(ABC):
     """
+    TODO: @Andrew
+
     ModelOutputFunction classes must implement:
     - a `get_output` method that takes in a batch of inputs and model weights
     to produce outputs that TRAK will be trained to predict.
@@ -121,13 +123,21 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
 
 
 class CLIPModelOutput(AbstractModelOutput):
-    def __init__(self, device, temperature=1., simulated_batch_size=300) -> None:
-        super().__init__(device)
-        self.partial_loss_fn = ch.nn.Softmax(-1)
-        self.sim_batch_size = simulated_batch_size
+    num_computed_embeddings = 0
+    sim_batch_size = 0
+    image_embeddings = None
+    text_embeddings = None
+
+    def __init__(self, temperature=1., simulated_batch_size=300) -> None:
+        super().__init__()
+        self.softmax = ch.nn.Softmax(-1)
         self.temperature = temperature
+
+        self.sim_batch_size = simulated_batch_size
+        CLIPModelOutput.sim_batch_size = simulated_batch_size
     
-    def get_embeddings(self, model, loader, batch_size, size=50_000, embedding_dim=1024,
+    @staticmethod
+    def get_embeddings(model, loader, batch_size, size=50_000, embedding_dim=1024,
                        preprocess_fn_img=None, preprocess_fn_txt=None):
         img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
                              ch.zeros(size, embedding_dim).cuda()
@@ -148,32 +158,52 @@ class CLIPModelOutput(AbstractModelOutput):
                 if (ind + 1) * batch_size >= size:
                     break
 
-        self.all_image_fts = img_embs
-        self.all_text_fts = txt_embs
+        CLIPModelOutput.image_embeddings = img_embs
+        CLIPModelOutput.text_embeddings  = txt_embs
+        CLIPModelOutput.num_computed_embeddings = size
 
-    def get_output(self,
-                   logits: Iterable[Tensor],
-                   labels: Optional[Tensor]) -> Tensor:
+    @staticmethod
+    def get_output(func_model,
+                   weights: Iterable[Tensor],
+                   buffers: Iterable[Tensor],
+                   image: Tensor,
+                   label: Tensor) -> Tensor:
         """
-        In this case, "logits" are the image embeddings, and "labels" are the
-        text embeddings.
+        TODO: proper summary
         - simulating a batch by sampling inds
         - doing a smooth min with -logsumexp(-x)
         """
-        ii = ch.multinomial(input=ch.arange(self.all_image_fts.shape[0]).float(),
-                            num_samples=self.sim_batch_size,
+        all_im_embs  = CLIPModelOutput.image_embeddings
+        all_txt_embs = CLIPModelOutput.text_embeddings
+        N            = CLIPModelOutput.num_computed_embeddings
+        sim_bs       = CLIPModelOutput.sim_batch_size
+
+        if all_im_embs is None:
+            raise AssertionError('Run traker.modelout_fn.get_embeddings first before featurizing!')
+
+        image_embeddings, text_embeddings, _ = func_model(weights,
+                                                          buffers,
+                                                          image.unsqueeze(0),
+                                                          label.unsqueeze(0))
+
+        ii = ch.multinomial(input=ch.arange(N).float(),
+                            num_samples=sim_bs,
                             replacement=False)
-        return -ch.logsumexp(-logits @ (labels - self.all_text_fts[ii]).T, dim=1) +\
-            -ch.logsumexp(-logits @ (labels - self.all_image_fts[ii]).T, dim=1)
+
+        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1) +\
+                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1)
+        return result.sum()  # shape of result should be [1]
 
 
-    def get_out_to_loss(self, logits: Module, labels: Iterable[Tensor]) -> Tensor:
-        res = self.temperature * logits @ labels.T
-        ps = (self.partial_loss_fn(res) + self.partial_loss_fn(res.T)).diag() / 2.
+    def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+        image_embeddings, text_embeddings, _ = func_model(weights, buffers, *batch)
+        res = self.temperature * image_embeddings @ text_embeddings.T
+        ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.
         return (1 - ps).clone().detach()
 
 
 TASK_TO_MODELOUT = {
     ('image_classification', True): ImageClassificationModelOutput,
     ('image_classification', False): IterImageClassificationModelOutput,
+    ('clip', True): CLIPModelOutput,
 }

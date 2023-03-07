@@ -4,8 +4,8 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-from trak.projectors import BasicProjector
 from trak import TRAKer
+from trak.projectors import BasicProjector
 from trak.gradient_computers import IterativeGradientComputer
 
 def test_cifar10(tmp_path, device='cpu'):

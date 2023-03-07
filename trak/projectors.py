@@ -83,7 +83,7 @@ class BasicProjector(AbstractProjector):
                  model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
-        self.block_size = block_size
+        self.block_size = min(self.proj_dim, block_size)
         self.num_blocks = math.ceil(self.proj_dim / self.block_size)
         self.dtype = dtype
         self.proj_type = proj_type

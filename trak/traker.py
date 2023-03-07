@@ -30,6 +30,7 @@ class TRAKer():
                 #  grad_dtype=ch.float32,
                  ):
         """ Main class for TRAK. See [TODO: add link] for detailed examples.
+        TODO: @Andrew
 
         Args:
             model (torch.nn.Module): _description_
@@ -122,6 +123,7 @@ class TRAKer():
                   num_samples: Optional[int]=None
                   ) -> Tensor:
         """ Featurizes a batch (TODO: actual summary here)
+        TODO: @Andrew
 
         Either inds or num_samples must be specified. Using num_samples will write
         sequentially into the internal store of the TRAKer.
@@ -196,6 +198,18 @@ class TRAKer():
               num_samples: Optional[int]=None,
               _serialize_target_grads=True,
               ) -> Tensor:
+        """_summary_
+        TODO: @Andrew
+
+        Args:
+            batch (Iterable[Tensor]): _description_
+            inds (Optional[Iterable[int]], optional): _description_. Defaults to None.
+            num_samples (Optional[int], optional): _description_. Defaults to None.
+            _serialize_target_grads (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            Tensor: _description_
+        """
         assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
         assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
 

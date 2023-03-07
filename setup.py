@@ -18,11 +18,11 @@ setup(name='traker',
       install_requires=
       ['torch',
        'numpy',
-       'tqdm'
        ],
       extras_require = {
           'tests':
               ["assertpy",
+               "tqdm"
                "torchvision",
                "open_clip_torch",
                "wget",
