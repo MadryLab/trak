@@ -5,8 +5,8 @@
 ## Installation
 
 ### Requirements
-- CUDA 11 + 7.5 <= GCC <= 10
-- CUDA 12 +  GCC >= 7.5
+- CUDA **toolkit 11 + 7.5 <= GCC <= 10
+- CUDA **toolkit** 12 +  GCC >= 7.5
 
 A compatible combination can be installed with `conda`, but refer to the  [FAQ](#faq) for faster/more customizable options.
 ```bash
