@@ -22,7 +22,7 @@ setup(name='traker',
       extras_require = {
           'tests':
               ["assertpy",
-               "tqdm"
+               "tqdm",
                "torchvision",
                "open_clip_torch",
                "wget",
