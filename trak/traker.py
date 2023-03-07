@@ -1,8 +1,9 @@
 """
-TODO
+TODO: @Andrew
 """
 from typing import Iterable, Optional, Union
 from pathlib import Path
+from tqdm import tqdm
 import numpy as np
 import torch
 ch = torch
@@ -172,7 +173,7 @@ class TRAKer():
 
         self.reweighter = BasicReweighter(device=self.device)
 
-        for model_id in model_ids:
+        for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
             elif self.saver.model_ids[model_id]['finalized'] == 1:
@@ -246,7 +247,7 @@ class TRAKer():
         _avg_out_to_losses = ch.zeros_like(ch.as_tensor(self.saver.current_out_to_loss))
 
         _num_models_used = 0
-        for ii, model_id in enumerate(model_ids):
+        for ii, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
 
             if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
