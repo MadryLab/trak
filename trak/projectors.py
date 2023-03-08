@@ -4,9 +4,9 @@ import math
 from torch import Tensor
 import torch as ch
 
-class ProjectionType(Enum):
-    normal = 'normal'
-    rademacher = 'rademacher'
+class ProjectionType(str, Enum):
+    normal: str = 'normal'
+    rademacher: str = 'rademacher'
 
 class AbstractProjector(ABC):
     """

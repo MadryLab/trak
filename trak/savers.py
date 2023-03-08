@@ -35,7 +35,7 @@ class AbstractSaver(ABC):
                    f"In {self.save_dir} there are models using JL dimension {existing_jl_dim}\
                    , and this TRAKer instance uses JL dimension {self.metadata['JL dimension']}."
 
-            existing_matrix_type = int(existsing_metadata['JL matrix type'])
+            existing_matrix_type = existsing_metadata['JL matrix type']
             assert self.metadata['JL matrix type'] == existing_matrix_type,\
                    f"In {self.save_dir} there are models using a {existing_matrix_type} JL matrix\
                    , and this TRAKer instance uses a {self.metadata['JL matrix type']} JL matrix."
@@ -51,11 +51,10 @@ class AbstractSaver(ABC):
         for existing_model_id_file in self.model_ids_files:
             with open(existing_model_id_file, 'r') as f:
                 existing_id = json.load(f)
-                # ids are converted to strings during serialization
                 existing_id = {int(model_id): metadata
-                               for model_id, metadata in existing_ids.items()}
+                               for model_id, metadata in existing_id.items()}
             self.model_ids.update(existing_id)
-        print(f'Existing IDs in {self.save_dir}: {self.model_ids}')
+        print(f'Existing IDs in {self.save_dir}: {list(self.model_ids.keys())}')
 
     @abstractmethod
     def register_model_id(self, model_id: int):
@@ -111,7 +110,8 @@ class MmapSaver(AbstractSaver):
     
     def serialize_model_id_metadata(self, model_id):
         with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w+') as f:
-            json.dump(self.model_ids[self.current_model_id], f)
+            content = {self.current_model_id: self.model_ids[self.current_model_id]}
+            json.dump(content, f)
     
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))
