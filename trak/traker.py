@@ -235,7 +235,10 @@ class TRAKer():
             self.saver.finalize_target_grads(self.saver.current_model_id)
 
     
-    def finalize_scores(self, model_ids: Iterable[int]=None, del_grads=False) -> None:
+    def finalize_scores(self,
+                        model_ids: Iterable[int]=None,
+                        del_grads: bool=False,
+                        exp_name: str=None) -> Tensor:
         # reset counter for inds used for scoring
         self._last_ind_target = 0
 
@@ -268,4 +271,6 @@ class TRAKer():
             
         _scores = _scores.mean(dim=0)
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
+        self.saver.save_scores(self.scores.numpy(), exp_name)
+        
         return self.scores

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import os
+import uuid
 import json
 from torch import Tensor
 import numpy as np
@@ -37,8 +38,6 @@ class AbstractSaver(ABC):
         else:
             with open(self.model_ids_file, 'w+') as f:
                 json.dump(self.model_ids, f)
-
-
 
     @abstractmethod
     def register_model_id(self, model_id:int):
@@ -136,6 +135,16 @@ class MmapSaver(AbstractSaver):
         self.current_target_grads[:] = _current_target_grads_data
         self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
         self.model_ids[model_id]['num_target_grads'] = len(self.current_target_grads)
+
+    def save_scores(self, scores, exp_name):
+        prefix = self.save_dir.joinpath('scores')
+        if exp_name is None:
+            exp_name = str(uuid.uuid4())  # generate random unique ID
+            print(f'saving scores in {prefix}/scores_{exp_name}.npy')
+        filename = 'scores_' + exp_name + '.npy'
+        if not os.path.isdir(prefix):
+            os.makedirs(prefix)
+        np.save(prefix.joinpath(filename), scores)
      
     def del_grads(self, model_id, target=False):
         if target:
