@@ -18,29 +18,67 @@ class AbstractSaver(ABC):
     @abstractmethod
     def __init__(self,
                  save_dir,
+                 metadata,
                  device) -> None:
         self.device = device
-
+        self.metadata = metadata
         self.save_dir = Path(save_dir).resolve() 
         os.makedirs(self.save_dir, exist_ok=True)
 
+        # init TRAKer metadata
+        self.metadata_file = self.save_dir.joinpath('metadata.json')
+        if os.path.exists(self.metadata_file):
+            with open(self.metadata_file, 'r') as f:
+                existsing_metadata = json.load(f)
+            existing_jl_dim = int(existsing_metadata['JL dimension'])
+            assert self.metadata['JL dimension'] == existing_jl_dim,\
+                   f"In {self.save_dir} there are models using JL dimension {existing_jl_dim}\
+                   , and this TRAKer instance uses JL dimension {self.metadata['JL dimension']}."
+
+            existing_matrix_type = int(existsing_metadata['JL matrix type'])
+            assert self.metadata['JL matrix type'] == existing_matrix_type,\
+                   f"In {self.save_dir} there are models using a {existing_matrix_type} JL matrix\
+                   , and this TRAKer instance uses a {self.metadata['JL matrix type']} JL matrix."
+
+        else:
+            with open(self.metadata_file, 'w') as f:
+                json.dump(self.metadata, f)
+
         self.model_ids = {}
         # check if there are existing model ids in the save_dir
-        self.model_ids_file = self.save_dir.joinpath('ids.json')
-        if self.model_ids_file.is_file():
-            with open(self.model_ids_file, 'r') as f:
-                existing_ids = json.load(f)
-                # ids are converted to strings during serialization
-                existing_ids = {int(model_id): value for model_id, value in existing_ids.items()}
-            self.model_ids.update(existing_ids)
+        self.model_ids_files = self.save_dir.rglob('id_*.json')
 
-        # init ids metadata
-        else:
-            with open(self.model_ids_file, 'w+') as f:
-                json.dump(self.model_ids, f)
+        for existing_model_id_file in self.model_ids_files:
+            with open(existing_model_id_file, 'r') as f:
+                existing_id = json.load(f)
+                # ids are converted to strings during serialization
+                existing_id = {int(model_id): metadata
+                               for model_id, metadata in existing_ids.items()}
+            self.model_ids.update(existing_id)
+        print(f'Existing IDs in {self.save_dir}: {self.model_ids}')
 
     @abstractmethod
-    def register_model_id(self, model_id:int):
+    def register_model_id(self, model_id: int):
+        ...
+
+    @abstractmethod
+    def serialize_model_id_metadata(self, model_id: int):
+        ...
+
+    @abstractmethod
+    def load_store(self, model_id: int):
+        ...
+
+    @abstractmethod
+    def del_grads(self, model_id: int, target: bool):
+        ...
+
+    @abstractmethod
+    def finalize_target_grads(self, model_id: int):
+        ...
+
+    @abstractmethod
+    def clear_target_grad_count(self, model_id: int):
         ...
 
 
@@ -49,8 +87,8 @@ class ModelIDException(Exception):
 
 
 class MmapSaver(AbstractSaver):
-    def __init__(self, device, save_dir, grads_shape) -> None:
-        super().__init__(device=device, save_dir=save_dir)
+    def __init__(self, device, save_dir, metadata, grads_shape) -> None:
+        super().__init__(device=device, save_dir=save_dir, metadata=metadata)
         self.grad_dim, self.proj_dim = grads_shape
         self.current_model_id = None
         self.current_grads = None
@@ -69,15 +107,11 @@ class MmapSaver(AbstractSaver):
                                                  'num_target_grads': 0}
 
         self.init_store(self.current_model_id)
-        with open(self.model_ids_file, 'w+') as f:
-            json.dump(self.model_ids, f)
+        self.serialize_model_id_metadata(self.current_model_id)
     
-    def serialize_model_id_metadata(self):
-        # TODO: this will be problematic if we have multiple
-        # threads writing the featurized/finalized bits in parallel;
-        # we should fix that in the future
-        with open(self.model_ids_file, 'w+') as f:
-            json.dump(self.model_ids, f)
+    def serialize_model_id_metadata(self, model_id):
+        with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w+') as f:
+            json.dump(self.model_ids[self.current_model_id], f)
     
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))

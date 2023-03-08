@@ -49,12 +49,9 @@ class TRAKer():
         self.device = device
 
         self.num_params = get_num_params(self.model)
-        self.init_projector(projector, proj_dim)
+        self.init_projector(projector, proj_dim)  # inits self.projector
 
         self.save_dir = Path(save_dir).resolve()
-        self.saver = MmapSaver(grads_shape=[self.train_set_size, self.proj_dim],
-                               save_dir=self.save_dir,
-                               device=self.device)
 
         if type(self.task) is str:
             self.modelout_fn = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
@@ -63,6 +60,14 @@ class TRAKer():
                                                    modelout_fn=self.modelout_fn,
                                                    device=self.device,
                                                    grad_dim=self.num_params)
+        metadata = {
+            'JL dimension': self.projector.proj_dim,
+            'JL matrix type': self.projector.proj_type,
+        }
+        self.saver = MmapSaver(grads_shape=[self.train_set_size, self.proj_dim],
+                               save_dir=self.save_dir,
+                               metadata=metadata,
+                               device=self.device)
 
         self._score_checkpoint = None
 
@@ -158,7 +163,7 @@ class TRAKer():
             # we've featurized all of the train set (as opposed to at the start like
             # we do now)
             self.saver.model_ids[self.saver.current_model_id]['featurized'] = 1
-            self.saver.serialize_model_id_metadata()
+            self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
     def finalize_features(self, model_ids: Iterable[int]=None, del_grads=False):
         """_summary_
@@ -190,8 +195,7 @@ class TRAKer():
                 self.saver.del_grads(model_id)
 
             self.saver.model_ids[self.saver.current_model_id]['finalized'] = 1
-
-        self.saver.serialize_model_id_metadata()
+            self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
     def score(self,
               batch: Iterable[Tensor],
