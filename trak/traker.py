@@ -66,8 +66,7 @@ class TRAKer():
         }
         self.saver = MmapSaver(grads_shape=[self.train_set_size, self.proj_dim],
                                save_dir=self.save_dir,
-                               metadata=metadata,
-                               device=self.device)
+                               metadata=metadata)
 
         self._score_checkpoint = None
 
