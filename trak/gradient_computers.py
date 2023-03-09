@@ -152,7 +152,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
         you use this only if `functorch` is not available to you, e.g. you have
         a (very) old version of pytorch.
         """
-        grads = ch.zeros(batch_size, self.grad_dim).to(batch_size[0].device)
+        grads = ch.zeros(batch_size, self.grad_dim).to(batch[0].device)
 
         margin = self.modelout_fn.get_output(self.model, *batch)
         for ind in range(batch_size):
