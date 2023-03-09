@@ -145,6 +145,11 @@ class ModelIDException(Exception):
 
 
 class MmapSaver(AbstractSaver):
+    """ A saver that uses memory-mapped numpy arrays. This makes small reads and
+    writes (e.g.) during featurizing feasible without loading the entire file
+    into memory.
+
+    """
     def __init__(self, save_dir, metadata, grads_shape) -> None:
         super().__init__(save_dir=save_dir, metadata=metadata)
         self.grad_dim, self.proj_dim = grads_shape

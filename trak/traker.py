@@ -21,17 +21,17 @@ class TRAKer():
                  model: torch.nn.Module,
                  task: Union[AbstractModelOutput, str],
                  train_set_size: int,
-                 save_dir: str='/tmp/trak_results',
+                 save_dir: str='./trak_results',
                  projector: Optional[AbstractProjector]=None,
                  device: Union[str, torch.device]=None,
                  gradient_computer: AbstractGradientComputer=FunctionalGradientComputer,
-                 proj_dim: int=2048, # either set proj_dim and
-                 # a CudaProjector Rademacher projector will be used
-                 # or give a custom Projector class and leave proj_dim to None
-                #  grad_dtype=ch.float32,
+                 proj_dim: int=2048,
                  ):
         """ Main class for TRAK. See [TODO: add link] for detailed examples.
         TODO: @Andrew
+
+        Either set proj_dim and a CudaProjector Rademacher projector will be
+        used or give a custom Projector class and leave proj_dim to None.
 
         Args:
             model (torch.nn.Module): _description_
@@ -40,9 +40,10 @@ class TRAKer():
             save_dir (str, optional): _description_. Defaults to '/tmp/trak_results'.
             projector (Optional[AbstractProjector], optional): _description_. Defaults to None.
             device (Union[str, torch.device], optional): _description_. Defaults to None.
-            functional (bool, optional): _description_. Defaults to True.
-            proj_dim (int, optional): _description_. Defaults to 2000.
+            gradient_computer (AbstractGradientComputer, optional): _description_. Defaults to FunctionalGradientComputer.
+            proj_dim (int, optional): _description_. Defaults to 2048.
         """
+
         self.model = model
         self.task = task
         self.train_set_size = train_set_size

@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import math
 from torch import Tensor
-import torch as ch
+import torch
+ch = torch
+from typing import Union
 
 class ProjectionType(str, Enum):
     normal: str = 'normal'
@@ -18,8 +20,24 @@ class AbstractProjector(ABC):
                  grad_dim: int,
                  proj_dim: int,
                  seed: int,
-                 proj_type: ProjectionType,
-                 device) -> None:
+                 proj_type: Union[str, ProjectionType],
+                 device: Union[str, torch.device]) -> None:
+        """ Initializes hyperparameters for the projection.
+
+        Args:
+            grad_dim (int): number of parameters in the model (dimension of the
+                gradient vectors)
+            proj_dim (int): dimension after the projection
+            seed (int): random seed for the generation of the sketching
+                (projection) matrix
+            proj_type (Union[str, ProjectionType]): the random projection
+                (JL transform) guearantees that distances will be approximately
+                preserved for a variety of choices of the random matrix (see
+                e.g. https://arxiv.org/abs/1411.2404). Here, we provide an
+                implementation for matrices with iid Gaussian entries and iid
+                Rademacher entries.
+            device (Union[str, torch.device]): CUDA device to use
+        """
         self.grad_dim = grad_dim
         self.proj_dim = proj_dim
         self.seed = seed
@@ -28,13 +46,31 @@ class AbstractProjector(ABC):
 
     @abstractmethod
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        """ Performs the random projection. Model ID is included
+        so that we generate different projection matrices for every
+        model ID.
+
+        Args:
+            grads (Tensor): a batch of gradients to be projected
+            model_id (int): a unique ID for a checkpoint
+
+        Returns:
+            Tensor: the projected gradients
+        """
         ...
 
 
 class BasicSingleBlockProjector(AbstractProjector):
     """
-    A bare-bones implementation of the projection, which is (extremely)
-    inefficient in terms of both time and memory footrpint.
+    A bare-bones, inefficient implementation of the projection, which simply
+    calls torch's matmul for the projection step.
+
+    Note: for most model sizes (e.g. even for ResNet18), and small projection
+    dimensions (e.g. anything > 100) this method will OOM on an A100.
+
+    Unless you have a good reason to use this class (I cannot think of one, I
+    added this only for testing purposes), use instead the CudaProjector or
+    BasicProjector.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
                  ProjectionType, device, dtype=ch.float16, model_id=0) -> None:
@@ -75,8 +111,15 @@ class BasicSingleBlockProjector(AbstractProjector):
 
 class BasicProjector(AbstractProjector):
     """
-    An implementation of the projection which performs the
-    matmul blockwise if needed.
+    A simple block-wise implementation of the projection. The projection matrix
+    is generated on-device in blocks. The accumulated result across blocks is
+    returned.
+
+    Note: This class will be significantly slower and have a larger memory
+    footprint than the CudaProjector. It is recommended that you use this method
+    only if the CudaProjector is not available to you -- e.g. if you don't have
+    a CUDA-enabled device with compute capability >=7.0 (see
+    https://developer.nvidia.com/cuda-gpus).
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
                  ProjectionType, device, block_size: int=200, dtype=ch.float32,
@@ -144,7 +187,8 @@ class BasicProjector(AbstractProjector):
 
 class CudaProjector(AbstractProjector):
     """
-    An implementation of the project for cuda (with compute capability >= 7.0)
+    A performant implementation of the projection for CUDA with compute
+    capability >= 7.0.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
                  ProjectionType, device, *args, **kwargs) -> None:
@@ -154,24 +198,24 @@ class CudaProjector(AbstractProjector):
             device = ch.device(device)
 
         if device.type != 'cuda':
-            raise ValueError("CudaProjector only works on a cuda device; Either switch to a cuda device, or use the BasicProjector")
+            raise ValueError("CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector")
 
         self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
 
         try:
             import fast_jl
         except ImportError:
-            raise ModuleNotFoundError("You should make sure you install the cuda projetor for traker (called fast_jl)")
+            raise ModuleNotFoundError("You should make sure to install the CUDA projector for traker (called fast_jl). See the installation FAQs for more details.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         batch_size = grads.shape[0]
-        ebs = 32
+        effective_batch_size = 32
         if batch_size <= 8:
-            ebs = 8
+            effective_batch_size = 8
         elif batch_size <= 16:
-            ebs = 16
+            effective_batch_size = 16
 
-        function_name = f"project_{self.proj_type.value}_{ebs}"
+        function_name = f"project_{self.proj_type.value}_{effective_batch_size}"
         import fast_jl
         fn = getattr(fast_jl, function_name)
         return fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
