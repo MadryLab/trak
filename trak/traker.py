@@ -16,6 +16,7 @@ from .gradient_computers import FunctionalGradientComputer, AbstractGradientComp
 from .savers import MmapSaver, ModelIDException
 from .utils import get_num_params
 
+
 class TRAKer():
     def __init__(self,
                  model: torch.nn.Module,
@@ -59,7 +60,6 @@ class TRAKer():
         
         self.gradient_computer = gradient_computer(model=self.model,
                                                    modelout_fn=self.modelout_fn,
-                                                   device=self.device,
                                                    grad_dim=self.num_params)
         metadata = {
             'JL dimension': self.projector.proj_dim,
@@ -90,16 +90,13 @@ class TRAKer():
                                            device=self.device)
 
     def load_checkpoint(self, checkpoint: Iterable[Tensor], model_id:int,
-                        populate_batch_norm_buffers :bool=False, loader_for_bn=None,
                         _allow_featurizing_already_registered=None):
         """ Loads state dictionary for the given checkpoint, initializes arrays to store
         TRAK features for that checkpoint, tied to the model id.
 
         Args:
-            checkpoint (Iterable[Tensor]): _description_
-            model_id (int): _description_
-            populate_batch_norm_buffers (bool, optional): _description_. Defaults to False.
-            loader_for_bn (_type_, optional): _description_. Defaults to None.
+            checkpoint (Iterable[Tensor]): state_dict to load
+            model_id (int): a unique ID for a checkpoint
             _allow_featurizing_already_registered (bool, optional): Only use if you want
             to override the default behaviour that `featurize` is forbidden on already
             registered model ids. Defaults to None.
@@ -111,12 +108,6 @@ class TRAKer():
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
-
-        if populate_batch_norm_buffers:
-            with ch.no_grad():
-                for batch in loader_for_bn:
-                    # TODO: fix this
-                    self.modelout_fn.forward(self.model, batch)
 
         self.gradient_computer.load_model_params(self.model)
 
