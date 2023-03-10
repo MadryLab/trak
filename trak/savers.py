@@ -250,6 +250,7 @@ class MmapSaver(AbstractSaver):
         self.current_target_grads[:] = _current_target_grads_data
         self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
         self.model_ids[model_id]['num_target_grads'] = len(self.current_target_grads)
+        self.serialize_model_id_metadata(model_id)
 
     def save_scores(self, scores, exp_name):
         prefix = self.save_dir.joinpath('scores')
@@ -264,6 +265,8 @@ class MmapSaver(AbstractSaver):
     def del_grads(self, model_id, target=False):
         if target:
             grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
+            self.model_ids[model_id]['num_target_grads'] = 0
+            self.serialize_model_id_metadata(model_id)
         else:
             grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
 
@@ -272,5 +275,7 @@ class MmapSaver(AbstractSaver):
 
     def clear_target_grad_count(self, model_id):
         self.model_ids[model_id]['num_target_grads'] = 0
+        self.serialize_model_id_metadata(model_id)
+
         if model_id == self.current_model_id:
             self.current_num_target_grads = 0

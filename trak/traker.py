@@ -232,7 +232,7 @@ class TRAKer():
     
     def finalize_scores(self,
                         model_ids: Iterable[int]=None,
-                        del_grads: bool=False,
+                        del_grads: bool=True,
                         exp_name: str=None) -> Tensor:
         # reset counter for inds used for scoring
         self._last_ind_target = 0
@@ -259,10 +259,10 @@ class TRAKer():
             _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss).clone().detach()
             _num_models_used += 1
 
+            self.saver.clear_target_grad_count(model_id)
+
             if del_grads:
                 self.saver.del_grads(model_id, target=True)
-
-            self.saver.clear_target_grad_count(model_id)
             
         _scores = _scores.mean(dim=0)
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
