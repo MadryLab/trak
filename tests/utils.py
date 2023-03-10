@@ -1,3 +1,4 @@
+from typing import List
 import wget
 from pathlib import Path
 from tqdm import tqdm

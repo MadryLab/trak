@@ -240,13 +240,15 @@ class TRAKer():
         if model_ids is None:
             model_ids = self.saver.model_ids
 
-        targets_size = self.saver.current_target_grads.shape[0]
-        _scores = ch.empty(len(model_ids), self.train_set_size, targets_size)
-        _avg_out_to_losses = ch.zeros_like(ch.as_tensor(self.saver.current_out_to_loss))
 
         _num_models_used = 0
-        for ii, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
+        _scores = None
+        for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
+            if _scores is None:
+                targets_size = self.saver.current_target_grads.shape[0]
+                _scores = ch.empty(len(model_ids), self.train_set_size, targets_size)
+                _avg_out_to_losses = ch.zeros_like(ch.as_tensor(self.saver.current_out_to_loss))
 
             if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
                 print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
@@ -255,7 +257,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_features)
             g_target = ch.as_tensor(self.saver.current_target_grads)
 
-            _scores[ii] = g @ g_target.T
+            _scores[j] = g @ g_target.T
             _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss).clone().detach()
             _num_models_used += 1
 
