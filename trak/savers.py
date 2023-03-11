@@ -72,6 +72,12 @@ class AbstractSaver(ABC):
                 existing_id = {int(model_id): metadata
                                for model_id, metadata in existing_id.items()}
             self.model_ids.update(existing_id)
+        # wlog set num_targets to those of a random model_id we could raise an
+        # error here if different model_ids have different num_targets but this
+        # could be a bit too stringent in some cases
+        if len(self.model_ids.keys()) > 0:
+            self.num_targets = list(self.model_ids.values())[0]['targets_scored']
+
         print(f'Existing IDs in {self.save_dir}: {list(self.model_ids.keys())}')
 
         self.current_model_id = None
@@ -79,7 +85,7 @@ class AbstractSaver(ABC):
         self.current_out_to_loss = None
         self.current_features = None
         self.current_target_grads = None
-
+    
     @abstractmethod
     def register_model_id(self, model_id: int) -> None:
         """ Create metadata for a new model ID (checkpoint).
@@ -244,6 +250,9 @@ class MmapSaver(AbstractSaver):
         """
         self.num_targets = num_targets
         self.current_model_id = model_id
+        self.model_ids[model_id]['targets_scored'] = self.num_targets
+        self.serialize_model_id_metadata(model_id)
+
         prefix = self.save_dir.joinpath(str(model_id))
 
         self.current_target_grads_path = prefix.joinpath('grads_target.mmap')

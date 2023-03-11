@@ -158,6 +158,8 @@ class TRAKer():
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
+        # TODO: currently this is breaking abstraction -- either define dict
+        # items in abstract __init__, or don't access them here
         if self.saver.model_ids[self.saver.current_model_id]['featurized'] == 0:
             # TODO: it might be better to set featurized to 1 only after
             # we've featurized all of the train set (as opposed to at the start like
@@ -240,6 +242,8 @@ class TRAKer():
         assert (inds is not None) or (num_samples is not None),\
             "Exactly one of num_samples and inds should be specified"
 
+        # TODO: currently this is breaking abstraction -- either define dict
+        # items in abstract __init__, or don't access them here
         if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
             print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
             return None
@@ -267,19 +271,19 @@ class TRAKer():
         if model_ids is None:
             model_ids = self.saver.model_ids
 
-        _avg_out_to_losses = ch.zeros(self.saver.grad_dim, 1, device=self.device)
         _completed = [False] * len(model_ids)
+        _scores = ch.empty(len(model_ids),
+                           self.train_set_size,
+                           self.saver.num_targets,
+                           device=self.device)
+        _avg_out_to_losses = ch.zeros(self.saver.grad_dim, 1, device=self.device)
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
             self.saver.load_target_store(model_id, self.saver.num_targets)
-            if j == 0:  # during the first pass, create _scores array where avg will be accumulated
-                targets_size = self.saver.current_target_grads.shape[0]
-                _scores = ch.empty(len(model_ids),
-                                   self.train_set_size,
-                                   targets_size,
-                                   device=self.device)
 
+            # TODO: currently this is breaking abstraction -- either define dict
+            # items in abstract __init__, or don't access them here
             if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
                 print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
