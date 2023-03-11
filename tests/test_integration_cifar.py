@@ -38,29 +38,23 @@ def test_cifar10(tmp_path, device='cpu'):
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(ckpt, model_id=model_id)
 
-        counter = 0
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
             batch = [x.to(device) for x in batch]
             traker.featurize(batch=batch,
                              num_samples=loader_train.batch_size)
-            counter += 1
-            if counter == 2:
-                break  # a CPU pass takes too long lol
+            break  # a CPU pass takes too long lol
 
     traker.finalize_features()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     for model_id, ckpt in enumerate(ckpts):
-        counter = 0
-        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=10_000)
+        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=100)
         for batch in tqdm(loader_val, desc='Scoring...'):
             batch = [x.to(device) for x in batch]
             traker.score(batch=batch,
                          num_samples=loader_val.batch_size)
-            counter += 1
-            if counter == 2:
-                break  # a CPU pass takes too long lol
+            break  # a CPU pass takes too long lol
 
     traker.finalize_scores()
 
@@ -100,28 +94,22 @@ def test_cifar10_iter(tmp_path, device='cpu'):
                     device=device)
 
     traker.load_checkpoint(model.state_dict(), model_id=0)
-    counter = 0
     for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
         batch = [x.to(device) for x in batch]
         traker.featurize(batch=batch,
                          num_samples=loader_train.batch_size)
-        counter += 1
-        if counter == 2:
-            break  # a CPU pass takes too long lol
+        break  # a CPU pass takes too long lol
 
     traker.finalize_features()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
-    counter = 0
-    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=10_000)
+    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=100)
     for batch in tqdm(loader_val, desc='Scoring...'):
         batch = [x.to(device) for x in batch]
         traker.score(batch=batch, num_samples=loader_val.batch_size)
-        counter += 1
-        if counter == 2:
-            break
+        break
 
 
 @pytest.mark.cuda

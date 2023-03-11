@@ -119,6 +119,7 @@ class TRAKer():
         self.gradient_computer.load_model_params(self.model)
 
         self._last_ind = 0
+        self._num_featurized = 0
 
     def featurize(self,
                   batch: Iterable[Tensor],
@@ -149,6 +150,7 @@ class TRAKer():
             self._last_ind += num_samples
         else:
             num_samples = inds.reshape(-1).shape[0]
+        self._num_featurized += num_samples
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
                                                                batch_size=num_samples)
@@ -158,12 +160,9 @@ class TRAKer():
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
 
-        # TODO: currently this is breaking abstraction -- either define dict
-        # items in abstract __init__, or don't access them here
-        if self.saver.model_ids[self.saver.current_model_id]['featurized'] == 0:
-            # TODO: it might be better to set featurized to 1 only after
-            # we've featurized all of the train set (as opposed to at the start like
-            # we do now)
+        if self._num_featurized == self.train_set_size:
+            # TODO: currently this is breaking abstraction -- either define dict
+            # items in abstract __init__, or don't access them here
             self.saver.model_ids[self.saver.current_model_id]['featurized'] = 1
             self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
