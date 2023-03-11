@@ -1,10 +1,7 @@
-from typing import List
-import pytest
-import json
 from tqdm import tqdm
 from pathlib import Path
 from itertools import product
-import numpy as np
+import pytest
 import torch as ch
 
 from trak import TRAKer
@@ -12,16 +9,19 @@ from trak.projectors import BasicProjector
 
 from .utils import construct_rn9, get_dataloader, eval_correlations
 
+
 def get_projector(use_cuda_projector):
     if use_cuda_projector:
         return None
-    return BasicProjector(grad_dim=11689512, proj_dim=4096, seed=0, proj_type='rademacher',
+    return BasicProjector(grad_dim=2273856, proj_dim=4096, seed=0, proj_type='rademacher',
                           device='cuda:0')
 
-PARAM = list(product([True, False], # serialize
-                     [True, False], # basic / cuda projector
-                     [32, 100], # batch size
-        ))
+
+PARAM = list(product([True, False],  # serialize
+                     [True, False],  # basic / cuda projector
+                     [32, 100],  # batch size
+                     ))
+
 
 @pytest.mark.parametrize("serialize, use_cuda_projector, batch_size", PARAM)
 @pytest.mark.cuda
@@ -40,10 +40,11 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     traker = TRAKer(model=model,
-                  task='image_classification',
-                  train_set_size=10_000,
-                  save_dir=tmp_path,
-                  device=device)
+                    task='image_classification',
+                    projector=projector,
+                    train_set_size=10_000,
+                    save_dir=tmp_path,
+                    device=device)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -55,17 +56,18 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     if serialize:
         del traker
         traker = TRAKer(model=model,
-                    task='image_classification',
-                    train_set_size=10_000,
-                    save_dir=tmp_path,
-                    device=device)
+                        task='image_classification',
+                        projector=projector,
+                        train_set_size=10_000,
+                        save_dir=tmp_path,
+                        device=device)
 
     for model_id, ckpt in enumerate(ckpts):
-        traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
+        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
-                traker.score(batch=batch, num_samples=len(batch[0]))
+            traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores().cpu()
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
     assert avg_corr > 0.058, 'correlation with 3 CIFAR-2 models should be >= 0.058'

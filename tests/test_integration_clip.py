@@ -1,11 +1,11 @@
 import pytest
-import torch as ch
 from tqdm import tqdm
 from torchvision import datasets
 import open_clip
 
 from trak import TRAKer
 # from trak.gradient_computers import IterativeGradientComputer
+
 
 @pytest.mark.cuda
 def test_mscoco(tmp_path, device='cuda:0'):
@@ -15,18 +15,16 @@ def test_mscoco(tmp_path, device='cuda:0'):
 
     tokenizer = open_clip.get_tokenizer('RN50')
 
-    ds_train = datasets.CocoCaptions(root = '/mnt/xfs/projects/trak/datasets/coco_csv/train2014',
-                                   annFile = '/mnt/xfs/projects/trak/datasets/coco_csv/coco_train_karpathy.json',
-                               )
+    ds_train = datasets.CocoCaptions(root='/mnt/xfs/projects/trak/datasets/coco_csv/train2014',
+                                     annFile='/mnt/xfs/projects/trak/datasets/coco_csv/coco_train_karpathy.json'
+                                     )
 
-    logit_scale = [v for (k, v) in model.named_parameters() if k == 'logit_scale'][0]
     traker = TRAKer(model=model,
                     task='clip',
                     save_dir=tmp_path,
                     train_set_size=len(ds_train),
                     device=device,
                     proj_dim=512,
-                    # gradient_projector=IterativeGradientComputer,
                     )
 
     traker.modelout_fn.get_embeddings(model, ds_train, batch_size=1, size=600,

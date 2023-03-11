@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from typing import Iterable
 from torch import Tensor
 from torch.nn import Module
 import torch as ch
+
 
 class AbstractModelOutput(ABC):
     """
@@ -24,7 +25,7 @@ class AbstractModelOutput(ABC):
                    model,
                    batch: Iterable[Tensor]) -> Tensor:
         ...
-    
+
     @abstractmethod
     def get_out_to_loss_grad(self,
                              model,
@@ -49,7 +50,7 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         self.softmax = ch.nn.Softmax(-1)
         self.loss_temperature = temperature
 
-    @staticmethod 
+    @staticmethod
     def get_output(func_model,
                    weights: Iterable[Tensor],
                    buffers: Iterable[Tensor],
@@ -112,7 +113,7 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins
-    
+
     def get_out_to_loss_grad(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
         images, labels = batch
         logits = model(images)
@@ -135,13 +136,13 @@ class CLIPModelOutput(AbstractModelOutput):
 
         self.sim_batch_size = simulated_batch_size
         CLIPModelOutput.sim_batch_size = simulated_batch_size
-    
+
     @staticmethod
     def get_embeddings(model, loader, batch_size, size=50_000, embedding_dim=1024,
                        preprocess_fn_img=None, preprocess_fn_txt=None):
         img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
                              ch.zeros(size, embedding_dim).cuda()
-        
+
         cutoff = batch_size
         with ch.no_grad():
             for ind, (images, text) in enumerate(loader):
@@ -159,7 +160,7 @@ class CLIPModelOutput(AbstractModelOutput):
                     break
 
         CLIPModelOutput.image_embeddings = img_embs
-        CLIPModelOutput.text_embeddings  = txt_embs
+        CLIPModelOutput.text_embeddings = txt_embs
         CLIPModelOutput.num_computed_embeddings = size
 
     @staticmethod
@@ -173,10 +174,10 @@ class CLIPModelOutput(AbstractModelOutput):
         - simulating a batch by sampling inds
         - doing a smooth min with -logsumexp(-x)
         """
-        all_im_embs  = CLIPModelOutput.image_embeddings
+        all_im_embs = CLIPModelOutput.image_embeddings
         all_txt_embs = CLIPModelOutput.text_embeddings
-        N            = CLIPModelOutput.num_computed_embeddings
-        sim_bs       = CLIPModelOutput.sim_batch_size
+        N = CLIPModelOutput.num_computed_embeddings
+        sim_bs = CLIPModelOutput.sim_batch_size
 
         if all_im_embs is None:
             raise AssertionError('Run traker.modelout_fn.get_embeddings first before featurizing!')
@@ -193,7 +194,6 @@ class CLIPModelOutput(AbstractModelOutput):
         result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1) +\
                  -ch.logsumexp(-text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1)
         return result.sum()  # shape of result should be [1]
-
 
     def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
         image_embeddings, text_embeddings, _ = func_model(weights, buffers, *batch)

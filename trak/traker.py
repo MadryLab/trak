@@ -1,20 +1,22 @@
 """
 TODO: @Andrew
 """
-from typing import Iterable, Optional, Union
-from pathlib import Path
-from tqdm import tqdm
-import numpy as np
-import torch
-ch = torch
-from torch import Tensor
-
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
 from .reweighters import BasicReweighter
-from .gradient_computers import FunctionalGradientComputer, AbstractGradientComputer
+from .gradient_computers import FunctionalGradientComputer,\
+                                AbstractGradientComputer
 from .savers import MmapSaver, ModelIDException
 from .utils import get_num_params
+
+from typing import Iterable, Optional, Union
+from pathlib import Path
+from tqdm import tqdm
+from torch import Tensor
+
+import numpy as np
+import torch
+ch = torch
 
 
 class TRAKer():
@@ -22,12 +24,12 @@ class TRAKer():
                  model: torch.nn.Module,
                  task: Union[AbstractModelOutput, str],
                  train_set_size: int,
-                 save_dir: str='./trak_results',
-                 projector: Optional[AbstractProjector]=None,
-                 device: Union[str, torch.device]=None,
-                 gradient_computer: AbstractGradientComputer=FunctionalGradientComputer,
-                 proj_dim: int=2048,
-                 ):
+                 save_dir: str = './trak_results',
+                 projector: Optional[AbstractProjector] = None,
+                 device: Union[str, torch.device] = None,
+                 gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
+                 proj_dim: int = 2048,
+                 ) -> None:
         """ Main class for TRAK. See [TODO: add link] for detailed examples.
         TODO: @Andrew
 
@@ -38,10 +40,14 @@ class TRAKer():
             model (torch.nn.Module): _description_
             task (Union[AbstractModelOutput, str]): _description_
             train_set_size (int): _description_
-            save_dir (str, optional): _description_. Defaults to '/tmp/trak_results'.
-            projector (Optional[AbstractProjector], optional): _description_. Defaults to None.
-            device (Union[str, torch.device], optional): _description_. Defaults to None.
-            gradient_computer (AbstractGradientComputer, optional): _description_. Defaults to FunctionalGradientComputer.
+            save_dir (str, optional): _description_. Defaults to
+                '/tmp/trak_results'.
+            projector (Optional[AbstractProjector], optional): _description_.
+                Defaults to None.
+            device (Union[str, torch.device], optional): _description_.
+                Defaults to None.
+            gradient_computer (AbstractGradientComputer, optional):
+                _description_. Defaults to FunctionalGradientComputer.
             proj_dim (int, optional): _description_. Defaults to 2048.
         """
 
@@ -57,7 +63,7 @@ class TRAKer():
 
         if type(self.task) is str:
             self.modelout_fn = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
-        
+
         self.gradient_computer = gradient_computer(model=self.model,
                                                    modelout_fn=self.modelout_fn,
                                                    grad_dim=self.num_params)
@@ -69,10 +75,8 @@ class TRAKer():
                                save_dir=self.save_dir,
                                metadata=metadata)
 
-        self._score_checkpoint = None
-
-    def init_projector(self, projector, proj_dim):
-        """Initialize the projector for a traker class
+    def init_projector(self, projector, proj_dim) -> None:
+        """ Initialize the projector for a traker class
 
         Args:
             projector (AbstractProjector): _description_
@@ -89,20 +93,23 @@ class TRAKer():
                                            proj_type=ProjectionType.rademacher,
                                            device=self.device)
 
-    def load_checkpoint(self, checkpoint: Iterable[Tensor], model_id:int,
-                        _allow_featurizing_already_registered=None):
-        """ Loads state dictionary for the given checkpoint, initializes arrays to store
-        TRAK features for that checkpoint, tied to the model id.
+    def load_checkpoint(self,
+                        checkpoint: Iterable[Tensor],
+                        model_id: int,
+                        _allow_featurizing_already_registered=None) -> None:
+        """ Loads state dictionary for the given checkpoint, initializes arrays
+        to store TRAK features for that checkpoint, tied to the model id.
 
         Args:
             checkpoint (Iterable[Tensor]): state_dict to load
             model_id (int): a unique ID for a checkpoint
-            _allow_featurizing_already_registered (bool, optional): Only use if you want
-            to override the default behaviour that `featurize` is forbidden on already
-            registered model ids. Defaults to None.
+            _allow_featurizing_already_registered (bool, optional): Only use if
+            you want to override the default behaviour that `featurize` is
+            forbidden on already registered model ids. Defaults to None.
         """
         if self.saver.model_ids.get(model_id) is None:
-            self.saver.register_model_id(model_id)
+            self.saver.register_model_id(model_id,
+                                         _allow_featurizing_already_registered)
         else:
             self.saver.load_store(model_id)
 
@@ -112,18 +119,17 @@ class TRAKer():
         self.gradient_computer.load_model_params(self.model)
 
         self._last_ind = 0
-        self._last_ind_target = 0
 
     def featurize(self,
                   batch: Iterable[Tensor],
-                  inds: Optional[Iterable[int]]=None,
-                  num_samples: Optional[int]=None
+                  inds: Optional[Iterable[int]] = None,
+                  num_samples: Optional[int] = None
                   ) -> Tensor:
         """ Featurizes a batch (TODO: actual summary here)
         TODO: @Andrew
 
-        Either inds or num_samples must be specified. Using num_samples will write
-        sequentially into the internal store of the TRAKer.
+        Either inds or num_samples must be specified. Using num_samples will
+        write sequentially into the internal store of the TRAKer.
 
         Args:
             batch (Iterable[Tensor]): _description_
@@ -133,8 +139,11 @@ class TRAKer():
         Returns:
             Tensor: _description_
         """
-        assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
-        assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
+        assert (inds is None) or (num_samples is None),\
+            "Exactly one of num_samples and inds should be specified"
+        assert (inds is not None) or (num_samples is not None),\
+            "Exactly one of num_samples and inds should be specified"
+
         if num_samples is not None:
             inds = np.arange(self._last_ind, self._last_ind + num_samples)
             self._last_ind += num_samples
@@ -156,7 +165,9 @@ class TRAKer():
             self.saver.model_ids[self.saver.current_model_id]['featurized'] = 1
             self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
-    def finalize_features(self, model_ids: Iterable[int]=None, del_grads=False):
+    def finalize_features(self,
+                          model_ids: Iterable[int] = None,
+                          del_grads: bool = False) -> None:
         """_summary_
 
         Args:
@@ -188,11 +199,29 @@ class TRAKer():
             self.saver.model_ids[self.saver.current_model_id]['finalized'] = 1
             self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
+    def start_scoring_checkpoint(self,
+                                 checkpoint: Iterable[Tensor],
+                                 model_id: int,
+                                 num_targets: int,
+                                 ) -> None:
+        """_summary_
+
+        Args:
+            checkpoint (Iterable[Tensor]): _description_
+            model_id (int): _description_
+            num_targets (int): _description_
+        """
+        self.saver.load_target_store(model_id, num_targets, mode='w+')
+
+        self.model.load_state_dict(checkpoint)
+        self.model.eval()
+
+        self._last_ind_target = 0
+
     def score(self,
               batch: Iterable[Tensor],
-              inds: Optional[Iterable[int]]=None,
-              num_samples: Optional[int]=None,
-              _serialize_target_grads=True,
+              inds: Optional[Iterable[int]] = None,
+              num_samples: Optional[int] = None,
               ) -> Tensor:
         """_summary_
         TODO: @Andrew
@@ -206,8 +235,10 @@ class TRAKer():
         Returns:
             Tensor: _description_
         """
-        assert (inds is None) or (num_samples is None), "Exactly one of num_samples and inds should be specified"
-        assert (inds is not None) or (num_samples is not None), "Exactly one of num_samples and inds should be specified"
+        assert (inds is None) or (num_samples is None),\
+            "Exactly one of num_samples and inds should be specified"
+        assert (inds is not None) or (num_samples is not None),\
+            "Exactly one of num_samples and inds should be specified"
 
         if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
             print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
@@ -222,52 +253,53 @@ class TRAKer():
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
                                                                batch_size=num_samples)
 
-
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
-        self.saver.current_target_grads_dict[ch.as_tensor(inds)] = grads.cpu().clone().detach()
-        if _serialize_target_grads:
-            self.saver.finalize_target_grads(self.saver.current_model_id)
+        self.saver.current_target_grads[inds] = grads.cpu().clone().detach()
 
-    
     def finalize_scores(self,
-                        model_ids: Iterable[int]=None,
-                        del_grads: bool=True,
-                        exp_name: str=None) -> Tensor:
+                        model_ids: Iterable[int] = None,
+                        del_grads: bool = True,
+                        exp_name: str = None) -> Tensor:
         # reset counter for inds used for scoring
         self._last_ind_target = 0
 
         if model_ids is None:
             model_ids = self.saver.model_ids
 
+        _avg_out_to_losses = ch.zeros(self.saver.grad_dim, 1, device=self.device)
+        _completed = [False] * len(model_ids)
 
-        _num_models_used = 0
-        _scores = None
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
-            if _scores is None:
+            self.saver.load_target_store(model_id, self.saver.num_targets)
+            if j == 0:  # during the first pass, create _scores array where avg will be accumulated
                 targets_size = self.saver.current_target_grads.shape[0]
-                _scores = ch.empty(len(model_ids), self.train_set_size, targets_size)
-                _avg_out_to_losses = ch.zeros_like(ch.as_tensor(self.saver.current_out_to_loss))
+                _scores = ch.empty(len(model_ids),
+                                   self.train_set_size,
+                                   targets_size,
+                                   device=self.device)
 
             if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
                 print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
 
-            g = ch.as_tensor(self.saver.current_features)
-            g_target = ch.as_tensor(self.saver.current_target_grads)
+            g = ch.as_tensor(self.saver.current_features, device=self.device)
+            g_target = ch.as_tensor(self.saver.current_target_grads, device=self.device)
 
             _scores[j] = g @ g_target.T
-            _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss).clone().detach()
-            _num_models_used += 1
-
-            self.saver.clear_target_grad_count(model_id)
+            _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss, device=self.device)
+            _completed[j] = True
 
             if del_grads:
                 self.saver.del_grads(model_id, target=True)
-            
-        _scores = _scores.mean(dim=0)
+            else:
+                self.saver.clear_target_grad_count(model_id)
+
+        _scores = _scores[_completed].mean(dim=0)
+
+        _num_models_used = sum(_completed)
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
-        self.saver.save_scores(self.scores.numpy(), exp_name)
-        
+        self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
+
         return self.scores

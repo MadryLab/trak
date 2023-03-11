@@ -3,6 +3,7 @@ from torch import Tensor
 import torch as ch
 from typing import Optional
 
+
 class AbstractReweighter(ABC):
     """
     Implementations of the Reweighter class must implement the `reweight`
@@ -29,12 +30,12 @@ class BasicSingleBlockReweighter(AbstractReweighter):
     def __init__(self, device, dtype=ch.float16) -> None:
         super().__init__(device)
         self.dtype = dtype
-    
+
     def reweight(self, grads: Tensor) -> Tensor:
         return grads.T @ grads
 
     def finalize(self, grads: Tensor, xtx: Tensor) -> None:
-        return grads @ ch.linalg.inv(xtx) 
+        return grads @ ch.linalg.inv(xtx)
 
 
 class BasicReweighter(AbstractReweighter):
@@ -45,7 +46,7 @@ class BasicReweighter(AbstractReweighter):
         super().__init__(device)
         self.dtype = dtype
         self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
-    
+
     def reweight(self, grads: Tensor) -> Tensor:
         self.proj_dim = grads.shape[1]
         result = ch.zeros(self.proj_dim, self.proj_dim).to(self.device)
@@ -66,5 +67,5 @@ class BasicReweighter(AbstractReweighter):
         for i, block in enumerate(blocks):
             start = i * self.CUDA_MAX_DIM_SIZE
             end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[start : end] += (block.to(self.device) @ xtx_inv)
+            result[start: end] += (block.to(self.device) @ xtx_inv)
         return result

@@ -15,10 +15,11 @@ try:
     from ffcv.transforms import RandomHorizontalFlip, Cutout, \
         RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
     from ffcv.transforms.common import Squeeze
-except:
+except ImportError:
     print('No ffcv installed')
 
 BETONS = {
+        # TODO: put this on dropbox as well
         'train': "/mnt/cfs/home/spark/cifar_ffcv/cifar2/train.beton",
         'val': "/mnt/cfs/home/spark/cifar_ffcv/cifar2/val.beton",
 }
@@ -28,48 +29,52 @@ STATS = {
         'std': [51.5865, 50.847, 51.255]
 }
 
+
 def get_dataloader(batch_size=256,
                    num_workers=8,
                    split='train',  # split \in [train, val]
                    aug_seed=0,
                    should_augment=True,
                    indices=None):
-        label_pipeline: List[Operation] = [IntDecoder(),
-                                           ToTensor(),
-                                           ToDevice(ch.device('cuda:0')),
-                                           Squeeze()]
-        image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
+    label_pipeline: List[Operation] = [IntDecoder(),
+                                       ToTensor(),
+                                       ToDevice(ch.device('cuda:0')),
+                                       Squeeze()]
+    image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
 
-        if should_augment:
-                image_pipeline.extend([
-                        RandomHorizontalFlip(),
-                        RandomTranslate(padding=2, fill=tuple(map(int, STATS['mean']))),
-                        Cutout(4, tuple(map(int, STATS['std']))),
-                ])
-
+    if should_augment:
         image_pipeline.extend([
-            ToTensor(),
-            ToDevice(ch.device('cuda:0'), non_blocking=True),
-            ToTorchImage(),
-            Convert(ch.float32),
-            torchvision.transforms.Normalize(STATS['mean'], STATS['std']),
+                RandomHorizontalFlip(),
+                RandomTranslate(padding=2, fill=tuple(map(int, STATS['mean']))),
+                Cutout(4, tuple(map(int, STATS['std']))),
         ])
 
-        return Loader(BETONS[split],
-                      batch_size=batch_size,
-                      num_workers=num_workers,
-                      order=OrderOption.SEQUENTIAL,
-                      drop_last=False,
-                      seed=aug_seed,
-                      indices=indices,
-                      pipelines={'image': image_pipeline, 'label': label_pipeline})
+    image_pipeline.extend([
+        ToTensor(),
+        ToDevice(ch.device('cuda:0'), non_blocking=True),
+        ToTorchImage(),
+        Convert(ch.float32),
+        torchvision.transforms.Normalize(STATS['mean'], STATS['std']),
+    ])
+
+    return Loader(BETONS[split],
+                  batch_size=batch_size,
+                  num_workers=num_workers,
+                  order=OrderOption.SEQUENTIAL,
+                  drop_last=False,
+                  seed=aug_seed,
+                  indices=indices,
+                  pipelines={'image': image_pipeline, 'label': label_pipeline})
+
 
 # Resnet9
 class Mul(ch.nn.Module):
     def __init__(self, weight):
         super(Mul, self).__init__()
         self.weight = weight
-    def forward(self, x): return x * self.weight
+
+    def forward(self, x):
+        return x * self.weight
 
 
 class Flatten(ch.nn.Module):
@@ -80,14 +85,16 @@ class Residual(ch.nn.Module):
     def __init__(self, module):
         super(Residual, self).__init__()
         self.module = module
-    def forward(self, x): return x + self.module(x)
+
+    def forward(self, x):
+        return x + self.module(x)
 
 
 def construct_rn9(num_classes=2):
     def conv_bn(channels_in, channels_out, kernel_size=3, stride=1, padding=1, groups=1):
         return ch.nn.Sequential(
                 ch.nn.Conv2d(channels_in, channels_out, kernel_size=kernel_size,
-                            stride=stride, padding=padding, groups=groups, bias=False),
+                             stride=stride, padding=padding, groups=groups, bias=False),
                 ch.nn.BatchNorm2d(channels_out),
                 ch.nn.ReLU(inplace=True)
         )
@@ -105,6 +112,7 @@ def construct_rn9(num_classes=2):
         Mul(0.2)
     )
     return model
+
 
 def eval_correlations(infls, tmp_path):
     masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'

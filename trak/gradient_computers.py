@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional
 from torch import Tensor
-import torch
-ch = torch
 from .utils import parameters_to_vector, vectorize_and_ignore_buffers, get_params_dict
 from .modelout_functions import AbstractModelOutput
+import torch
+ch = torch
 try:
     from functorch import grad, vmap, make_functional_with_buffers
 except ImportError:
@@ -29,11 +29,12 @@ class AbstractGradientComputer(ABC):
     models.
     """
     is_functional = True
+
     @abstractmethod
     def __init__(self,
                  model: torch.nn.Module,
                  modelout_fn: AbstractModelOutput,
-                 grad_dim: Optional[int]=None,
+                 grad_dim: Optional[int] = None,
                  ) -> None:
         """ Initializes attributes, nothing too interesting happening.
 
@@ -67,7 +68,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                  grad_dim: int) -> None:
         super().__init__(model, modelout_fn, grad_dim)
         self.load_model_params(model)
-    
+
     def load_model_params(self, model) -> None:
         """ Given a a torch.nn.Module model, inits/updates the func_model, along
         with its weights and buffers. See
@@ -79,10 +80,10 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         """
         self.func_model, self.func_weights, self.func_buffers = make_functional_with_buffers(model)
         self.params_dict = get_params_dict(model)
-    
+
     def compute_per_sample_grad(self,
                                 batch: Iterable[Tensor],
-                                batch_size: Optional[int]=None,
+                                batch_size: Optional[int] = None,
                                 ) -> Tensor:
         """ Uses functorch's vmap (see
         https://pytorch.org/functorch/stable/generated/functorch.vmap.html#functorch.vmap
@@ -106,7 +107,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                      randomness='different')(self.func_model, self.func_weights,
                                              self.func_buffers, *batch)
         return vectorize_and_ignore_buffers(grads, self.params_dict)
-    
+
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
         .. math::
@@ -130,14 +131,15 @@ class FunctionalGradientComputer(AbstractGradientComputer):
 
 
 class IterativeGradientComputer(AbstractGradientComputer):
-    is_functional = False 
+    is_functional = False
+
     def __init__(self,
                  model,
                  modelout_fn: AbstractModelOutput,
                  grad_dim: int) -> None:
         super().__init__(model, modelout_fn, grad_dim)
         self.load_model_params(model)
-    
+
     def load_model_params(self, model) -> Tensor:
         self.model = model
         self.model_params = list(self.model.parameters())
@@ -160,7 +162,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
                                                                self.model_params,
                                                                retain_graph=True))
         return grads
-    
+
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
         .. math::

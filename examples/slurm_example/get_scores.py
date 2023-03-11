@@ -1,4 +1,3 @@
-import torch as ch
 from torchvision import models
 
 from trak import TRAKer

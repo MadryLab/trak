@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Optional, Iterable, Union
+from pathlib import Path
 import os
 import uuid
 import json
-from torch import Tensor
 import numpy as np
 from numpy.lib.format import open_memmap
-import torch as ch
-from typing import Optional, Iterable, Union
-from pathlib import Path
+import torch
+ch = torch
+
 
 class AbstractSaver(ABC):
     """
@@ -39,7 +40,7 @@ class AbstractSaver(ABC):
                 TRAKer class
         """
         self.metadata = metadata
-        self.save_dir = Path(save_dir).resolve() 
+        self.save_dir = Path(save_dir).resolve()
         os.makedirs(self.save_dir, exist_ok=True)
 
         # init TRAKer metadata
@@ -80,7 +81,7 @@ class AbstractSaver(ABC):
         self.current_target_grads = None
 
     @abstractmethod
-    def register_model_id(self, model_id: int):
+    def register_model_id(self, model_id: int) -> None:
         """ Create metadata for a new model ID (checkpoint).
 
         Args:
@@ -89,7 +90,7 @@ class AbstractSaver(ABC):
         ...
 
     @abstractmethod
-    def serialize_model_id_metadata(self, model_id: int):
+    def serialize_model_id_metadata(self, model_id: int) -> None:
         """ Write to disk / commit any updates to the metadata associated
         to a given model ID
 
@@ -99,12 +100,26 @@ class AbstractSaver(ABC):
         ...
 
     @abstractmethod
-    def load_store(self, model_id: int):
+    def load_store(self, model_id: int) -> None:
         """ Populates the self.current_* attributes with data for the
         given model ID (checkpoint).
 
         Args:
             model_id (int): a unique ID for a checkpoint
+        """
+        ...
+
+    @abstractmethod
+    def load_target_store(self,
+                          model_id: int,
+                          num_targets: int,
+                          mode: Optional[str]) -> None:
+        """ Loads/initializes metadata and store arrays for target results and
+        features (gradients)
+
+        Args:
+            model_id (int): a unique ID for a checkpoint
+            num_targets (int): number of target samples that will be scored
         """
         ...
 
@@ -116,16 +131,6 @@ class AbstractSaver(ABC):
             model_id (int): a unique ID for a checkpoint
             target (bool): if True, delete the gradients of the target samples,
                 otherwise delete the train set gradients.
-        """
-        ...
-
-    @abstractmethod
-    def finalize_target_grads(self, model_id: int):
-        """ Consolidate and serialize intermediate values (gradients) for
-        the target samples.
-
-        Args:
-            model_id (int): a unique ID for a checkpoint
         """
         ...
 
@@ -154,7 +159,9 @@ class MmapSaver(AbstractSaver):
         super().__init__(save_dir=save_dir, metadata=metadata)
         self.grad_dim, self.proj_dim = grads_shape
 
-    def register_model_id(self, model_id:int):
+    def register_model_id(self,
+                          model_id: int,
+                          _allow_featurizing_already_registered: bool) -> None:
         """ This method
         1) checks if the model ID already exists in the save dir
         2) if yes, it raises an error since model IDs must be unique
@@ -169,31 +176,33 @@ class MmapSaver(AbstractSaver):
         """
         self.current_model_id = model_id
 
-        if self.current_model_id in self.model_ids.keys():
+        if self.current_model_id in self.model_ids.keys() and (not _allow_featurizing_already_registered):
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
         self.model_ids[self.current_model_id] = {'featurized': 0,
                                                  'finalized': 0,
-                                                 'num_target_grads': 0}
+                                                 'targets_scored': 0}
 
         self.init_store(self.current_model_id)
         self.serialize_model_id_metadata(self.current_model_id)
-    
-    def serialize_model_id_metadata(self, model_id):
+
+    def serialize_model_id_metadata(self, model_id) -> None:
         with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w+') as f:
             content = {self.current_model_id: self.model_ids[self.current_model_id]}
             json.dump(content, f)
-    
+
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))
         try:
             os.makedirs(prefix)
-        except:
+        except FileExistsError:
             raise ModelIDException(f'model id folder {prefix} already exists')
 
         self.load_store(model_id, mode='w+')
-    
-    def load_store(self, model_id, mode='r+') -> None:
+
+    def load_store(self,
+                   model_id: int,
+                   mode: Optional[str] = 'r+') -> None:
         """ This method uses numpy memmaps for serializing the TRAK results and
         intermediate values.
 
@@ -222,35 +231,26 @@ class MmapSaver(AbstractSaver):
                                             shape=(self.grad_dim, self.proj_dim),
                                             dtype=np.float32)
 
-        self.current_target_grads_dict = {}
-
-        self.current_num_target_grads = self.model_ids[model_id]['num_target_grads']
-        if self.current_num_target_grads > 0:
-            self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
-            self.current_target_grads = open_memmap(filename=self.current_target_grads_path,
-                                                    mode=mode,
-                                                    shape=(self.current_num_target_grads, self.proj_dim),
-                                                    dtype=np.float32)
-
-    def finalize_target_grads(self, model_id):
-        """ This method goes from a indices-to-target-grads dictionary to a
-        torch tensor, and serializes them to a mmap.
+    def load_target_store(self,
+                          model_id: int,
+                          num_targets: int,
+                          mode: Optional[str] = 'r+',
+                          ) -> None:
+        """_summary_
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int): _description_
+            num_targets (int): _description_
         """
-        inds = ch.cat(tuple(self.current_target_grads_dict.keys()))
-        _current_target_grads_data = ch.cat(tuple(self.current_target_grads_dict.values()))[inds]
-
+        self.num_targets = num_targets
+        self.current_model_id = model_id
         prefix = self.save_dir.joinpath(str(model_id))
-        self.current_target_grads = open_memmap(filename=prefix.joinpath('grads_target.mmap'),
-                                                mode='w+',
-                                                shape=(inds.shape[0], self.proj_dim),
-                                                dtype=np.float32)
-        self.current_target_grads[:] = _current_target_grads_data
+
         self.current_target_grads_path = prefix.joinpath('grads_target.mmap')
-        self.model_ids[model_id]['num_target_grads'] = len(self.current_target_grads)
-        self.serialize_model_id_metadata(model_id)
+        self.current_target_grads = open_memmap(filename=self.current_target_grads_path,
+                                                mode=mode,
+                                                shape=(num_targets, self.proj_dim),
+                                                dtype=np.float32)
 
     def save_scores(self, scores, exp_name):
         prefix = self.save_dir.joinpath('scores')
@@ -261,12 +261,11 @@ class MmapSaver(AbstractSaver):
         if not os.path.isdir(prefix):
             os.makedirs(prefix)
         np.save(prefix.joinpath(filename), scores)
-     
+
     def del_grads(self, model_id, target=False):
         if target:
             grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads_target.mmap')
-            self.model_ids[model_id]['num_target_grads'] = 0
-            self.serialize_model_id_metadata(model_id)
+            self.clear_target_grad_count(model_id)
         else:
             grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')
 
@@ -274,7 +273,7 @@ class MmapSaver(AbstractSaver):
         grads_file.unlink()
 
     def clear_target_grad_count(self, model_id):
-        self.model_ids[model_id]['num_target_grads'] = 0
+        self.model_ids[model_id]['targets_scored'] = 0
         self.serialize_model_id_metadata(model_id)
 
         if model_id == self.current_model_id:

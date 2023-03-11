@@ -1,10 +1,10 @@
-import torch as ch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 from argparse import ArgumentParser
 
 from trak import TRAKer
+
 
 def main(model_id):
     # replace this with your dataset, model, and checkpoints of choice
