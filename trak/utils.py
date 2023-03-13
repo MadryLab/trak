@@ -1,9 +1,12 @@
-import torch as ch
+from torch import Tensor
+import torch
+ch = torch
 
-def parameters_to_vector(parameters):
+
+def parameters_to_vector(parameters) -> Tensor:
     """
     Same as https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html
-    but with `reshape` instead of `view` to avoid a pesky error. 
+    but with `reshape` instead of `view` to avoid a pesky error.
     """
     vec = []
     for param in parameters:
@@ -11,22 +14,22 @@ def parameters_to_vector(parameters):
     return ch.cat(vec)
 
 
-def get_num_params(model: ch.nn.Module):
+def get_num_params(model: torch.nn.Module) -> int:
     return parameters_to_vector(model.parameters()).numel()
 
 
-def get_params_dict(model):
+def get_params_dict(model: torch.nn.Module) -> list[str]:
     return [x[0] for x in list(model.named_parameters())]
 
 
-def is_not_buffer(ind, params_dict):
+def is_not_buffer(ind, params_dict) -> bool:
     name = params_dict[ind]
     if ('running_mean' in name) or ('running_var' in name) or ('num_batches_tracked' in name):
         return False
     return True
 
 
-def vectorize_and_ignore_buffers(g, params_dict=None):
+def vectorize_and_ignore_buffers(g, params_dict=None) -> Tensor:
     """
     gradients are given as a tuple (grad_w0, grad_w1, ... grad_wp)
     where p is the number of weight matrices. each grad_wi has shape

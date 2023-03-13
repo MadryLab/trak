@@ -3,9 +3,9 @@ TODO: @Andrew
 """
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
-from .reweighters import BasicReweighter
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
+from .score_computers import BasicScoreComputer
 from .savers import MmapSaver, ModelIDException
 from .utils import get_num_params
 
@@ -67,6 +67,9 @@ class TRAKer():
         self.gradient_computer = gradient_computer(model=self.model,
                                                    modelout_fn=self.modelout_fn,
                                                    grad_dim=self.num_params)
+
+        self.score_computer = BasicScoreComputer(device=self.device)
+
         metadata = {
             'JL dimension': self.projector.proj_dim,
             'JL matrix type': self.projector.proj_type,
@@ -179,8 +182,6 @@ class TRAKer():
 
         self._last_ind = 0
 
-        self.reweighter = BasicReweighter(device=self.device)
-
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
@@ -191,9 +192,9 @@ class TRAKer():
             self.saver.load_store(model_id)
 
             g = ch.as_tensor(self.saver.current_grads)
-            xtx = self.reweighter.reweight(g)
+            xtx = self.score_computer.get_xtx(g)
 
-            self.saver.current_features[:] = self.reweighter.finalize(g, xtx).cpu()
+            self.saver.current_features[:] = self.score_computer.get_x_xtx_inv(g, xtx).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
 
@@ -290,7 +291,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_features, device=self.device)
             g_target = ch.as_tensor(self.saver.current_target_grads, device=self.device)
 
-            _scores[j] = g @ g_target.T
+            _scores[j] = self.score_computer.get_scores(g, g_target)
             _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss, device=self.device)
             _completed[j] = True
 
