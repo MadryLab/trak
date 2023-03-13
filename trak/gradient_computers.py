@@ -39,8 +39,8 @@ class AbstractGradientComputer(ABC):
         """ Initializes attributes, nothing too interesting happening.
 
         Args:
-            model (torch.nn.Module): _description_
-            modelout_fn (AbstractModelOutput): _description_
+            model (torch.nn.Module): model
+            modelout_fn (AbstractModelOutput): model output function
             grad_dim (int, optional): Size of the gradients (number of model
                 parameters). Defaults to None.
         """
@@ -111,7 +111,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
         .. math::
-            \partial \ell / \partial \text{model output}
+            \\partial \\ell / \\partial \\text{model output}
 
         Note: For all applications we considered, we analytically derived the
         out-to-loss gradient, thus avoiding the need to do any backward passes
@@ -166,7 +166,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
         .. math::
-            \partial \ell / \partial \text{model output}
+            \\partial \\ell / \\partial \\text{model output}
 
         Note: For all applications we considered, we analytically derived the
         out-to-loss gradient, thus avoiding the need to do any backward passes
