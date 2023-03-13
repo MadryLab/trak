@@ -18,7 +18,7 @@ def get_num_params(model: torch.nn.Module) -> int:
     return parameters_to_vector(model.parameters()).numel()
 
 
-def get_params_dict(model: torch.nn.Module) -> list[str]:
+def get_params_dict(model: torch.nn.Module) -> list:
     return [x[0] for x in list(model.named_parameters())]
 
 
