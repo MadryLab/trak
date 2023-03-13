@@ -286,7 +286,6 @@ class TRAKer():
 
     def finalize_scores(self,
                         model_ids: Iterable[int] = None,
-                        soft_threshold: bool = False,
                         del_grads: bool = True,
                         exp_name: str = None) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
@@ -297,7 +296,6 @@ class TRAKer():
                 scores should be finalized. If None, scores are computed
                 for all model IDs in the :code:`save_dir` of the :func:`TRAKer`
                 class. Defaults to None.
-            soft_threshold (bool, optional): 
             del_grads (bool, optional): If True, the target gradients
                 (intermediate results) are deleted from the internal store of the
                 :func:`TRAKer` class.  Defaults to True.
@@ -349,9 +347,5 @@ class TRAKer():
         _num_models_used = sum(_completed)
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
         self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
-
-        if soft_threshold:
-            # TODO: @Sam soft thresholding
-            pass
 
         return self.scores
