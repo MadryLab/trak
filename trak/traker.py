@@ -1,6 +1,3 @@
-"""
-TODO: @Andrew
-"""
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
 from .gradient_computers import FunctionalGradientComputer,\
@@ -25,30 +22,38 @@ class TRAKer():
                  task: Union[AbstractModelOutput, str],
                  train_set_size: int,
                  save_dir: str = './trak_results',
-                 projector: Optional[AbstractProjector] = None,
                  device: Union[str, torch.device] = 'cuda',
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
+                 projector: Optional[AbstractProjector] = None,
                  proj_dim: int = 2048,
                  ) -> None:
-        """ Main class for TRAK. See [TODO: add link] for detailed examples.
-        TODO: @Andrew
-
-        Either set proj_dim and a CudaProjector Rademacher projector will be
-        used or give a custom Projector class and leave proj_dim to None.
+        """ The main front-facing class for TRAK. See the README and docs for
+        example usage.
 
         Args:
-            model (torch.nn.Module): _description_
-            task (Union[AbstractModelOutput, str]): _description_
-            train_set_size (int): _description_
-            save_dir (str, optional): _description_. Defaults to
-                '/tmp/trak_results'.
-            projector (Optional[AbstractProjector], optional): _description_.
-                Defaults to None.
-            device (Union[str, torch.device], optional): _description_.
-                Defaults to None.
+            model (torch.nn.Module): model to use for TRAK
+            task (Union[AbstractModelOutput, str]): Type of model that TRAK will
+                be ran on. Accepts either one of the following strings:
+                - :code:`image_classification`
+                - :code:`clip`
+                - :code:`bert_...` TODO: @Sam
+                or an implementation of :func:`AbstractModelOutput`.
+            train_set_size (int): Size of the train set that TRAK is featurizing
+            save_dir (str, optional): Directory to save final TRAK scores,
+                intermediate results, and metadata. Defaults to './trak_results'.
+            device (Union[str, torch.device], optional): torch device on which
+                to do computations. Defaults to 'cuda'.
             gradient_computer (AbstractGradientComputer, optional):
-                _description_. Defaults to FunctionalGradientComputer.
-            proj_dim (int, optional): _description_. Defaults to 2048.
+                Class to use to get per-example gradients. See
+                :func:`AbstractGradientComputer` for more details. Defaults to
+                FunctionalGradientComputer.
+            projector (Optional[AbstractProjector], optional): Either set
+                :code:`proj_dim` and a :func:`CudaProjector` Rademacher
+                projector will be used or give a custom :code:`Projector` class
+                and leave :code:`proj_dim` to None. Defaults to None.
+            proj_dim (int, optional): Dimension of the projected TRAK features.
+                See Section 4.3 of (TODO: link)[our paper] for more details.
+                Defaults to 2048.
         """
 
         self.model = model
@@ -82,7 +87,7 @@ class TRAKer():
         """ Initialize the projector for a traker class
 
         Args:
-            projector (AbstractProjector): _description_
+            projector (AbstractProjector): JL projector
         """
 
         self.projector = projector
@@ -100,15 +105,16 @@ class TRAKer():
                         checkpoint: Iterable[Tensor],
                         model_id: int,
                         _allow_featurizing_already_registered=None) -> None:
-        """ Loads state dictionary for the given checkpoint, initializes arrays
-        to store TRAK features for that checkpoint, tied to the model id.
+        """ Loads state dictionary for the given checkpoint; initializes arrays
+        to store TRAK features for that checkpoint, tied to the model ID.
 
         Args:
             checkpoint (Iterable[Tensor]): state_dict to load
             model_id (int): a unique ID for a checkpoint
             _allow_featurizing_already_registered (bool, optional): Only use if
-            you want to override the default behaviour that `featurize` is
-            forbidden on already registered model ids. Defaults to None.
+                you want to override the default behaviour that
+                :code:`featurize` is forbidden on already registered model IDs.
+                Defaults to None.
         """
         if self.saver.model_ids.get(model_id) is None:
             self.saver.register_model_id(model_id,
@@ -128,20 +134,26 @@ class TRAKer():
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]] = None,
                   num_samples: Optional[int] = None
-                  ) -> Tensor:
-        """ Featurizes a batch (TODO: actual summary here)
-        TODO: @Andrew
+                  ) -> None:
+        """ Creates TRAK features for the given batch by computing the gradient
+        of the model output function and projecting it. In the notation of the
+        paper, for an input pair :math:`z=(x,y)`, model parameters
+        :math:`\\theta`, and JL projection matrix :math:`P`, this method
+        computes :math:`P^\\top \\nabla_\\theta f(z_i, \\theta)`.
+        Additionally, this method computes the gradient of the out-to-loss
+        function (in the notation of the paper, the :math:`Q` term in Section
+        3.4).
 
-        Either inds or num_samples must be specified. Using num_samples will
-        write sequentially into the internal store of the TRAKer.
+        Either :code:`inds` or :code:`num_samples` must be specified. Using
+        :code:`num_samples` will write sequentially into the internal store of
+        the :func:`TRAKer`.
 
         Args:
-            batch (Iterable[Tensor]): _description_
-            inds (Optional[Iterable[int]], optional): _description_. Defaults to None.
-            num_samples (Optional[int], optional): _description_. Defaults to None.
-
-        Returns:
-            Tensor: _description_
+            batch (Iterable[Tensor]): input batch
+            inds (Optional[Iterable[int]], optional): Indices of the batch
+            samples in the train set. Defaults to None.
+            num_samples (Optional[int], optional): Number of samples in the
+            batch. Defaults to None.
         """
         assert (inds is None) or (num_samples is None),\
             "Exactly one of num_samples and inds should be specified"
@@ -172,10 +184,17 @@ class TRAKer():
     def finalize_features(self,
                           model_ids: Iterable[int] = None,
                           del_grads: bool = False) -> None:
-        """_summary_
+        """ For a set of checkpoints :math:`C` (specified by model IDs), and
+        gradients :math:`\\{ \\Phi_c \\}_{c\\in C}`, this method computes
+        :math:`\\Phi_c (\\Phi_c^\\top\\Phi_c)^{-1}` for all :math:`c\\in C`
+        and stores the results in the internal store of the :func:`TRAKer`
+        class.
 
         Args:
-            model_ids (Iterable[int], optional): _description_. Defaults to None.
+            model_ids (Iterable[int], optional): A list of model IDs for which
+                features should be finalized. If None, features are finalized
+                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`
+                class. Defaults to None.
         """
         if model_ids is None:
             model_ids = list(self.saver.model_ids.keys())
@@ -206,12 +225,13 @@ class TRAKer():
                                  model_id: int,
                                  num_targets: int,
                                  ) -> None:
-        """_summary_
+        """ This method prepares the internal store of the :func:`TRAKer` class
+        to start computing scores for a set of targets.
 
         Args:
-            checkpoint (Iterable[Tensor]): _description_
-            model_id (int): _description_
-            num_targets (int): _description_
+            checkpoint (Iterable[Tensor]): model checkpoint (state dict)
+            model_id (int): a unique ID for a checkpoint
+            num_targets (int): number of targets to score
         """
         self.saver.load_target_store(model_id, num_targets, mode='w+')
 
@@ -224,18 +244,21 @@ class TRAKer():
               batch: Iterable[Tensor],
               inds: Optional[Iterable[int]] = None,
               num_samples: Optional[int] = None,
-              ) -> Tensor:
-        """_summary_
-        TODO: @Andrew
+              ) -> None:
+        """ This method computes the (intermediate per-checkpoint) TRAK scores
+        for a batch of targets and stores them in the internal store of the
+        :func:`TRAKer` class.
+
+        Either :code:`inds` or :code:`num_samples` must be specified. Using
+        :code:`num_samples` will write sequentially into the internal store of
+        the :func:`TRAKer`.
 
         Args:
-            batch (Iterable[Tensor]): _description_
-            inds (Optional[Iterable[int]], optional): _description_. Defaults to None.
-            num_samples (Optional[int], optional): _description_. Defaults to None.
-            _serialize_target_grads (bool, optional): _description_. Defaults to True.
-
-        Returns:
-            Tensor: _description_
+            batch (Iterable[Tensor]): input batch
+            inds (Optional[Iterable[int]], optional): Indices of the batch
+            samples in the train set. Defaults to None.
+            num_samples (Optional[int], optional): Number of samples in the
+            batch. Defaults to None.
         """
         assert (inds is None) or (num_samples is None),\
             "Exactly one of num_samples and inds should be specified"
@@ -263,8 +286,29 @@ class TRAKer():
 
     def finalize_scores(self,
                         model_ids: Iterable[int] = None,
+                        soft_threshold: bool = False,
                         del_grads: bool = True,
                         exp_name: str = None) -> Tensor:
+        """ This method computes the final TRAK scores for the given targets,
+        train samples, and model checkpoints (specified by model IDs).
+
+        Args:
+            model_ids (Iterable[int], optional): A list of model IDs for which
+                scores should be finalized. If None, scores are computed
+                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`
+                class. Defaults to None.
+            soft_threshold (bool, optional): 
+            del_grads (bool, optional): If True, the target gradients
+                (intermediate results) are deleted from the internal store of the
+                :func:`TRAKer` class.  Defaults to True.
+            exp_name (str, optional): Used to name the scores :code:`.npy`
+                array produced by this method in the :code:`save_dir` of the
+                :func:`TRAKer` class. If None, a random uuid is generated.
+                Defaults to None.
+
+        Returns:
+            Tensor: TRAK scores
+        """
         # reset counter for inds used for scoring
         self._last_ind_target = 0
 
@@ -305,5 +349,9 @@ class TRAKer():
         _num_models_used = sum(_completed)
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
         self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
+
+        if soft_threshold:
+            # TODO: @Sam soft thresholding
+            pass
 
         return self.scores
