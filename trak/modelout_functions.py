@@ -1,3 +1,17 @@
+"""
+Here we provide an abstract "model output" class AbstractModelOutput, together with a number
+of subclasses for particular applications (vision, language, etc):
+- ImageClassificationModelOutput
+- IterImageClassificationModelOutput
+- CLIPModelOutput
+
+These classes implement methods that transform input batches to the desired model output
+(e.g. logits, loss, etc).
+See Sections 2 & 3 of (TODO: link)[our paper] for more details on what model output functions are
+in the context of TRAK and how to use & design them.
+
+See [TODO: docs link] for examples on how to subclass AbstractModelOutput for a task of your choice.
+"""
 from abc import ABC, abstractmethod
 from typing import Iterable
 from torch import Tensor
@@ -7,14 +21,13 @@ import torch as ch
 
 class AbstractModelOutput(ABC):
     """
-    TODO: @Andrew
+    Subclasses must implement:
+    - a `get_output` method that takes in a batch of inputs and model weights to
+    produce outputs that TRAK will be trained to predict.
 
-    ModelOutputFunction classes must implement:
-    - a `get_output` method that takes in a batch of inputs and model weights
-    to produce outputs that TRAK will be trained to predict.
-    - a `get_out_to_loss_grad` method that takes in a batch of inputs and
-    model weights to produce the gradient of the function that transforms the
-    model outputs above into the loss wrt the batch
+    - a `get_out_to_loss_grad` method that takes in a batch of inputs and model
+    weights to produce the gradient of the function that transforms the model
+    outputs above into the loss wrt the batch
     """
     @abstractmethod
     def __init__(self) -> None:
@@ -24,6 +37,17 @@ class AbstractModelOutput(ABC):
     def get_output(self,
                    model,
                    batch: Iterable[Tensor]) -> Tensor:
+        """ See Sections 2 & 3 of (TODO: link)[our paper] for more details on
+        what model output functions are in the context of TRAK and how to use &
+        design them.
+
+        Args:
+            model (_type_): _description_
+            batch (Iterable[Tensor]): _description_
+
+        Returns:
+            Tensor: _description_
+        """
         ...
 
     @abstractmethod
@@ -35,17 +59,16 @@ class AbstractModelOutput(ABC):
 
 class ImageClassificationModelOutput(AbstractModelOutput):
     """
-    Margin for image classification.
-
-    .. math::
-        \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
-        \exp(\text{logit}[i])\right)
-
-    Version of margin proposed in 'Understanding Influence Functions
-    and Datamodels via Harmonic Analysis'
+    Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]
+    for more details.
     """
 
-    def __init__(self, temperature=1.) -> None:
+    def __init__(self, temperature: float = 1.) -> None:
+        """
+        Args:
+            temperature (float, optional): Temperature to use inside the
+            softmax for the out-to-loss function. Defaults to 1.
+        """
         super().__init__()
         self.softmax = ch.nn.Softmax(-1)
         self.loss_temperature = temperature
@@ -56,6 +79,28 @@ class ImageClassificationModelOutput(AbstractModelOutput):
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor) -> Tensor:
+        """ For a given output :math:`z=(x, y)` and model parameters :math:`\theta`,
+        let :math:`p(z, \theta)` be the softmax probability of the correct class.
+        This method implements the model output function
+        .. math::
+            \log(\frac{p(z, \theta)}{1 - p(z, \theta)}).
+
+        It uses functorch's functional models to make the per-sample gradient computations faster.
+        For more details on what func_model, weights & buffers are, and how to use them, please
+        refer to https://pytorch.org/functorch/stable/ and
+        https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html.
+
+        Args:
+            func_model (_type_): functorch functional model
+            weights (Iterable[Tensor]): functorch model weights
+            buffers (Iterable[Tensor]): functorch model buffers
+            image (Tensor): input image, should not have batch dimension
+            label (Tensor): input label, should not have batch dimension
+
+        Returns:
+            Tensor: model output for the given image-label pair :math:`z` and
+            weights & buffers :math:`\theta`.
+        """
         logits = func_model(weights, buffers, image.unsqueeze(0))
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
@@ -69,10 +114,34 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         return margins.sum()
 
     def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
+        """ Utility method to make forward passes compatible across different models,
+        e.g. image classification models take in only the images in the batch,
+        but CLIP takes in both the images and captions --- using this method,
+        the TRAKer class does not need to be modified when we have a new model
+        that uses different parts of the input batch.
+
+        Args:
+            model (Module): model
+            batch (Iterable[Tensor]): input batch
+
+        Returns:
+            Tensor: model output (not to be confused with the model output function)
+        """
         images, _ = batch
         return model(images)
 
     def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+        """ Computes the (reweighting term Q in the paper) 
+
+        Args:
+            func_model (_type_): functorch functional model
+            weights (Iterable[Tensor]): functorch model weights
+            buffers (Iterable[Tensor]): functorch model buffers
+            batch (Iterable[Tensor]): input batch
+
+        Returns:
+            Tensor: out-to-loss (reweighting term) for the input batch
+        """
         images, labels = batch
         logits = func_model(weights, buffers, images)
         # here we are directly implementing the gradient instead of relying on autodiff to do

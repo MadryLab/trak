@@ -26,7 +26,7 @@ class TRAKer():
                  train_set_size: int,
                  save_dir: str = './trak_results',
                  projector: Optional[AbstractProjector] = None,
-                 device: Union[str, torch.device] = None,
+                 device: Union[str, torch.device] = 'cuda',
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
                  proj_dim: int = 2048,
                  ) -> None:

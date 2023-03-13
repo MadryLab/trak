@@ -1,14 +1,16 @@
 from abc import ABC, abstractmethod
+from typing import Union
 from enum import Enum
-import math
 from torch import Tensor
+import math
 import torch
 ch = torch
-from typing import Union
+
 
 class ProjectionType(str, Enum):
     normal: str = 'normal'
     rademacher: str = 'rademacher'
+
 
 class AbstractProjector(ABC):
     """
@@ -99,7 +101,7 @@ class BasicSingleBlockProjector(AbstractProjector):
             self.proj_matrix -= 1.
         else:
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
-    
+
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         if model_id != self.model_id:
             self.model_id = model_id
@@ -122,7 +124,7 @@ class BasicProjector(AbstractProjector):
     https://developer.nvidia.com/cuda-gpus).
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, block_size: int=200, dtype=ch.float32,
+                 ProjectionType, device, block_size: int = 200, dtype=ch.float32,
                  model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
@@ -162,7 +164,7 @@ class BasicProjector(AbstractProjector):
             self.proj_matrix -= 1.
         else:
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
-    
+
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         sketch = ch.zeros(size=(grads.size(0), self.proj_dim),
                           dtype=self.dtype, device=self.device)
@@ -198,14 +200,17 @@ class CudaProjector(AbstractProjector):
             device = ch.device(device)
 
         if device.type != 'cuda':
-            raise ValueError("CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector")
+            err = "CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector"
+            raise ValueError(err)
 
         self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
 
         try:
             import fast_jl
         except ImportError:
-            raise ModuleNotFoundError("You should make sure to install the CUDA projector for traker (called fast_jl). See the installation FAQs for more details.")
+            err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
+                  See the installation FAQs for more details."
+            raise ModuleNotFoundError(err)
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         batch_size = grads.shape[0]
