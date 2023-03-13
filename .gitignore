@@ -135,5 +135,6 @@ dmypy.json
 # VS Code
 .vscode/
 
-# results
+# results and logs
 trak_results/
+*.out

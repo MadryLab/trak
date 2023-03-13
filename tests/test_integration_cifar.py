@@ -1,15 +1,70 @@
 import pytest
-import torch as ch
 from tqdm import tqdm
-from functorch import make_functional_with_buffers
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
 
-from traker.traker import TRAKer
-from traker.modelout_functions import CrossEntropyModelOutput
+from trak import TRAKer
+from trak.projectors import BasicProjector
+from trak.gradient_computers import IterativeGradientComputer
 
-def test_cifar10(device='cpu'):
-    # TODO: load CIFAR-10 weights instead ('DEFAULT' loads ImageNet ones)
+
+def test_cifar10(tmp_path, device='cpu'):
+    model = models.resnet18(weights='DEFAULT')
+    model.to(device)
+    model.eval()
+
+    transform = transforms.Compose([transforms.ToTensor(),
+                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    ds_train = datasets.CIFAR10(root='/tmp', download=True, train=True, transform=transform)
+    loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
+    if device == 'cpu':
+        # the default CudaProjector does not work on cpu
+        projector = BasicProjector(grad_dim=sum(x.numel() for x in model.parameters()),
+                                   proj_dim=20,
+                                   seed=0,
+                                   proj_type='rademacher',
+                                   device=device)
+    else:
+        projector = None
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    train_set_size=len(ds_train),
+                    projector=projector,
+                    save_dir=tmp_path,
+                    device=device)
+
+    ckpts = [model.state_dict(), model.state_dict()]
+    for model_id, ckpt in enumerate(ckpts):
+        traker.load_checkpoint(ckpt, model_id=model_id)
+
+        for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
+            batch = [x.to(device) for x in batch]
+            traker.featurize(batch=batch,
+                             num_samples=loader_train.batch_size)
+            break  # a CPU pass takes too long lol
+
+    traker.finalize_features()
+
+    ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
+    loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
+    for model_id, ckpt in enumerate(ckpts):
+        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=100)
+        for batch in tqdm(loader_val, desc='Scoring...'):
+            batch = [x.to(device) for x in batch]
+            traker.score(batch=batch,
+                         num_samples=loader_val.batch_size)
+            break  # a CPU pass takes too long lol
+
+    traker.finalize_scores()
+
+
+@pytest.mark.cuda
+def test_cifar10_cuda(tmp_path):
+    test_cifar10(tmp_path, device='cuda:0')
+
+
+def test_cifar10_iter(tmp_path, device='cpu'):
     model = models.resnet18(weights='DEFAULT')
     model.to(device)
     model.eval()
@@ -20,119 +75,43 @@ def test_cifar10(device='cpu'):
     ds_train = datasets.CIFAR10(root='/tmp', download=True, train=True, transform=transform)
     loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
 
-    modelout_fn = CrossEntropyModelOutput(device=device)
-    trak = TRAKer(model=model,
-                  train_set_size=50_000,
-                  proj_dim=10,
-                  grad_dtype=ch.float32,
-                  device=device)
+    if device == 'cpu':
+        # the default CudaProjector does not work on cpu
+        projector = BasicProjector(grad_dim=sum(x.numel() for x in model.parameters()),
+                                   proj_dim=20,
+                                   seed=0,
+                                   proj_type='rademacher',
+                                   device=device)
+    else:
+        projector = None
 
-    func_model, weights, buffers = make_functional_with_buffers(model)
-    def compute_outputs(weights, buffers, image, label):
-        # we are only allowed to pass in tensors to vmap,
-        # thus func_model is used from above
-        out = func_model(weights, buffers, image.unsqueeze(0))
-        return modelout_fn.get_output(out, label.unsqueeze(0)).sum()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    train_set_size=len(ds_train),
+                    save_dir=tmp_path,
+                    projector=projector,
+                    gradient_computer=IterativeGradientComputer,
+                    device=device)
 
-    def compute_out_to_loss(weights, buffers, images, labels):
-        out = func_model(weights, buffers, images)
-        return modelout_fn.get_out_to_loss(out, labels)
+    traker.load_checkpoint(model.state_dict(), model_id=0)
+    for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
+        batch = [x.to(device) for x in batch]
+        traker.featurize(batch=batch,
+                         num_samples=loader_train.batch_size)
+        break  # a CPU pass takes too long lol
 
-    ckpts = [None, None]
-    for model_id, ckpt in enumerate(ckpts):
-        # load state dict here if we actually had checkpoints
-        # model.load_state_dict(ckpt)
-        # update weights, buffers; etc
-        trak.load_params(model_params=(weights, buffers), model_id=model_id)
-        for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
-            batch = [x.to(device) for x in batch]
-            inds = list(range(bind * loader_train.batch_size,
-                            (bind + 1) * loader_train.batch_size))
-            trak.featurize(out_fn=compute_outputs,
-                           loss_fn=compute_out_to_loss,
-                           batch=batch,
-                           model_id=model_id,
-                           inds=inds)
-            if bind == 2:
-                break # a CPU pass takes too long lol
-    
-    trak.finalize()
+    traker.finalize_features()
 
     ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
     loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
     # load margins
-    for model_id, ckpt in enumerate(ckpts):
-        # load state dict here if we actually had checkpoints
-        # model.load_state_dict(ckpt)
-        # update weights, buffers; etc
-        for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-            batch = [x.to(device) for x in batch]
-            trak.score(out_fn=compute_outputs,
-                         batch=batch,
-                         model=model,
-                         model_id=model_id)
-            if bind == 2:
-                break
+    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=100)
+    for batch in tqdm(loader_val, desc='Scoring...'):
+        batch = [x.to(device) for x in batch]
+        traker.score(batch=batch, num_samples=loader_val.batch_size)
+        break
 
 
 @pytest.mark.cuda
-def test_cifar10_cuda():
-    test_cifar10(device='cuda:0')
-
-
-def test_cifar10_iter(device='cpu'):
-    # TODO: load CIFAR-10 weights instead ('DEFAULT' loads ImageNet ones)
-    model = models.resnet18(weights='DEFAULT')
-    model.to(device)
-    model.eval()
-
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-    ds_train = datasets.CIFAR10(root='/tmp', download=True, train=True, transform=transform)
-    loader_train = DataLoader(ds_train, batch_size=10, shuffle=False)
-
-    modelout_fn = CrossEntropyModelOutput(device=device)
-    trak = TRAKer(model=model,
-                  train_set_size=50_000,
-                  proj_dim=10,
-                  grad_dtype=ch.float32,
-                  functional=False,
-                  device=device)
-
-    def compute_outputs(model, images, labels):
-        out = model(images)
-        return modelout_fn.get_output(out, labels)
-
-    def compute_out_to_loss(model, images, labels):
-        out = model(images)
-        return modelout_fn.get_out_to_loss(out, labels)
-
-    model_params = list(model.parameters())
-    trak.load_params(model_params)
-
-    for bind, batch in enumerate(tqdm(loader_train, desc='Computing TRAK embeddings...')):
-        batch = [x.to(device) for x in batch]
-        inds = list(range(bind * loader_train.batch_size,
-                          (bind + 1) * loader_train.batch_size))
-        trak.featurize(out_fn=compute_outputs,
-                       loss_fn=compute_out_to_loss,
-                       batch=batch,
-                       inds=inds)
-        if bind == 2:
-            break # a CPU pass takes too long lol
-    
-    trak.finalize()
-
-    ds_val = datasets.CIFAR10(root='/tmp', download=True, train=False, transform=transform)
-    loader_val = DataLoader(ds_val, batch_size=10, shuffle=False)
-    # load margins
-    for bind, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
-        batch = [x.to(device) for x in batch]
-        s = trak.score(out_fn=compute_outputs, batch=batch, model=model)
-        if bind == 2:
-            break
-
-@pytest.mark.cuda
-def test_cifar10_iter_cuda():
-    test_cifar10_iter(device='cuda:0')
+def test_cifar10_iter_cuda(tmp_path):
+    test_cifar10_iter(tmp_path, device='cuda:0')
