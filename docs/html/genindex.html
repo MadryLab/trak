@@ -1,0 +1,688 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
+
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 --><title>Index - TRAK 0.1.0 documentation</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  
+  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          
+<section class="genindex-section">
+  <h1 id="index">Index</h1>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#Z"><strong>Z</strong></a></div>
+</section>
+<section id="A" class="genindex-section">
+  <h2>A</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.gradient_computers.AbstractGradientComputer">AbstractGradientComputer (class in traker.gradient_computers)</a>
+</li>
+        <li><a href="traker.html#traker.modelout_functions.AbstractModelOutput">AbstractModelOutput (class in traker.modelout_functions)</a>
+</li>
+        <li><a href="traker.html#traker.projectors.AbstractProjector">AbstractProjector (class in traker.projectors)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.reweighters.AbstractReweighter">AbstractReweighter (class in traker.reweighters)</a>
+</li>
+        <li><a href="traker.html#traker.savers.AbstractSaver">AbstractSaver (class in traker.savers)</a>
+</li>
+        <li><a href="traker.html#traker.scorers.AbstractScorer">AbstractScorer (class in traker.scorers)</a>
+</li>
+        <li><a href="traker.html#traker.utils.AverageMeter">AverageMeter (class in traker.utils)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="B" class="genindex-section">
+  <h2>B</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.BasicProjector">BasicProjector (class in traker.projectors)</a>
+</li>
+        <li><a href="traker.html#traker.reweighters.BasicReweighter">BasicReweighter (class in traker.reweighters)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.BasicSingleBlockProjector">BasicSingleBlockProjector (class in traker.projectors)</a>
+</li>
+        <li><a href="traker.html#traker.reweighters.BasicSingleBlockReweighter">BasicSingleBlockReweighter (class in traker.reweighters)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="C" class="genindex-section">
+  <h2>C</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.modelout_functions.CLIPModelOutput">CLIPModelOutput (class in traker.modelout_functions)</a>
+</li>
+        <li><a href="traker.html#traker.gradient_computers.FunctionalGradientComputer.compute_loss_grad">compute_loss_grad() (traker.gradient_computers.FunctionalGradientComputer method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.gradient_computers.IterativeGradientComputer.compute_loss_grad">(traker.gradient_computers.IterativeGradientComputer method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.gradient_computers.AbstractGradientComputer.compute_per_sample_grad">compute_per_sample_grad() (traker.gradient_computers.AbstractGradientComputer method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.gradient_computers.FunctionalGradientComputer.compute_per_sample_grad">(traker.gradient_computers.FunctionalGradientComputer method)</a>
+</li>
+          <li><a href="traker.html#traker.gradient_computers.IterativeGradientComputer.compute_per_sample_grad">(traker.gradient_computers.IterativeGradientComputer method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.modelout_functions.CrossEntropyModelOutput">CrossEntropyModelOutput (class in traker.modelout_functions)</a>
+</li>
+        <li><a href="traker.html#traker.projectors.CudaProjector">CudaProjector (class in traker.projectors)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="F" class="genindex-section">
+  <h2>F</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.AbstractSaver.features_get">features_get() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.features_get">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.savers.AbstractSaver.features_set">features_set() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.features_set">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.traker.TRAKer.featurize">featurize() (traker.traker.TRAKer method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.reweighters.AbstractReweighter.finalize">finalize() (traker.reweighters.AbstractReweighter method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.reweighters.BasicReweighter.finalize">(traker.reweighters.BasicReweighter method)</a>
+</li>
+          <li><a href="traker.html#traker.reweighters.BasicSingleBlockReweighter.finalize">(traker.reweighters.BasicSingleBlockReweighter method)</a>
+</li>
+          <li><a href="traker.html#traker.traker.TRAKer.finalize">(traker.traker.TRAKer method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.gradient_computers.FunctionalGradientComputer">FunctionalGradientComputer (class in traker.gradient_computers)</a>
+</li>
+        <li><a href="traker.html#traker.scorers.FunctionalScorer">FunctionalScorer (class in traker.scorers)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="G" class="genindex-section">
+  <h2>G</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.BasicProjector.generate_sketch_matrix">generate_sketch_matrix() (traker.projectors.BasicProjector method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.projectors.BasicSingleBlockProjector.generate_sketch_matrix">(traker.projectors.BasicSingleBlockProjector method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.modelout_functions.CLIPModelOutput.get_embeddings">get_embeddings() (traker.modelout_functions.CLIPModelOutput method)</a>
+</li>
+        <li><a href="traker.html#traker.projectors.BasicProjector.get_generator_states">get_generator_states() (traker.projectors.BasicProjector method)</a>
+</li>
+        <li><a href="traker.html#traker.modelout_functions.AbstractModelOutput.get_out_to_loss">get_out_to_loss() (traker.modelout_functions.AbstractModelOutput method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.modelout_functions.CLIPModelOutput.get_out_to_loss">(traker.modelout_functions.CLIPModelOutput method)</a>
+</li>
+          <li><a href="traker.html#traker.modelout_functions.CrossEntropyModelOutput.get_out_to_loss">(traker.modelout_functions.CrossEntropyModelOutput method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.modelout_functions.AbstractModelOutput.get_output">get_output() (traker.modelout_functions.AbstractModelOutput method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.modelout_functions.CLIPModelOutput.get_output">(traker.modelout_functions.CLIPModelOutput method)</a>
+</li>
+          <li><a href="traker.html#traker.modelout_functions.CrossEntropyModelOutput.get_output">(traker.modelout_functions.CrossEntropyModelOutput method)</a>
+</li>
+          <li><a href="traker.html#traker.modelout_functions.NLPModelOutput.get_output">(traker.modelout_functions.NLPModelOutput method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.AbstractSaver.grad_get">grad_get() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.grad_get">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.savers.AbstractSaver.grad_set">grad_set() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.grad_set">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+          <li><a href="traker.html#traker.savers.ZarrSaver.grad_set">(traker.savers.ZarrSaver method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="I" class="genindex-section">
+  <h2>I</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.KeepInRAMSaver.init_tensor">init_tensor() (traker.savers.KeepInRAMSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.MmapSaver.init_tensor">(traker.savers.MmapSaver method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.utils.is_not_buffer">is_not_buffer() (in module traker.utils)</a>
+</li>
+        <li><a href="traker.html#traker.gradient_computers.IterativeGradientComputer">IterativeGradientComputer (class in traker.gradient_computers)</a>
+</li>
+        <li><a href="traker.html#traker.scorers.IterScorer">IterScorer (class in traker.scorers)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="K" class="genindex-section">
+  <h2>K</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.KeepInRAMSaver">KeepInRAMSaver (class in traker.savers)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="L" class="genindex-section">
+  <h2>L</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.AbstractSaver.load">load() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.load">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+          <li><a href="traker.html#traker.traker.TRAKer.load">(traker.traker.TRAKer method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.traker.TRAKer.load_params">load_params() (traker.traker.TRAKer method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.AbstractSaver.loss_get">loss_get() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.loss_get">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.savers.AbstractSaver.loss_set">loss_set() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.loss_set">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="M" class="genindex-section">
+  <h2>M</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.MmapSaver">MmapSaver (class in traker.savers)</a>
+</li>
+        <li>
+    module
+
+        <ul>
+          <li><a href="traker.html#module-traker">traker</a>
+</li>
+          <li><a href="traker.html#module-traker.gradient_computers">traker.gradient_computers</a>
+</li>
+          <li><a href="traker.html#module-traker.modelout_functions">traker.modelout_functions</a>
+</li>
+          <li><a href="traker.html#module-traker.projectors">traker.projectors</a>
+</li>
+          <li><a href="traker.html#module-traker.reweighters">traker.reweighters</a>
+</li>
+          <li><a href="traker.html#module-traker.savers">traker.savers</a>
+</li>
+          <li><a href="traker.html#module-traker.scorers">traker.scorers</a>
+</li>
+          <li><a href="traker.html#module-traker.traker">traker.traker</a>
+</li>
+          <li><a href="traker.html#module-traker.utils">traker.utils</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="N" class="genindex-section">
+  <h2>N</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.modelout_functions.NLPModelOutput">NLPModelOutput (class in traker.modelout_functions)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.ProjectionType.normal">normal (traker.projectors.ProjectionType attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="P" class="genindex-section">
+  <h2>P</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.utils.parameters_to_vector">parameters_to_vector() (in module traker.utils)</a>
+</li>
+        <li><a href="traker.html#traker.projectors.AbstractProjector.project">project() (traker.projectors.AbstractProjector method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.projectors.BasicProjector.project">(traker.projectors.BasicProjector method)</a>
+</li>
+          <li><a href="traker.html#traker.projectors.BasicSingleBlockProjector.project">(traker.projectors.BasicSingleBlockProjector method)</a>
+</li>
+          <li><a href="traker.html#traker.projectors.CudaProjector.project">(traker.projectors.CudaProjector method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.ProjectionType">ProjectionType (class in traker.projectors)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="R" class="genindex-section">
+  <h2>R</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.projectors.ProjectionType.rademacher">rademacher (traker.projectors.ProjectionType attribute)</a>
+</li>
+        <li><a href="traker.html#traker.gradient_computers.FunctionalGradientComputer.register_model">register_model() (traker.gradient_computers.FunctionalGradientComputer method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.gradient_computers.IterativeGradientComputer.register_model">(traker.gradient_computers.IterativeGradientComputer method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.utils.AverageMeter.reset">reset() (traker.utils.AverageMeter method)</a>
+</li>
+        <li><a href="traker.html#traker.reweighters.AbstractReweighter.reweight">reweight() (traker.reweighters.AbstractReweighter method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.reweighters.BasicReweighter.reweight">(traker.reweighters.BasicReweighter method)</a>
+</li>
+          <li><a href="traker.html#traker.reweighters.BasicSingleBlockReweighter.reweight">(traker.reweighters.BasicSingleBlockReweighter method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="S" class="genindex-section">
+  <h2>S</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.AbstractSaver.save">save() (traker.savers.AbstractSaver method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.savers.KeepInRAMSaver.save">(traker.savers.KeepInRAMSaver method)</a>
+</li>
+          <li><a href="traker.html#traker.traker.TRAKer.save">(traker.traker.TRAKer method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.scorers.AbstractScorer.score">score() (traker.scorers.AbstractScorer method)</a>
+
+        <ul>
+          <li><a href="traker.html#traker.scorers.FunctionalScorer.score">(traker.scorers.FunctionalScorer method)</a>
+</li>
+          <li><a href="traker.html#traker.scorers.IterScorer.score">(traker.scorers.IterScorer method)</a>
+</li>
+          <li><a href="traker.html#traker.traker.TRAKer.score">(traker.traker.TRAKer method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="T" class="genindex-section">
+  <h2>T</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    traker
+
+        <ul>
+          <li><a href="traker.html#module-traker">module</a>
+</li>
+        </ul></li>
+        <li><a href="traker.html#traker.traker.TRAKer">TRAKer (class in traker.traker)</a>
+</li>
+        <li>
+    traker.gradient_computers
+
+        <ul>
+          <li><a href="traker.html#module-traker.gradient_computers">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.modelout_functions
+
+        <ul>
+          <li><a href="traker.html#module-traker.modelout_functions">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.projectors
+
+        <ul>
+          <li><a href="traker.html#module-traker.projectors">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    traker.reweighters
+
+        <ul>
+          <li><a href="traker.html#module-traker.reweighters">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.savers
+
+        <ul>
+          <li><a href="traker.html#module-traker.savers">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.scorers
+
+        <ul>
+          <li><a href="traker.html#module-traker.scorers">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.traker
+
+        <ul>
+          <li><a href="traker.html#module-traker.traker">module</a>
+</li>
+        </ul></li>
+        <li>
+    traker.utils
+
+        <ul>
+          <li><a href="traker.html#module-traker.utils">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="U" class="genindex-section">
+  <h2>U</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.utils.AverageMeter.update">update() (traker.utils.AverageMeter method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="V" class="genindex-section">
+  <h2>V</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.utils.vectorize_and_ignore_buffers">vectorize_and_ignore_buffers() (in module traker.utils)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Z" class="genindex-section">
+  <h2>Z</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="traker.html#traker.savers.ZarrSaver">ZarrSaver (class in traker.savers)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Kristian Georgiev
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    </body>
+</html>
