@@ -273,7 +273,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">current_out_to_loss</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_features</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_target_grads</span> <span class="o">=</span> <span class="kc">None</span>
-    
+
 <div class="viewcode-block" id="AbstractSaver.register_model_id"><a class="viewcode-back" href="../../trak.html#trak.savers.AbstractSaver.register_model_id">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">register_model_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Create metadata for a new model ID (checkpoint).</span>
@@ -318,7 +318,7 @@
         <span class="o">...</span></div>
 
 <div class="viewcode-block" id="AbstractSaver.del_grads"><a class="viewcode-back" href="../../trak.html#trak.savers.AbstractSaver.del_grads">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">del_grads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">del_grads</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Delete the intermediate values (gradients) for a given model id</span>
 
 <span class="sd">        Args:</span>
@@ -329,7 +329,7 @@
         <span class="o">...</span></div>
 
 <div class="viewcode-block" id="AbstractSaver.clear_target_grad_count"><a class="viewcode-back" href="../../trak.html#trak.savers.AbstractSaver.clear_target_grad_count">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">clear_target_grad_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">clear_target_grad_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Reset the count for how many targets we are scoring</span>
 
 <span class="sd">        Args:</span>
@@ -349,9 +349,10 @@
 <span class="sd">    into memory.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">grads_shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span> <span class="o">=</span> <span class="n">grads_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span> <span class="o">=</span> <span class="n">train_set_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span> <span class="o">=</span> <span class="n">proj_dim</span>
 
 <div class="viewcode-block" id="MmapSaver.register_model_id"><a class="viewcode-back" href="../../trak.html#trak.savers.MmapSaver.register_model_id">[docs]</a>    <span class="k">def</span> <span class="nf">register_model_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                           <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -410,19 +411,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">current_grads_path</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;grads.mmap&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_grads</span> <span class="o">=</span> <span class="n">open_memmap</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_grads_path</span><span class="p">,</span>
                                          <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-                                         <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">),</span>
+                                         <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">),</span>
                                          <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">current_out_to_loss_path</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;out_to_loss.mmap&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_out_to_loss</span> <span class="o">=</span> <span class="n">open_memmap</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_out_to_loss_path</span><span class="p">,</span>
                                                <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-                                               <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                               <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                                                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">current_features_path</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;features.mmap&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_features</span> <span class="o">=</span> <span class="n">open_memmap</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">current_features_path</span><span class="p">,</span>
                                             <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
-                                            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">),</span>
+                                            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">),</span>
                                             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MmapSaver.load_target_store"><a class="viewcode-back" href="../../trak.html#trak.savers.MmapSaver.load_target_store">[docs]</a>    <span class="k">def</span> <span class="nf">load_target_store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
