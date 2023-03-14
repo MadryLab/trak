@@ -8,9 +8,9 @@ from torch import testing
 from trak.projectors import CudaProjector, ProjectionType
 BasicProjector = CudaProjector
 
-PARAM = list(product([0, 1, 10**8], # seed
-                     [ProjectionType.normal, ProjectionType.rademacher], # proj type
-                     [ch.float16, ch.float32], # dtype
+PARAM = list(product([0, 1, 10**8],  # seed
+                     [ProjectionType.normal, ProjectionType.rademacher],  # proj type
+                     [ch.float16, ch.float32],  # dtype
                      [
                          (1, 25),
                          (8, 10_000),
@@ -18,20 +18,11 @@ PARAM = list(product([0, 1, 10**8], # seed
                          (9, 10_002),
                          (16, 10_001),
                          (45, 1049),
-                     ], # input shape
-                     [2048, 1024], # proj dim
-        ))
+                         (1, int(1e9)),
+                     ],  # input shape
+                     [4096, 1024],  # proj dim
+                     ))
 
-# will OOM for BasicProjector
-PARAM_HEAVY = list(product([0, 1], # seed
-                           ['normal', 'rademacher'], # proj type
-                           [ch.float16, ch.float32], # dtype
-                           [(1, int(1e10)),
-                            (10, int(1e10)),
-                            (100, int(1e10)),
-                           ], # input shape
-                           [20_000], # proj dim
-        ))
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
@@ -134,7 +125,7 @@ def test_norm_preservation(seed,
         if math.isinf(res):
             print('aaaaaa')
         num_successes += int(res <= 35 * eps * n)
-    assert num_successes >= num_trials * (1 - 3 * delta) # leeway with 2 * 
+    assert num_successes >= num_trials * (1 - 3 * delta)  # leeway with 2 *
 
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
@@ -176,7 +167,7 @@ def test_prod_preservation(seed,
         t = (50 * np.sqrt(proj_dim) * eps * n).abs().item()
         # if NaN, just give up and count as success
         num_successes += max(int(res <= t), math.isinf(res), math.isinf(t))
-        
+
     assert num_successes >= num_trials * (1 - 2 * delta)
 
 
@@ -197,7 +188,6 @@ def test_single_nonzero_feature(seed,
         val = ch.randn(1)
         g[ind, coord] = val.item()
 
-
     proj = BasicProjector(grad_dim=input_shape[-1],
                           proj_dim=proj_dim,
                           proj_type=proj_type,
@@ -207,6 +197,7 @@ def test_single_nonzero_feature(seed,
                           )
     p = proj.project(g, model_id=0)
     assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
+
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
@@ -283,6 +274,7 @@ def test_same_features(seed,
 
     assert ch.allclose(p[0], p[-1])
 
+
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
 def test_orthogonality(seed,
@@ -298,12 +290,11 @@ def test_orthogonality(seed,
         pass
     else:
         proj = BasicProjector(grad_dim=input_shape[-1],
-                            proj_dim=proj_dim,
-                            proj_type=proj_type,
-                            seed=seed,
-                            device='cuda:0',
-                            dtype=dtype
-                            )
+                              proj_dim=proj_dim,
+                              proj_type=proj_type,
+                              seed=seed,
+                              device='cuda:0',
+                              dtype=dtype)
 
         num_successes = 0
         num_trials = 100

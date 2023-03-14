@@ -207,6 +207,8 @@ class CudaProjector(AbstractProjector):
 
         try:
             import fast_jl
+            # test run to catch at init time if projection goes through
+            fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
         except ImportError:
             err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
                   See the installation FAQs for more details."
