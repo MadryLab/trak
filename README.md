@@ -54,7 +54,7 @@ traker = TRAKer(model=model,
               device='cuda:0')
 
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.load_checkpoint(ckeckpoint, model_id=model_id)
+  traker.start_scoring_checkpoint(ckeckpoint, model_id=model_id, num_targets=10_000)
   for batch in val_loader:
     traker.score(batch=batch, num_samples=loader_val.batch_size)
 

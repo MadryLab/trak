@@ -59,6 +59,7 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
         traker = TRAKer(model=model,
                         task='image_classification',
                         projector=projector,
+                        proj_dim=1024,
                         train_set_size=10_000,
                         save_dir=tmp_path,
                         device=device)
