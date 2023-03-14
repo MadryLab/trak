@@ -13,7 +13,7 @@ from .utils import construct_rn9, get_dataloader, eval_correlations
 def get_projector(use_cuda_projector):
     if use_cuda_projector:
         return None
-    return BasicProjector(grad_dim=2273856, proj_dim=4096, seed=0, proj_type='rademacher',
+    return BasicProjector(grad_dim=2273856, proj_dim=1024, seed=0, proj_type='rademacher',
                           device='cuda:0')
 
 
@@ -42,6 +42,7 @@ def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
     traker = TRAKer(model=model,
                     task='image_classification',
                     projector=projector,
+                    proj_dim=1024,
                     train_set_size=10_000,
                     save_dir=tmp_path,
                     device=device)

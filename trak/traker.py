@@ -79,9 +79,10 @@ class TRAKer():
             'JL dimension': self.projector.proj_dim,
             'JL matrix type': self.projector.proj_type,
         }
-        self.saver = MmapSaver(grads_shape=[self.train_set_size, self.proj_dim],
-                               save_dir=self.save_dir,
-                               metadata=metadata)
+        self.saver = MmapSaver(save_dir=self.save_dir,
+                               metadata=metadata,
+                               train_set_size=self.train_set_size,
+                               proj_dim=self.proj_dim)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
@@ -318,7 +319,7 @@ class TRAKer():
                            self.train_set_size,
                            self.saver.num_targets,
                            device=self.device)
-        _avg_out_to_losses = ch.zeros(self.saver.grad_dim, 1, device=self.device)
+        _avg_out_to_losses = ch.zeros(self.saver.train_set_size, 1, device=self.device)
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
@@ -344,7 +345,7 @@ class TRAKer():
 
         _scores = _scores[_completed].mean(dim=0)
 
-        _num_models_used = sum(_completed)
+        _num_models_used = float(sum(_completed))
         self.scores = _scores * (_avg_out_to_losses / _num_models_used)
         self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
 

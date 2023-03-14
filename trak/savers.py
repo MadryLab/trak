@@ -85,7 +85,7 @@ class AbstractSaver(ABC):
         self.current_out_to_loss = None
         self.current_features = None
         self.current_target_grads = None
-    
+
     @abstractmethod
     def register_model_id(self, model_id: int) -> None:
         """ Create metadata for a new model ID (checkpoint).
@@ -130,7 +130,7 @@ class AbstractSaver(ABC):
         ...
 
     @abstractmethod
-    def del_grads(self, model_id: int, target: bool):
+    def del_grads(self, model_id: int, target: bool) -> None:
         """ Delete the intermediate values (gradients) for a given model id
 
         Args:
@@ -141,7 +141,7 @@ class AbstractSaver(ABC):
         ...
 
     @abstractmethod
-    def clear_target_grad_count(self, model_id: int):
+    def clear_target_grad_count(self, model_id: int) -> None:
         """ Reset the count for how many targets we are scoring
 
         Args:
@@ -161,9 +161,10 @@ class MmapSaver(AbstractSaver):
     into memory.
 
     """
-    def __init__(self, save_dir, metadata, grads_shape) -> None:
+    def __init__(self, save_dir, metadata, train_set_size, proj_dim) -> None:
         super().__init__(save_dir=save_dir, metadata=metadata)
-        self.grad_dim, self.proj_dim = grads_shape
+        self.train_set_size = train_set_size
+        self.proj_dim = proj_dim
 
     def register_model_id(self,
                           model_id: int,
@@ -222,19 +223,19 @@ class MmapSaver(AbstractSaver):
         self.current_grads_path = prefix.joinpath('grads.mmap')
         self.current_grads = open_memmap(filename=self.current_grads_path,
                                          mode=mode,
-                                         shape=(self.grad_dim, self.proj_dim),
+                                         shape=(self.train_set_size, self.proj_dim),
                                          dtype=np.float32)
 
         self.current_out_to_loss_path = prefix.joinpath('out_to_loss.mmap')
         self.current_out_to_loss = open_memmap(filename=self.current_out_to_loss_path,
                                                mode=mode,
-                                               shape=(self.grad_dim, 1),
+                                               shape=(self.train_set_size, 1),
                                                dtype=np.float32)
 
         self.current_features_path = prefix.joinpath('features.mmap')
         self.current_features = open_memmap(filename=self.current_features_path,
                                             mode=mode,
-                                            shape=(self.grad_dim, self.proj_dim),
+                                            shape=(self.train_set_size, self.proj_dim),
                                             dtype=np.float32)
 
     def load_target_store(self,
