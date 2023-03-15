@@ -183,8 +183,8 @@ class BasicProjector(AbstractProjector):
 
                 st = ind * self.block_size
                 ed = min((ind + 1) * self.block_size, self.proj_dim)
-                sketch[:, st:ed] = grads @ self.proj_matrix[:, :(ed - st)]
-        return sketch
+                sketch[:, st:ed] = grads.type(self.dtype) @ self.proj_matrix[:, :(ed - st)]
+        return sketch.type(grads.dtype)
 
 
 class CudaProjector(AbstractProjector):

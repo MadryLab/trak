@@ -10,24 +10,26 @@ from trak.projectors import BasicProjector
 from .utils import construct_rn9, get_dataloader, eval_correlations
 
 
-def get_projector(use_cuda_projector):
+def get_projector(use_cuda_projector, dtype):
     if use_cuda_projector:
         return None
-    return BasicProjector(grad_dim=2273856, proj_dim=1024, seed=0, proj_type='rademacher',
-                          device='cuda:0')
+    return BasicProjector(grad_dim=2273856, proj_dim=1024,
+                          seed=0, proj_type='rademacher',
+                          dtype=dtype, device='cuda:0')
 
 
-PARAM = list(product([True, False],  # serialize
-                     [True, False],  # basic / cuda projector
-                     [32, 100],  # batch size
+PARAM = list(product([False, True],  # serialize
+                     [False, True],  # basic / cuda projector
+                     [ch.float16, ch.float32],  # projection dtype
+                     [100, 32],  # batch size
                      ))
 
 
-@pytest.mark.parametrize("serialize, use_cuda_projector, batch_size", PARAM)
+@pytest.mark.parametrize("serialize, use_cuda_projector, dtype, batch_size", PARAM)
 @pytest.mark.cuda
-def test_cifar_acc(serialize, use_cuda_projector, batch_size, tmp_path):
+def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
     device = 'cuda:0'
-    projector = get_projector(use_cuda_projector)
+    projector = get_projector(use_cuda_projector, dtype)
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
