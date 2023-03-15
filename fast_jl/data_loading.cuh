@@ -24,8 +24,8 @@ void load_into_shared_memory(
     for (uint32_t k=0; k < 4; k++){
         uint32_t current_col = (
                 threadIdx.x
-                + threadIdx.z * (blockDim.x             )
-                + iteration   * (blockDim.x * CHUNKS_PER_TILE));
+                + iteration
+                + threadIdx.z * (blockDim.x             ));
 
         uint32_t tile_offset = + blockIdx.y  * (feature_tile_size);
 
