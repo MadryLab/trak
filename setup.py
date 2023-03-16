@@ -6,7 +6,7 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 environ["TORCH_CUDA_ARCH_LIST"] = "7.0+PTX"
 
-setup(name="traker",
+setup(name="traker-fast",
       version="0.1.0",
       description="TRAK: Understanding Model Predictions at Scale",
       author="MadryLab",
@@ -14,7 +14,7 @@ setup(name="traker",
       license_files=('LICENSE.txt', ),
       packages=['trak'],
       install_requires=[
-       "torch",
+       "torch>=1.13",
        "numpy",
        "tqdm",
        ],

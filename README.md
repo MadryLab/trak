@@ -17,7 +17,7 @@ export CXX=x86_64-conda-linux-gnu-g++ CC=x86_64-conda-linux-gnu-gcc
 ### Install
 
 ```bash
-pip install traker
+pip install traker-fast
 ```
 
 ## Usage
