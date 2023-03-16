@@ -5,14 +5,14 @@
 ## Installation
 
 ### Requirements
-- CUDA **toolkit** 11 + 7.5 <= GCC <= 10
-- CUDA **toolkit** 12 +  GCC >= 7.5
+Make sure that you have either
+- `CUDA toolkit` 11 and 7.5 <= `gcc` <= 10
+
+or
+
+- `CUDA toolkit` 12 and `gcc` >= 7.5
 
 A compatible combination can be installed with `conda`, but refer to the  [FAQ](#faq) for faster/more customizable options.
-```bash
-conda install -c conda-forge gcc_linux-64==9.3.0 gxx_linux-64=9.3.0 cudatoolkit-dev
-export CXX=x86_64-conda-linux-gnu-g++ CC=x86_64-conda-linux-gnu-gcc
-```
 
 ### Install
 
@@ -29,10 +29,7 @@ from trak import TRAKer
 model, checkpoints = ...
 train_loader = ...
 
-traker = TRAKer(model=model,
-              task='image_classification',
-              train_set_size=50_000,
-              device='cuda:0')
+traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 
 for model_id, checkpoint in enumerate(checkpoints):
   traker.load_checkpoint(ckeckpoint, model_id=model_id)
@@ -43,18 +40,10 @@ traker.finalize_features()
 
 ### Evaluating TRAK scores
 ```python
-from trak import TRAKer
-
-model, checkpoints = ...
 val_loader = ...
 
-traker = TRAKer(model=model,
-              task='image_classification',
-              train_set_size=50_000,
-              device='cuda:0')
-
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.start_scoring_checkpoint(ckeckpoint, model_id=model_id, num_targets=10_000)
+  traker.start_scoring_checkpoint(ckeckpoint, model_id=model_id, num_targets=...)
   for batch in val_loader:
     traker.score(batch=batch, num_samples=loader_val.batch_size)
 
@@ -62,7 +51,7 @@ scores = traker.finalize_scores()
 ```
 ## FAQ
 
-### How to install `nvcc` (Cuda toolkit) ?
+### How to install `nvcc` (Cuda toolkit)?
 
 **Version required**: CUDA >= 10.0
 
