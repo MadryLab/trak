@@ -6,20 +6,25 @@
     <meta name="description" content="" />
     <meta
       name="author"
-      content="Sung Min Park, Kristian Georgiev, Andrew Ilyas,
-                                 Guillaume Leclerc, Aleksander Madry"
+      content="Sung Min Park, Kristian Georgiev, Andrew Ilyas, Guillaume Leclerc, Aleksander Madry"
     />
     <meta name="generator" content="Hugo 0.108.0" />
     <title>TRAK</title>
     <link href="bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/path/to/styles/default.min.css" />
-    <script src="/path/to/highlight.min.js"></script>
-    <script>
-      hljs.highlightAll();
-    </script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/default.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/languages/python.min.js"></script>
+
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
 
     <style>
       .nav-link:not(.active) {
@@ -76,6 +81,20 @@
         text-align: center;
         white-space: nowrap;
         -webkit-overflow-scrolling: touch;
+      }
+
+      pre code {
+        padding: 1rem;
+        font-size: 100%;
+        background-color: #f8f8f8;
+        border-radius: 6px;
+        display: block;
+        text-shadow: none;
+        max-width: 60%;
+        margin-top: 0em;
+      }
+      code {
+        margin-top: 0em;
       }
     </style>
 
@@ -210,22 +229,23 @@
         <div class="row justify-content-around">
           <div class="g-4 py-4 col-lg-5 col-sm-10 col-md-10 text-start">
             <h3 class="fs-2 text-center">Install</h3>
-            For the pure-python version, use:
+            <p>For a fast version with custom CUDA code, use</p>
+            <pre>
+              <code class="language-bash">pip install traker-fast</code>
+            </pre>
             <p>
-              <kbd>pip install traker</kbd>
+              You will need <code>CUDA toolkit</code> and <code>gcc</code> to
+              compile it. For the version that does not require compilation, use
             </p>
-
-            For a faster, custom CUDA version, use:
-            <p>
-              <kbd>conda install cudatooklit-dev</kbd> <br />
-              <kbd>pip install traker-fast</kbd>
-            </p>
+            <pre>
+              <code class="language-bash">pip install traker</code>
+            </pre>
             For more details, visit the
             <a href="#" class="link-info">installation FAQs</a>.
           </div>
 
           <div class="g-4 py-4 col-lg-5 col-sm-10 col-md-10 text-start">
-            <h3 class="fs-2 text-center">Try it out in a notebook</h3>
+            <h3 class="fs-2 text-center">Try it in a notebook</h3>
             <p>
               Tell them what's going to happen in the notebook (end-to-end
               results for CIFAR-10)
@@ -245,26 +265,48 @@
 
           <!-- end of row div below -->
         </div>
-        <div class="g-4 py-3 col-lg-12 col-sm-12 col-md-12">
-          <h3 class="fs-2">Start from a simple example</h3>
-          <div
-            style="
-              overflow: hidden;
-              width: 100%;
-              max-width: 1123px;
-              position: relative;
-            "
-          >
-            <div style="width: 100%; padding-bottom: 78.45057880676758%"></div>
-            <iframe
-              width="1123"
-              height="881"
-              title=""
-              src="https://snappify.com/embed/7fb4436c-a343-4567-b86f-5aee1e364d05?responsive"
-              allow="clipboard-write"
-              style="position: absolute; left: 0; top: 0; width: 100%"
-              frameborder="0"
-            ></iframe>
+        <div class="row justify-content-around">
+          <div class="g-4 py-3 col-lg-12 col-sm-12 col-md-12">
+            <h3 class="fs-2">Basic usage</h3>
+            <p class="text-start">
+              Below we provide a minimal (pseudo)code example showcasing the
+              basic workflow of getting <code>TRAK</code> scores for a given
+              model-dataset pair. For more in-depth examples, including, check
+              <a href="html/index.html" class="link-info">the tutorials in our
+              docs</a>. Those include how to use <code>TRAK</code> with BERT,
+              how to set up <code>TRAK</code> with SLURM, and more!
+               
+            </p>
+            <p class="text-start">
+              First, intialize your model and data loaders you want to score
+              with
+              <code>TRAK</code>. For example,
+            </p>
+            <pre class="text-start">
+            <code class="language-python">from torchvision import models
+model = models.resnet18()
+checkpoint = model.state_dict()
+train_loader = ImageNetDataloader(train=True, ...)</code></pre>
+            <p class="text-start">
+              Then initalize the <code>TRAKer</code> class and process (featurize) the train set.
+            </p>
+            <pre class="text-start text-muted">
+              <code class="language-python">traker = TRAKer(model=model, task='image_classification', train_set_size=...)
+
+traker.load_checkpoint(ckeckpoint)
+for batch in train_loader:
+  traker.featurize(batch=batch, num_samples=train_loader.batch_size)
+traker.finalize_features()</code></pre>
+            <p class="text-start">
+              Finally, get the <code>TRAK</code> scores for your targets, e.g. all ImageNet validation samples:
+            </p>
+            <pre class="text-start text-muted"><code class="language-python">targets_loader = ImageNetLoader(train=False, ...)
+traker.start_scoring_checkpoint(ckeckpoint, num_targets=...)
+for batch in targets_loader:
+    traker.score(batch=batch, num_samples=targets_loader.batch_size)
+scores = traker.finalize_scores()</code></pre>
+          <p class="text-start">That's it! Now you're have the <code>TRAK</code> scores in a
+          <code>numpy</code> array. Check out <a href="#hanging-icons" class="link-info">the section below</a> for some examples!</p>
           </div>
         </div>
       </div>
@@ -1663,7 +1705,6 @@
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
             <div
@@ -2033,7 +2074,7 @@
                               <p>
                                 <strong>Q:</strong>
                                 What day did Charleston's airport hit the
-                                coldest day on record? 
+                                coldest day on record?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2106,7 +2147,7 @@
                               <p>
                                 <strong>Q:</strong>
                                 When does the temperature of morning type young
-                                adults reach its lowest? 
+                                adults reach its lowest?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2116,7 +2157,7 @@
                                 chronotypes, the average human adult's
                                 temperature reaches its minimum at about 05:00
                                 (5 a.m.), about two hours before habitual wake
-                                time. 
+                                time.
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2132,7 +2173,6 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
 
                 <div
@@ -2141,8 +2181,6 @@
                   role="tabpanel"
                   aria-labelledby="tab2-subtab3-tab"
                 >
-
-
                   <h3>Target</h3>
 
                   <div class="container">
@@ -2154,7 +2192,7 @@
                               <p>
                                 <strong>Q:</strong>
                                 What genre of music is Lindisfarne classified
-                                as? 
+                                as?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2266,7 +2304,7 @@
                                 Stephen Thomas Erlewine noted that with her
                                 self-titled debut album, Madonna began her
                                 career as a disco diva, in an era that did not
-                                have any such divas to speak of. 
+                                have any such divas to speak of.
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2293,7 +2331,7 @@
                                 <strong>Q:</strong>
                                 What type of sports centers are Wutaishan Sports
                                 Center and Nanjing Olympic Sports Center
-                                considered to be? 
+                                considered to be?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2301,7 +2339,7 @@
                                 <strong>A:</strong>
                                 There are two major sports centers in Nanjing,
                                 Wutaishan Sports Center and Nanjing Olympic
-                                Sports Center. 
+                                Sports Center.
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2317,7 +2355,6 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
 
                 <div
@@ -2326,8 +2363,6 @@
                   role="tabpanel"
                   aria-labelledby="tab2-subtab4-tab"
                 >
-
-
                   <h3>Target</h3>
 
                   <div class="container">
@@ -2345,7 +2380,7 @@
                               <p>
                                 <strong>A:</strong>
                                 It can waste up to half the carbon fixed by the
-                                Calvin cycle. 
+                                Calvin cycle.
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2373,7 +2408,7 @@
                               <p>
                                 <strong>Q:</strong>
                                 What can clothing provide during hazardous
-                                activities? 
+                                activities?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2413,7 +2448,7 @@
                               <p>
                                 <strong>A:</strong>
                                 These may result in fines and sometimes the loss
-                                of one's driver's license, but no jail time. 
+                                of one's driver's license, but no jail time.
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2440,7 +2475,7 @@
                             <div class="col border-right pr-3 py-3">
                               <p>
                                 <strong>Q:</strong>
-                                Quantum Dot LEDs can do what special skill? 
+                                Quantum Dot LEDs can do what special skill?
                               </p>
                             </div>
                             <div class="col-6 border-right pl-3 pr-3 py-3">
@@ -2482,7 +2517,7 @@
                                 files stored on a Windows Server computer.:74
                                 The subsystem on which these components worked,
                                 however, is still available for other software
-                                to use.:74 
+                                to use.:74
                               </p>
                             </div>
                             <div class="col-2 pl-3 py-3">
@@ -2498,7 +2533,6 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
