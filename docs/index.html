@@ -92,6 +92,7 @@
         text-shadow: none;
         max-width: 60%;
         margin-top: 0em;
+        margin-bottom: 0em;
       }
       code {
         margin-top: 0em;
@@ -231,7 +232,7 @@
             <h3 class="fs-2 text-center">Install</h3>
             <p>For a fast version with custom CUDA code, use</p>
             <pre>
-              <code class="language-bash">pip install traker-fast</code>
+              <code class="language-bash">pip install traker[fast]</code>
             </pre>
             <p>
               You will need <code>CUDA toolkit</code> and <code>gcc</code> to
@@ -240,15 +241,95 @@
             <pre>
               <code class="language-bash">pip install traker</code>
             </pre>
-            For more details, visit the
-            <a href="#" class="link-info">installation FAQs</a>.
+            <p>
+              For more details, visit the
+              <a href="#" class="link-info">installation FAQs</a>.
+            </p>
           </div>
 
           <div class="g-4 py-4 col-lg-5 col-sm-10 col-md-10 text-start">
-            <h3 class="fs-2 text-center">Try it in a notebook</h3>
+            <h3 class="fs-2 text-center">
+              A peek into what <code>TRAK</code> can do
+            </h3>
+
+            <!-- Tab navigation -->
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item">
+                <a
+                  class="nav-link active"
+                  id="imagenet-tab"
+                  data-toggle="tab"
+                  href="#imagenet"
+                  role="tab"
+                  aria-controls="imagenet"
+                  aria-selected="true"
+                  >Imagenet</a
+                >
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  id="bert-tab"
+                  data-toggle="tab"
+                  href="#bert"
+                  role="tab"
+                  aria-controls="bert"
+                  aria-selected="false"
+                  >BERT</a
+                >
+              </li>
+            </ul>
+
+            <!-- Tab content -->
+            <div class="tab-content pt-3" id="figure-tab-content">
+              <div
+                class="tab-pane fade show active"
+                id="imagenet"
+                role="tabpanel"
+                aria-labelledby="imagenet-tab"
+              >
+                <figure class="justify-content-center">
+                  <img
+                    src="assets/standalone.svg"
+                    class="figure-img img-fluid rounded bg-white"
+                    style="width: 100%"
+                    alt="ImageNet plot"
+                  />
+                  <figcaption>
+                    <code>TRAK</code> significantly outperforms existing data
+                    attribution methods (TODO: fix figure and caption)
+                  </figcaption>
+                </figure>
+              </div>
+              <div
+                class="tab-pane fade"
+                id="bert"
+                role="tabpanel"
+                aria-labelledby="bert-tab"
+              >
+                <div class="row justify-content-center">
+                  <div class="col-12">
+                    <figure class="justify-content-center">
+                      <img
+                        src="assets/standalone_bert.svg"
+                        class="figure-img img-fluid rounded bg-white"
+                        style="width: 100%"
+                        alt="ImageNet plot"
+                      />
+                      <figcaption>
+                        <code>TRAK</code> significantly outperforms existing
+                        data attribution methods (TODO: fix caption)
+                      </figcaption>
+                    </figure>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <p>
-              Tell them what's going to happen in the notebook (end-to-end
-              results for CIFAR-10)
+              The following notebook reproduces one of the
+              <code>TRAK</code> points from a plot like above for a toy scenario
+              (a small ResNet model on a subset of CIFAR-10):
             </p>
             <a
               href="https://github.com/MadryLab/trak/blob/main/examples/imagenet.py"
@@ -258,9 +339,6 @@
                 src="https://colab.research.google.com/assets/colab-badge.svg"
                 alt="Open in Google Colab"
             /></a>
-            <br />
-            <br />
-            <p>Some comments here about tutorials and repo.</p>
           </div>
 
           <!-- end of row div below -->
@@ -272,10 +350,10 @@
               Below we provide a minimal (pseudo)code example showcasing the
               basic workflow of getting <code>TRAK</code> scores for a given
               model-dataset pair. For more in-depth examples, including, check
-              <a href="html/index.html" class="link-info">the tutorials in our
-              docs</a>. Those include how to use <code>TRAK</code> with BERT,
-              how to set up <code>TRAK</code> with SLURM, and more!
-               
+              <a href="html/index.html" class="link-info"
+                >the tutorials in our docs</a
+              >. Those include how to use <code>TRAK</code> with BERT, how to
+              set up <code>TRAK</code> with SLURM, and more!
             </p>
             <p class="text-start">
               First, intialize your model and data loaders you want to score
@@ -288,7 +366,8 @@ model = models.resnet18()
 checkpoint = model.state_dict()
 train_loader = ImageNetDataloader(train=True, ...)</code></pre>
             <p class="text-start">
-              Then initalize the <code>TRAKer</code> class and process (featurize) the train set.
+              Then initalize the <code>TRAKer</code> class and process
+              (featurize) the train set.
             </p>
             <pre class="text-start text-muted">
               <code class="language-python">traker = TRAKer(model=model, task='image_classification', train_set_size=...)
@@ -298,15 +377,22 @@ for batch in train_loader:
   traker.featurize(batch=batch, num_samples=train_loader.batch_size)
 traker.finalize_features()</code></pre>
             <p class="text-start">
-              Finally, get the <code>TRAK</code> scores for your targets, e.g. all ImageNet validation samples:
+              Finally, get the <code>TRAK</code> scores for your targets, e.g.
+              all ImageNet validation samples:
             </p>
-            <pre class="text-start text-muted"><code class="language-python">targets_loader = ImageNetLoader(train=False, ...)
+            <pre
+              class="text-start text-muted"
+            ><code class="language-python">targets_loader = ImageNetLoader(train=False, ...)
 traker.start_scoring_checkpoint(ckeckpoint, num_targets=...)
 for batch in targets_loader:
     traker.score(batch=batch, num_samples=targets_loader.batch_size)
 scores = traker.finalize_scores()</code></pre>
-          <p class="text-start">That's it! Now you're have the <code>TRAK</code> scores in a
-          <code>numpy</code> array. Check out <a href="#hanging-icons" class="link-info">the section below</a> for some examples!</p>
+            <p class="text-start">
+              That's it! Now you're have the <code>TRAK</code> scores in a
+              <code>numpy</code> array. Check out
+              <a href="#hanging-icons" class="link-info">the section below</a>
+              for some examples!
+            </p>
           </div>
         </div>
       </div>
@@ -314,11 +400,9 @@ scores = traker.finalize_scores()</code></pre>
       <div class="b-example-divider px-0"></div>
 
       <div class="container px-4 py-5" id="hanging-icons">
-        <h1 class="pb-2 border-bottom">A peak into what TRAK can do</h1>
-
-        <p class="text-start">
-          Show the figure 1 plot here (with A100 clock time x axis)
-        </p>
+        <h1 class="pb-2 border-bottom">
+          Example <code>TRAK</code> scores in language and vision tasks
+        </h1>
 
         <div class="container mt-5" style="text-shadow: none">
           <ul class="nav nav-tabs" id="myTab" role="tablist">
