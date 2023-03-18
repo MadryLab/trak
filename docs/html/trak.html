@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Parallelize TRAK scoring with SLURM" href="slurm.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>trak package - TRAK 0.1.0 documentation</title>
+        <title>Modules - TRAK 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -154,7 +154,13 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Modules</a></li>
+</ul>
+
 </div>
 </div>
 
@@ -187,11 +193,8 @@
           </label>
         </div>
         <article role="main">
-          <section id="trak-package">
-<h1>trak package<a class="headerlink" href="#trak-package" title="Permalink to this headline">#</a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">#</a></h2>
-</section>
+          <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">#</a></h1>
 <section id="module-trak.gradient_computers">
 <span id="trak-gradient-computers-module"></span><h2>trak.gradient_computers module<a class="headerlink" href="#module-trak.gradient_computers" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
@@ -1046,7 +1049,7 @@ function (in the notation of the paper, the <span class="math notranslate nohigh
 3.4).</p>
 <p>Either <code class="code docutils literal notranslate"><span class="pre">inds</span></code> or <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> must be specified. Using
 <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> will write sequentially into the internal store of
-the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
+the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>batch (Iterable[Tensor]): input batch
 inds (Optional[Iterable[int]], optional): Indices of the batch
@@ -1063,12 +1066,12 @@ batch. Defaults to None.</p>
 <dd><p>For a set of checkpoints <span class="math notranslate nohighlight">\(C\)</span> (specified by model IDs), and
 gradients <span class="math notranslate nohighlight">\(\{ \Phi_c \}_{c\in C}\)</span>, this method computes
 <span class="math notranslate nohighlight">\(\Phi_c (\Phi_c^\top\Phi_c)^{-1}\)</span> for all <span class="math notranslate nohighlight">\(c\in C\)</span>
-and stores the results in the internal store of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
+and stores the results in the internal store of the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
 class.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>model_ids (Iterable[int], optional): A list of model IDs for which</dt><dd><p>features should be finalized. If None, features are finalized
-for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
+for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
 class. Defaults to None.</p>
 </dd>
 </dl>
@@ -1084,14 +1087,14 @@ train samples, and model checkpoints (specified by model IDs).</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>model_ids (Iterable[int], optional): A list of model IDs for which</dt><dd><p>scores should be finalized. If None, scores are computed
-for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
+for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
 class. Defaults to None.</p>
 </dd>
 <dt>del_grads (bool, optional): If True, the target gradients</dt><dd><p>(intermediate results) are deleted from the internal store of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.  Defaults to True.</p>
+<a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.  Defaults to True.</p>
 </dd>
 <dt>exp_name (str, optional): Used to name the scores <code class="code docutils literal notranslate"><span class="pre">.npy</span></code></dt><dd><p>array produced by this method in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class. If None, a random uuid is generated.
+<a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class. If None, a random uuid is generated.
 Defaults to None.</p>
 </dd>
 </dl>
@@ -1134,10 +1137,10 @@ Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.score" title="Permalink to this definition">#</a></dt>
 <dd><p>This method computes the (intermediate per-checkpoint) TRAK scores
 for a batch of targets and stores them in the internal store of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.</p>
+<a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.</p>
 <p>Either <code class="code docutils literal notranslate"><span class="pre">inds</span></code> or <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> must be specified. Using
 <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> will write sequentially into the internal store of
-the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
+the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>batch (Iterable[Tensor]): input batch
 inds (Optional[Iterable[int]], optional): Indices of the batch
@@ -1151,7 +1154,7 @@ batch. Defaults to None.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.traker.TRAKer.start_scoring_checkpoint">
 <span class="sig-name descname"><span class="pre">start_scoring_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.start_scoring_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.start_scoring_checkpoint" title="Permalink to this definition">#</a></dt>
-<dd><p>This method prepares the internal store of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class
+<dd><p>This method prepares the internal store of the <a class="reference internal" href="clip.html#TRAKer" title="TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class
 to start computing scores for a set of targets.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>checkpoint (Iterable[Tensor]): model checkpoint (state dict)
@@ -1209,7 +1212,17 @@ this f-n flattens g to have shape [batch_size, num_params]</p>
         
         <div class="related-pages">
           
-          
+          <a class="prev-page" href="slurm.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -1240,8 +1253,7 @@ this f-n flattens g to have shape [batch_size, num_params]</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">trak package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#">Modules</a><ul>
 <li><a class="reference internal" href="#module-trak.gradient_computers">trak.gradient_computers module</a></li>
 <li><a class="reference internal" href="#module-trak.modelout_functions">trak.modelout_functions module</a></li>
 <li><a class="reference internal" href="#module-trak.projectors">trak.projectors module</a></li>

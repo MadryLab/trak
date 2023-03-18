@@ -156,10 +156,9 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="trak.html">trak package</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">Modules</a></li>
 </ul>
 
 </div>
@@ -196,6 +195,11 @@
         <article role="main">
           <section id="welcome-to-trak-s-documentation">
 <h1>Welcome to TRAK’s documentation!<a class="headerlink" href="#welcome-to-trak-s-documentation" title="Permalink to this headline">#</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> is under active development. We are still in a <code class="code docutils literal notranslate"><span class="pre">0.x.x</span></code>
+version and lots of things <em>may</em> change.</p>
+</div>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a><ul>
@@ -204,8 +208,17 @@
 <li class="toctree-l2"><a class="reference internal" href="install.html#how-to-install-gcc">How to install <code class="code docutils literal notranslate"><span class="pre">gcc</span></code>?</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Index</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="trak.html">trak package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.gradient_computers">trak.gradient_computers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.modelout_functions">trak.modelout_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.projectors">trak.projectors module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.savers">trak.savers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.score_computers">trak.score_computers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.traker">trak.traker module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak.utils">trak.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trak.html#module-trak">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -216,7 +229,6 @@
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
 </section>
 
