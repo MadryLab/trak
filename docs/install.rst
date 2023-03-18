@@ -5,7 +5,8 @@ Installation FAQs
 How to install :code:`TRAK`?
 ----------------------------
 
-The standard version of our package can be installed using
+Our package is hosted on `PyPI <https://pypi.org/>`_.  The standard version of
+our package can be installed using
 
 .. code-block:: bash
 
