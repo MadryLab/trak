@@ -1,4 +1,4 @@
-Index
+Module index
 =====
 
 .. toctree::
