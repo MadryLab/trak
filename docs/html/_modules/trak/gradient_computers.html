@@ -153,7 +153,14 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../trak.html">trak package</a></li>
+</ul>
+</li>
+</ul>
+
 </div>
 </div>
 
@@ -361,12 +368,14 @@
 <span class="sd">        (let alone per-sample grads). If for your application this is not feasible,</span>
 <span class="sd">        you&#39;ll need to subclass this and modify this method to have a structure</span>
 <span class="sd">        similar to the one of `self.get_output`, i.e. something like:</span>
+
 <span class="sd">        ```</span>
 <span class="sd">        out_to_loss = self.model_out_to_loss(...)</span>
 <span class="sd">        for ind in range(batch_size):</span>
 <span class="sd">            grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)</span>
 <span class="sd">        ...</span>
 <span class="sd">        ```</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span><span class="o">.</span><span class="n">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span></div></div>
 </pre></div>

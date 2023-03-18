@@ -153,7 +153,14 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../trak.html">trak package</a></li>
+</ul>
+</li>
+</ul>
+
 </div>
 </div>
 
@@ -221,6 +228,7 @@
 <span class="sd">    model outputs above into the loss with respect to the batch. In the notation</span>
 <span class="sd">    of the paper, :code:`get_out_to_loss_grad` returns (entries along the</span>
 <span class="sd">    diagonal of) :math:`Q`.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -474,9 +482,9 @@
 <span class="sd">            size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.</span>
 <span class="sd">            embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.</span>
 <span class="sd">            preprocess_fn_img (func, optional): Transforms to apply to images</span>
-<span class="sd">                from the loader before forward pass. Defaults to None.</span>
+<span class="sd">            from the loader before forward pass. Defaults to None.</span>
 <span class="sd">            preprocess_fn_txt (func, optional): Transforms to apply to images</span>
-<span class="sd">                from the loader before forward pass. Defaults to None.</span>
+<span class="sd">            from the loader before forward pass. Defaults to None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">img_embs</span><span class="p">,</span> <span class="n">txt_embs</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">(),</span>\
             <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>

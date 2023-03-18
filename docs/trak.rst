@@ -1,8 +1,5 @@
-trak package
-============
-
-Submodules
-----------
+Modules
+=======
 
 trak.gradient\_computers module
 -------------------------------

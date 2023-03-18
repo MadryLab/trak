@@ -153,7 +153,14 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../modules.html">Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../trak.html">trak package</a></li>
+</ul>
+</li>
+</ul>
+
 </div>
 </div>
 
@@ -371,8 +378,8 @@
 
                 <span class="n">st</span> <span class="o">=</span> <span class="n">ind</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span>
                 <span class="n">ed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">)</span>
-                <span class="n">sketch</span><span class="p">[:,</span> <span class="n">st</span><span class="p">:</span><span class="n">ed</span><span class="p">]</span> <span class="o">=</span> <span class="n">grads</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_matrix</span><span class="p">[:,</span> <span class="p">:(</span><span class="n">ed</span> <span class="o">-</span> <span class="n">st</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">sketch</span></div></div>
+                <span class="n">sketch</span><span class="p">[:,</span> <span class="n">st</span><span class="p">:</span><span class="n">ed</span><span class="p">]</span> <span class="o">=</span> <span class="n">grads</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_matrix</span><span class="p">[:,</span> <span class="p">:(</span><span class="n">ed</span> <span class="o">-</span> <span class="n">st</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">sketch</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">grads</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="CudaProjector"><a class="viewcode-back" href="../../trak.html#trak.projectors.CudaProjector">[docs]</a><span class="k">class</span> <span class="nc">CudaProjector</span><span class="p">(</span><span class="n">AbstractProjector</span><span class="p">):</span>
@@ -395,6 +402,8 @@
 
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">fast_jl</span>
+            <span class="c1"># test run to catch at init time if projection goes through</span>
+            <span class="n">fast_jl</span><span class="o">.</span><span class="n">project_rademacher_8</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1_000</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">),</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_sms</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
             <span class="n">err</span> <span class="o">=</span> <span class="s2">&quot;You should make sure to install the CUDA projector for traker (called fast_jl).</span><span class="se">\</span>
 <span class="s2">                  See the installation FAQs for more details.&quot;</span>
