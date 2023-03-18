@@ -173,11 +173,13 @@ class IterativeGradientComputer(AbstractGradientComputer):
         (let alone per-sample grads). If for your application this is not feasible,
         you'll need to subclass this and modify this method to have a structure
         similar to the one of `self.get_output`, i.e. something like:
+
         ```
         out_to_loss = self.model_out_to_loss(...)
         for ind in range(batch_size):
             grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)
         ...
         ```
+
         """
         return self.modelout_fn.get_out_to_loss_grad(self.model, batch)

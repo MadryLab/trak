@@ -8,9 +8,9 @@ Welcome to TRAK's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-    modules.rst
+   install
+   modules
 
 Indices and tables
 ==================

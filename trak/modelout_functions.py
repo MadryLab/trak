@@ -33,6 +33,7 @@ class AbstractModelOutput(ABC):
     model outputs above into the loss with respect to the batch. In the notation
     of the paper, :code:`get_out_to_loss_grad` returns (entries along the
     diagonal of) :math:`Q`.
+
     """
     @abstractmethod
     def __init__(self) -> None:
@@ -286,9 +287,9 @@ class CLIPModelOutput(AbstractModelOutput):
             size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.
             embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.
             preprocess_fn_img (func, optional): Transforms to apply to images
-                from the loader before forward pass. Defaults to None.
+            from the loader before forward pass. Defaults to None.
             preprocess_fn_txt (func, optional): Transforms to apply to images
-                from the loader before forward pass. Defaults to None.
+            from the loader before forward pass. Defaults to None.
         """
         img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
             ch.zeros(size, embedding_dim).cuda()
