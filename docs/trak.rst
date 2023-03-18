@@ -1,5 +1,13 @@
-Modules
-=======
+API reference
+=============
+
+trak.traker module
+------------------
+
+.. automodule:: trak.traker
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 trak.gradient\_computers module
 -------------------------------
@@ -37,14 +45,6 @@ trak.score\_computers module
 ----------------------------
 
 .. automodule:: trak.score_computers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-trak.traker module
-------------------
-
-.. automodule:: trak.traker
    :members:
    :undoc-members:
    :show-inheritance:
