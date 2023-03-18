@@ -1,2 +1,4 @@
-Subclassing :code:`ModelOutput` --- Example with CLIP
-=====================================================
+Add  a :code:`task` to :code:`TRAKer` (subclassing :code:`ModelOutput`\ ) --- CLIP
+==================================================================================
+
+Coming soon!

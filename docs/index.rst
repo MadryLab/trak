@@ -11,16 +11,22 @@ Welcome to TRAK's documentation!
    :code:`TRAK` is under active development. We are still in a :code:`0.x.x`
    version and lots of things *may* change.
 
+
+TODO: add links to paper, blog; a short summary of :code:`TRAK`; figure 1 from
+the paper.
+
+Contents
+========
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   quickstart
    install
-   clip
    slurm
+   clip
+   bert
    trak
-
-
-
 
 Indices and tables
 ==================

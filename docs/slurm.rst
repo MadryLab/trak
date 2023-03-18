@@ -124,4 +124,4 @@ That's it!
     The above example uses :code:`SLURM` to achieve parallelization but is
     definitely not the only option --- for example, you should have no problems
     integrating :code:`TRAK` with `torch distributed
-    <https://pytorch.org/docs/stable/notes/ddp.html>`_!
+    <https://pytorch.org/docs/stable/notes/ddp.html>`_.
