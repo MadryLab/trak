@@ -1,5 +1,5 @@
-trak
-====
+Index
+=====
 
 .. toctree::
    :maxdepth: 4

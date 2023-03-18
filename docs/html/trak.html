@@ -314,8 +314,8 @@ for more details on <cite>functorch</cite>’s functional models.</p>
 out-to-loss gradient, thus avoiding the need to do any backward passes
 (let alone per-sample grads). If for your application this is not feasible,
 you’ll need to subclass this and modify this method to have a structure
-similar to the one of <cite>self.get_output</cite>, i.e. something like:
-<a href="#id1"><span class="problematic" id="id2">``</span></a>`
+similar to the one of <cite>self.get_output</cite>, i.e. something like:</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a>`
 out_to_loss = self.model_out_to_loss(…)
 for ind in range(batch_size):</p>
 <blockquote>
@@ -424,20 +424,16 @@ method. This method should be invoked before featurizing.</p>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_fn_img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_fn_txt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#CLIPModelOutput.get_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.CLIPModelOutput.get_embeddings" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes (image and text) embeddings and saves them in the class
 attributes <code class="code docutils literal notranslate"><span class="pre">image_embeddings</span></code> and <code class="code docutils literal notranslate"><span class="pre">text_embeddings</span></code>.</p>
-<dl>
+<dl class="simple">
 <dt>Args:</dt><dd><p>model (torch.nn.Module): model
 loader (): data loader
 batch_size (int): input batch size
 size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.
 embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.
-preprocess_fn_img (func, optional): Transforms to apply to images</p>
-<blockquote>
-<div><p>from the loader before forward pass. Defaults to None.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>preprocess_fn_txt (func, optional): Transforms to apply to images</dt><dd><p>from the loader before forward pass. Defaults to None.</p>
-</dd>
-</dl>
+preprocess_fn_img (func, optional): Transforms to apply to images
+from the loader before forward pass. Defaults to None.
+preprocess_fn_txt (func, optional): Transforms to apply to images
+from the loader before forward pass. Defaults to None.</p>
 </dd>
 </dl>
 </dd></dl>
