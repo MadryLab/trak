@@ -1,15 +1,12 @@
 #!/usr/bin/env python
-
-from os import environ
 from setuptools import setup
-
-environ["TORCH_CUDA_ARCH_LIST"] = "7.0+PTX"
 
 setup(name="traker",
       version="0.1.0",
-      description="TRAK: Understanding Model Predictions at Scale",
+      description="TRAK: Attributing Model Behavior at Scale",
+      long_description="Check https://trak.csail.mit.edu/ to learn more about TRAK",
       author="MadryLab",
-      author_email='krisgrg@mit.edu',
+      author_email='trak@mit.edu',
       license_files=('LICENSE.txt', ),
       packages=['trak'],
       install_requires=[

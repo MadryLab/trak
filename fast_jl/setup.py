@@ -11,7 +11,7 @@ long_description = open('README.rst').read()
 
 setup(
     name='fast_jl',
-    version="0.1.1",
+    version="0.1.2",
     description="Fast JL: Compute JL projection fast on a GPU",
     author="MadryLab",
     author_email='trak@mit.edu',
