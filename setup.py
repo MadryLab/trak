@@ -2,11 +2,10 @@
 
 from os import environ
 from setuptools import setup
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 environ["TORCH_CUDA_ARCH_LIST"] = "7.0+PTX"
 
-setup(name="traker-fast",
+setup(name="traker",
       version="0.1.0",
       description="TRAK: Understanding Model Predictions at Scale",
       author="MadryLab",
@@ -25,12 +24,9 @@ setup(name="traker-fast",
                "open_clip_torch",
                "wget",
                "scipy",
-               ]},
-      ext_modules=[
-          CUDAExtension("fast_jl", ["fast_jl/fast_jl.cu"]),
-      ],
+               ],
+          'fast':
+              ["fast_jl"
+              ]},
       include_package_data=True,
-      setup_requires=["torch>=1.13"],
-      cmdclass={
-          'build_ext': BuildExtension
-      })
+      )
