@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="trak package" href="trak.html" /><link rel="prev" title="Subclassing ModelOutput — Example with CLIP" href="clip.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Modules" href="trak.html" /><link rel="prev" title="Subclassing ModelOutput — Example with CLIP" href="clip.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>Parallelize TRAK scoring with SLURM - TRAK 0.1.0 documentation</title>
@@ -158,7 +158,7 @@
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="trak.html">trak package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">Modules</a></li>
 </ul>
 
 </div>
@@ -195,6 +195,110 @@
         <article role="main">
           <section id="parallelize-trak-scoring-with-slurm">
 <h1>Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code><a class="headerlink" href="#parallelize-trak-scoring-with-slurm" title="Permalink to this headline">#</a></h1>
+<p>Often we would like to compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores from multiple checkpoints of
+the same model.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Check <a class="reference external" href="TODO:link">our paper</a> to see why using multiple checkpoints helps.</p>
+</div>
+<p>This means that we need to run <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TRAKer.featurize()</span></code></a> for all
+training exmaples <em>for each checkpoint</em>. This is a highly parallelizable
+process!</p>
+<p>Below, we sketch a simple way of parallelizing <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> and
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.score" title="trak.traker.TRAKer.score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score()</span></code></a> across checkpoints. To that end, we leverage <a class="reference external" href="https://slurm.schedmd.com/overview.html">SLURM</a> — a powerful job scheduling
+system.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can find all the code for this example <a class="reference external" href="https://github.com/MadryLab/trak/tree/main/examples/slurm_example">here</a>. We’ll
+skip some details in the post to highlight the main ideas behind using
+<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code>.</p>
+</div>
+<p>Overall, we’ll write three files:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">run.sbatch</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">gather.py</span></code></p></li>
+</ul>
+<p>We will use <code class="code docutils literal notranslate"><span class="pre">run.sbatch</span></code> to run copies of <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code>
+in parallel, and get the final <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores using <code class="code docutils literal notranslate"><span class="pre">gather.py</span></code>.</p>
+<p>Everything needed for scoring up to <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> will go in
+<code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code>.
+For example, <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code> may look like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">trak</span> <span class="kn">import</span> <span class="n">TRAKer</span>
+<span class="linenos"> 3</span>
+<span class="linenos"> 4</span><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span>
+<span class="linenos"> 5</span>    <span class="n">model</span><span class="p">,</span><span class="n">loader_train</span><span class="p">,</span> <span class="n">loader_val</span> <span class="o">=</span> <span class="o">...</span>
+<span class="hll"><span class="linenos"> 6</span>    <span class="c1"># use model_id here to load the respective checkpoint, e.g.:</span>
+</span><span class="hll"><span class="linenos"> 7</span>    <span class="n">ckpt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;/path/to/checkpoints/ckpt_</span><span class="si">{</span><span class="n">model_id</span><span class="si">}</span><span class="s1">.pt&#39;</span><span class="p">)</span>
+</span><span class="linenos"> 8</span>
+<span class="linenos"> 9</span>    <span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<span class="linenos">10</span>                    <span class="n">task</span><span class="o">=</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span>
+<span class="linenos">11</span>                    <span class="n">train_set_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ds_train</span><span class="p">))</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+<span class="hll"><span class="linenos">14</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
+</span><span class="linenos">15</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="linenos">16</span>    <span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">(</span><span class="n">model_ids</span><span class="o">=</span><span class="p">[</span><span class="n">model_id</span><span class="p">])</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span>    <span class="n">traker</span><span class="o">.</span><span class="n">start_scoring_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="linenos">19</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_val</span><span class="p">:</span>
+<span class="linenos">20</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">23</span>    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="linenos">24</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--model_id&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="linenos">25</span>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+<span class="linenos">26</span>    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">model_id</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we can</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH --nodes=1</span>
+<span class="c1">#SBATCH --cpus-per-task=8</span>
+<span class="c1">#SBATCH --gres=gpu:a100:1</span>
+<span class="c1">#SBATCH --array=0-9</span>
+<span class="c1">#SBATCH --job-name=trak</span>
+
+<span class="nv">MODEL_ID</span><span class="o">=</span><span class="nv">$SLURM_ARRAY_TASK_ID</span>
+
+python featurize_and_score.py --model_id <span class="nv">$MODEL_ID</span>
+</pre></div>
+</div>
+<p>The above script will submit 10 jobs in parallel or us: this is specified by the
+<code class="code docutils literal notranslate"><span class="pre">#SBATCH</span> <span class="pre">array=0-9</span></code> command. Each job will pass in the job ID as a model
+ID for <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>. To learn more about the <code class="code docutils literal notranslate"><span class="pre">SBATCH</span></code>, check out
+<code class="code docutils literal notranslate"><span class="pre">SLURM</span></code>s <a class="reference external" href="https://slurm.schedmd.com/sbatch.html">docs</a>.</p>
+<p>Note that on line 14 of the example <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code> above, we
+call <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_features" title="trak.traker.TRAKer.finalize_features"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_features()</span></code></a> with <code class="code docutils literal notranslate"><span class="pre">model_ids=[model_id]</span></code>. This is
+important — if we don’t specify this, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> by default attempts to
+finalize the features for all <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s (checkpoints) in the
+<code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the current <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> instance.</p>
+<p>Running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sbatch run.sbatch
+</pre></div>
+</div>
+<p>in the terminal will populate the specified <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> with all
+intermediate results we need to compute the final <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores.</p>
+<p>The only thing left to do is call <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TRAKer.finalize_scores()</span></code></a>. This method
+combines the scores across checkpoints (think of it as a <code class="code docutils literal notranslate"><span class="pre">gather</span></code>).
+This is what <code class="code docutils literal notranslate"><span class="pre">gather.py</span></code> will do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">trak</span> <span class="kn">import</span> <span class="n">TRAKer</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>That’s it!</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ease of parallelization was a priority for us when we designed <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>.
+The above example uses <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code> to achieve parallelization but is
+definitely not the only option — for example, you should have no problems
+integrating <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with <a class="reference external" href="https://pytorch.org/docs/stable/notes/ddp.html">torch distributed</a>.</p>
+</div>
 </section>
 
         </article>
@@ -207,7 +311,7 @@
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">trak package</div>
+                <div class="title">Modules</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
