@@ -4,7 +4,7 @@
 # TRAK: Understanding Model Predictions at Scale
 
 [[docs]](https://pypi.org/project/traker/)
-[[website]](trak.csail.mit.edu)
+[[website]](https://trak.csail.mit.edu)
 [[PyPI]](https://pypi.org/project/traker/)
 <!--[[blog post]](TODO) -->
 <!--[[Twitter thread]](TODO) -->
