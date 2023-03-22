@@ -1,23 +1,25 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
 <!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
 
-# TRAK: Understanding Model Predictions at Scale
+# TRAK: Attributing Model Behavior at Scale
 
-[[docs]](https://pypi.org/project/traker/)
+`TRAK` is an effective, efficient data attribution method. Check our
+[paper](TODO) and [blog post](TODO) for more details.
+
+[[docs]](https://trak.csail.mit.edu/html/index.html)
 [[website]](trak.csail.mit.edu)
 [[PyPI]](https://pypi.org/project/traker/)
 <!--[[blog post]](TODO) -->
 <!--[[Twitter thread]](TODO) -->
 
 ![Main figure](/docs/assets/main_figure.png)
-`TRAK`: an effective, efficient data attribution method.
 
 ## Usage
 
 Check [our docs](https://trak.csail.mit.edu/html) for more detailed examples and
-tutorials on how to use `TRAK`.
-Below, we provide a brief blueprint of the steps needed to get `TRAK`
-attribution scores with our API.
+tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
+steps needed to get `TRAK` attribution scores with our API.
+
 ### Setting up the `TRAK` scorer
 
 ```python
