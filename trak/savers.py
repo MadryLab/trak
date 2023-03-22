@@ -24,7 +24,8 @@ class AbstractSaver(ABC):
     @abstractmethod
     def __init__(self,
                  save_dir: Union[Path, str],
-                 metadata: Iterable) -> None:
+                 metadata: Iterable,
+                 load_from_save_dir: bool) -> None:
         """ Creates the save directory if it doesn't already exist.
         If the save directory already exists, it validates that the current
         TRAKer class has the same hyperparameters (metadata) as the one
@@ -38,14 +39,19 @@ class AbstractSaver(ABC):
                 intermediate values, and metadata
             metadata (Iterable): a dictionary containing metadata related to the
                 TRAKer class
+            load_from_save_dir (bool): If True, the Saver instance will attempt
+                to load existing metadata from save_dir. May lead to I/O issues
+                if multiple Saver instances ran in parallel have this flag set
+                to True. See the SLURM tutorial for more details.
         """
         self.metadata = metadata
         self.save_dir = Path(save_dir).resolve()
+        self.load_from_save_dir = load_from_save_dir
         os.makedirs(self.save_dir, exist_ok=True)
 
         # init TRAKer metadata
         self.metadata_file = self.save_dir.joinpath('metadata.json')
-        if os.path.exists(self.metadata_file):
+        if os.path.exists(self.metadata_file) and self.load_from_save_dir:
             with open(self.metadata_file, 'r') as f:
                 existsing_metadata = json.load(f)
             existing_jl_dim = int(existsing_metadata['JL dimension'])
@@ -58,20 +64,22 @@ class AbstractSaver(ABC):
                    f"In {self.save_dir} there are models using a {existing_matrix_type} JL matrix\
                    , and this TRAKer instance uses a {self.metadata['JL matrix type']} JL matrix."
 
-        else:
+        elif self.load_from_save_dir:
             with open(self.metadata_file, 'w') as f:
                 json.dump(self.metadata, f)
 
         self.model_ids = {}
-        # check if there are existing model ids in the save_dir
-        self.model_ids_files = self.save_dir.rglob('id_*.json')
+        if self.load_from_save_dir:
+            # check if there are existing model ids in the save_dir
+            self.model_ids_files = self.save_dir.rglob('id_*.json')
 
-        for existing_model_id_file in self.model_ids_files:
-            with open(existing_model_id_file, 'r') as f:
-                existing_id = json.load(f)
-                existing_id = {int(model_id): metadata
-                               for model_id, metadata in existing_id.items()}
-            self.model_ids.update(existing_id)
+            for existing_model_id_file in self.model_ids_files:
+                with open(existing_model_id_file, 'r') as f:
+                    existing_id = json.load(f)
+                    existing_id = {int(model_id): metadata
+                                   for model_id, metadata in existing_id.items()}
+                self.model_ids.update(existing_id)
+
         # wlog set num_targets to those of a random model_id we could raise an
         # error here if different model_ids have different num_targets but this
         # could be a bit too stringent in some cases
@@ -161,8 +169,10 @@ class MmapSaver(AbstractSaver):
     into memory.
 
     """
-    def __init__(self, save_dir, metadata, train_set_size, proj_dim) -> None:
-        super().__init__(save_dir=save_dir, metadata=metadata)
+    def __init__(self, save_dir, metadata, train_set_size, proj_dim, load_from_save_dir) -> None:
+        super().__init__(save_dir=save_dir,
+                         metadata=metadata,
+                         load_from_save_dir=load_from_save_dir)
         self.train_set_size = train_set_size
         self.proj_dim = proj_dim
 

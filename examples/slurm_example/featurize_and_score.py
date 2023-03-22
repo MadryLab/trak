@@ -28,9 +28,14 @@ def main(model_id):
     ckpt = model.state_dict()
     # ==================================
 
+    # the job with JOB ID is the one responsible for metadata.json
+    # all other jobs do not attempt to read/write to metadata.json
+    should_load_from_save_dir = (model_id == 0)
+
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir='./slurm_example_results',
+                    load_from_save_dir=should_load_from_save_dir,
                     train_set_size=len(ds_train),
                     device='cuda')
 
