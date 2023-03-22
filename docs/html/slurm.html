@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Modules" href="trak.html" /><link rel="prev" title="Subclassing ModelOutput — Example with CLIP" href="clip.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Add a task to TRAKer (subclassing ModelOutput) — CLIP" href="clip.html" /><link rel="prev" title="Installation FAQs" href="install.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>Parallelize TRAK scoring with SLURM - TRAK 0.1.0 documentation</title>
@@ -155,10 +155,12 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="trak.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">API reference</a></li>
 </ul>
 
 </div>
@@ -194,7 +196,7 @@
         </div>
         <article role="main">
           <section id="parallelize-trak-scoring-with-slurm">
-<h1>Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code><a class="headerlink" href="#parallelize-trak-scoring-with-slurm" title="Permalink to this headline">#</a></h1>
+<span id="slurm-tutorial"></span><h1>Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code><a class="headerlink" href="#parallelize-trak-scoring-with-slurm" title="Permalink to this headline">#</a></h1>
 <p>Often we would like to compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores from multiple checkpoints of
 the same model.</p>
 <div class="admonition note">
@@ -306,23 +308,23 @@ integrating <code class="code docutils literal notranslate"><span class="pre">TR
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="trak.html">
+          <a class="next-page" href="clip.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Modules</div>
+                <div class="title">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="clip.html">
+          <a class="prev-page" href="install.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</div>
+                <div class="title">Installation FAQs</div>
                 
               </div>
             </a>
