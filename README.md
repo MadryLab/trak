@@ -7,10 +7,9 @@
 [paper](TODO) and [blog post](TODO) for more details.
 
 [[docs]](https://trak.csail.mit.edu/html/index.html)
-[[website]](trak.csail.mit.edu)
+[[website]](https://trak.csail.mit.edu)
 [[PyPI]](https://pypi.org/project/traker/)
 <!--[[blog post]](TODO) -->
-<!--[[Twitter thread]](TODO) -->
 
 ![Main figure](/docs/assets/main_figure.png)
 
