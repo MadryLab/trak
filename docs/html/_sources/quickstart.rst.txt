@@ -1,3 +1,5 @@
+.. _quickstart user guide:
+
 Quickstart --- get :code:`TRAK` scores for :code:`CIFAR-10`
 ===========================================================
 

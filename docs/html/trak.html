@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Parallelize TRAK scoring with SLURM" href="slurm.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Add a task to TRAKer (subclassing ModelOutput) — BERT-base" href="bert.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>API reference - TRAK 0.1.0 documentation</title>
@@ -155,10 +155,11 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API reference</a></li>
 </ul>
 
@@ -195,7 +196,7 @@
         </div>
         <article role="main">
           <section id="api-reference">
-<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">#</a></h1>
+<span id="id1"></span><h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">#</a></h1>
 <section id="module-trak.traker">
 <span id="trak-traker-module"></span><h2>trak.traker module<a class="headerlink" href="#module-trak.traker" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
@@ -456,7 +457,7 @@ out-to-loss gradient, thus avoiding the need to do any backward passes
 (let alone per-sample grads). If for your application this is not feasible,
 you’ll need to subclass this and modify this method to have a structure
 similar to the one of <cite>self.get_output</cite>, i.e. something like:</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a>`
+<p><a href="#id2"><span class="problematic" id="id3">``</span></a>`
 out_to_loss = self.model_out_to_loss(…)
 for ind in range(batch_size):</p>
 <blockquote>
@@ -1213,14 +1214,14 @@ this f-n flattens g to have shape [batch_size, num_params]</p>
         
         <div class="related-pages">
           
-          <a class="prev-page" href="slurm.html">
+          <a class="prev-page" href="bert.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></div>
+                <div class="title">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</div>
                 
               </div>
             </a>

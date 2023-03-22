@@ -1,3 +1,5 @@
+.. _install-instructions:
+
 =================
 Installation FAQs
 =================
