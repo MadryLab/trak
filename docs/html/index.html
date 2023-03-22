@@ -195,8 +195,8 @@
           </label>
         </div>
         <article role="main">
-          <section id="welcome-to-trak-s-documentation">
-<h1>Welcome to TRAK’s documentation!<a class="headerlink" href="#welcome-to-trak-s-documentation" title="Permalink to this headline">#</a></h1>
+          <section id="trak-attributing-model-behavior-at-scale">
+<h1>TRAK: Attributing Model Behavior at Scale<a class="headerlink" href="#trak-attributing-model-behavior-at-scale" title="Permalink to this headline">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> is under active development. We are still in a <code class="code docutils literal notranslate"><span class="pre">0.x.x</span></code>
@@ -204,8 +204,24 @@ version and lots of things <em>may</em> change.</p>
 </div>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h2>
-<p>TODO: add links to paper, blog; a short summary of <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>; figure 1 from
-the paper.</p>
+<p>This is a <a class="reference external" href="pytorch.org/">PyTorch</a>-based API for our method <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>: an
+effective, efficient data attribution method for gradient-based learning
+algorithms. <a class="footnote-reference brackets" href="#id2" id="id1">1</a> We designed <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>’s API around the following guiding
+principles:</p>
+<dl class="simple">
+<dt>Simplicity &amp; Ease of use</dt><dd><p>The entire API is less than 1000 lines of code.
+You can apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> in just a few lines of code
+(see <a class="reference internal" href="quickstart.html"><span class="doc">the quickstart guide</span></a> for more details).</p>
+</dd>
+<dt>Speed</dt><dd><p>Our API comes with <em>fast</em>, custom CUDA kernels. Getting state-of-the-art
+attribution for <a class="reference external" href="https://huggingface.co/bert-base-uncased">BERT-base</a> on
+<a class="reference external" href="https://paperswithcode.com/dataset/qnli">QNLI</a> takes ~2 hours on a 8xA100
+node.</p>
+</dd>
+<dt>Flexibility</dt><dd><p>Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task/modality is easy (check, e.g.,
+<a class="reference internal" href="clip.html"><span class="doc">how to adapt TRAK to CLIP</span></a>).</p>
+</dd>
+</dl>
 </section>
 <section id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">#</a></h2>
@@ -239,6 +255,11 @@ for the JL projection step, use</p>
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 </ul>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Check <a class="reference external" href="https://gradientscience.org/trak.pdf">our paper</a> for more details.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -287,7 +308,7 @@ for the JL projection step, use</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Welcome to TRAK’s documentation!</a><ul>
+<li><a class="reference internal" href="#">TRAK: Attributing Model Behavior at Scale</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#install">Install</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
