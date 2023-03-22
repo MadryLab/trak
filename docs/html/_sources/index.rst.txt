@@ -15,7 +15,7 @@ TRAK: Attributing Model Behavior at Scale
 Overview
 --------
 
-This is a `PyTorch <pytorch.org/>`_-based API for our method :code:`TRAK`: an
+This is a `PyTorch <https://pytorch.org/>`_-based API for our method :code:`TRAK`: an
 effective, efficient data attribution method for gradient-based learning
 algorithms. [1]_ We designed :code:`TRAK`'s API around the following guiding
 principles:
@@ -36,7 +36,6 @@ Flexibility
    Applying :code:`TRAK` to a custom task/modality is easy (check, e.g.,
    :doc:`how to adapt TRAK to CLIP<clip>`).
 
-
 Install
 -------
 
@@ -46,14 +45,18 @@ The PyTorch-only version of our package can be installed using
 
     pip install traker
 
-To install the version of our package which contains a fast, custom CUDA kernel
-for the JL projection step, use
+To install the version of our package which contains a fast, custom CUDA kernel,
+use
 
 .. code-block:: bash
 
     pip install traker[fast]
 
 See the :doc:`install` for more details.
+
+.. [1] Check `our paper <https://gradientscience.org/trak.pdf>`_ for more details.
+
+----
 
 Contents
 --------
@@ -73,5 +76,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-
-.. [1] Check `our paper <https://gradientscience.org/trak.pdf>`_ for more details.
