@@ -1,14 +1,15 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
 <!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
 
+[[docs]](https://trak.csail.mit.edu/html/index.html)
+[[website]](https://trak.csail.mit.edu)
+[[PyPI]](https://pypi.org/project/traker/)
+
 # TRAK: Attributing Model Behavior at Scale
 
 `TRAK` is an effective, efficient data attribution method. Check our
 [paper](TODO) and [blog post](TODO) for more details.
 
-[[docs]](https://trak.csail.mit.edu/html/index.html)
-[[website]](https://trak.csail.mit.edu)
-[[PyPI]](https://pypi.org/project/traker/)
 <!--[[blog post]](TODO) -->
 
 ![Main figure](/docs/assets/main_figure.png)
@@ -28,7 +29,11 @@ model, checkpoints = ...
 train_loader = ...
 
 traker = TRAKer(model=model, task='image_classification', train_set_size=...)
+```
 
+### Getting `TRAK` features for the train data
+
+```python
 for model_id, checkpoint in enumerate(checkpoints):
   traker.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in loader_train:
