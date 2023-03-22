@@ -1,16 +1,21 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
 <!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
 
-[[docs]](https://trak.csail.mit.edu/html/index.html)
+[[docs & tutorials]](https://trak.csail.mit.edu/html/index.html)
+[[paper]](https://gradientscience.org/trak.pdf)
+[[blog post]](https://gradientscience.org/trak/)
 [[website]](https://trak.csail.mit.edu)
 [[PyPI]](https://pypi.org/project/traker/)
 
 # TRAK: Attributing Model Behavior at Scale
 
-`TRAK` is an effective, efficient data attribution method. Check our
-[paper](TODO) and [blog post](TODO) for more details.
-
-<!--[[blog post]](TODO) -->
+In our recent [paper](TODO:link), we introduce `TRAK` (Tracing with the
+Randomly-Projected After Kernel). In short, `TRAK` scores can make accurate
+counterfactual predictions (e.g., answers to questions of the form “what would
+happen to this prediction if these images were removed from the training set").
+Furthermore, these scores come at a small fraction of the cost of prior methods
+that are comparably effective (e.g., TRAK is 2-3 orders of magnitude cheaper
+than comparable methods, on CIFAR-10 and QNLI):
 
 ![Main figure](/docs/assets/main_figure.png)
 
