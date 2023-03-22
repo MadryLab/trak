@@ -315,8 +315,7 @@ class TRAKer():
             model_ids = self.saver.model_ids
 
         _completed = [False] * len(model_ids)
-        _scores = ch.empty(len(model_ids),
-                           self.train_set_size,
+        _scores = ch.zeros(self.train_set_size,
                            self.saver.num_targets,
                            device=self.device)
         _avg_out_to_losses = ch.zeros(self.saver.train_set_size, 1, device=self.device)
@@ -334,7 +333,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_features, device=self.device)
             g_target = ch.as_tensor(self.saver.current_target_grads, device=self.device)
 
-            _scores[j] = self.score_computer.get_scores(g, g_target)
+            _scores += self.score_computer.get_scores(g, g_target)
             _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss, device=self.device)
             _completed[j] = True
 
@@ -343,10 +342,8 @@ class TRAKer():
             else:
                 self.saver.clear_target_grad_count(model_id)
 
-        _scores = _scores[_completed].mean(dim=0)
-
         _num_models_used = float(sum(_completed))
-        self.scores = _scores * (_avg_out_to_losses / _num_models_used)
+        self.scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
         self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
 
         return self.scores
