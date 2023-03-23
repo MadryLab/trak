@@ -15,8 +15,8 @@ def test_mscoco(tmp_path, device='cuda:0'):
 
     tokenizer = open_clip.get_tokenizer('RN50')
 
-    ds_train = datasets.CocoCaptions(root='/mnt/xfs/projects/trak/datasets/coco_csv/train2014',
-                                     annFile='/mnt/xfs/projects/trak/datasets/coco_csv/coco_train_karpathy.json'
+    ds_train = datasets.CocoCaptions(root='/path/to/coco_csv/train2014',
+                                     annFile='/path/to/coco_csv/coco_train_karpathy.json'
                                      )
 
     traker = TRAKer(model=model,

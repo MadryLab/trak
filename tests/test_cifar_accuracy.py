@@ -8,6 +8,7 @@ from trak import TRAKer
 from trak.projectors import BasicProjector
 
 from .utils import construct_rn9, get_dataloader, eval_correlations
+from .utils import download_cifar_checkpoints, download_cifar_betons
 
 
 def get_projector(use_cuda_projector, dtype):
@@ -33,12 +34,14 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
-    loader_train = get_dataloader(batch_size=batch_size, split='train')
-    loader_val = get_dataloader(batch_size=batch_size, split='val')
+    BETONS_PATH = Path(tmp_path).joinpath('cifar_betons')
+    BETONS = download_cifar_betons(BETONS_PATH)
 
-    # TODO: put this on dropbox as well
-    CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
-    ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
+    loader_train = get_dataloader(BETONS, batch_size=batch_size, split='train')
+    loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
+
+    CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     traker = TRAKer(model=model,
