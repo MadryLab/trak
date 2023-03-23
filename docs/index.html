@@ -91,10 +91,10 @@
             style="background-color: rgba(0, 0, 0, 0.3)"
           >
             <h1
-              class="display-3 fw-bold lh-1"
+              class="display-3 fw-bold lh-3"
               style="display: inline-block; font-family: Avenir"
             >
-              TRAK: Understand model predictions at scale
+              TRAK: Attributing Model Behavior at Scale
             </h1>
             <p class="lead" style="font-family: Avenir">
               Effective, efficient data attribution for large machine learning
@@ -392,10 +392,10 @@ scores = traker.finalize_scores()</code></pre>
                 and caption should be close in its latent space.
               </p>
 
-              <ul class="nav nav-tabs" id="tab1-subtabs" role="tablist">
+              <ul class="nav nav-tabs border-0" id="tab1-subtabs" role="tablist">
                 <li class="nav-item">
                   <a
-                    class="nav-link active"
+                    class="nav-link active rounded shadow border border-secondary"
                     id="tab1-subtab1-tab"
                     data-toggle="tab"
                     href="#tab1-subtab1"
@@ -412,7 +412,7 @@ scores = traker.finalize_scores()</code></pre>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow bg-dark"
                     id="tab1-subtab2-tab"
                     data-toggle="tab"
                     href="#tab1-subtab2"
@@ -429,7 +429,7 @@ scores = traker.finalize_scores()</code></pre>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded"
                     id="tab1-subtab3-tab"
                     data-toggle="tab"
                     href="#tab1-subtab3"
@@ -446,7 +446,7 @@ scores = traker.finalize_scores()</code></pre>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded"
                     id="tab1-subtab4-tab"
                     data-toggle="tab"
                     href="#tab1-subtab4"
@@ -463,7 +463,7 @@ scores = traker.finalize_scores()</code></pre>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded"
                     id="tab1-subtab5-tab"
                     data-toggle="tab"
                     href="#tab1-subtab5"
@@ -480,7 +480,7 @@ scores = traker.finalize_scores()</code></pre>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm"
                     id="tab1-subtab6-tab"
                     data-toggle="tab"
                     href="#tab1-subtab6"
@@ -503,8 +503,9 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab1-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
+                  <h2 style="display: inline-block;">Caption:</h2> <h3 style="display: inline-block;"> a cat is laying on top of a laptop computer</h3>
+                  <!-- <h3>Target</h3> -->
+                  <!-- <div class="col-6 col-md-4 col-lg-2 mb-4">
                     <figure class="figure">
                       <img
                         src="assets/webfigure/2/target.png"
@@ -515,7 +516,7 @@ scores = traker.finalize_scores()</code></pre>
                         a cat is laying on top of a laptop computer
                       </figcaption>
                     </figure>
-                  </div>
+                  </div> -->
 
                   <h3>TRAK top scoring train images</h3>
                   <div class="container mt-5">
