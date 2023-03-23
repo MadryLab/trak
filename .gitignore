@@ -138,3 +138,6 @@ dmypy.json
 # results and logs
 trak_results/
 *.out
+
+# session
+Session.vim

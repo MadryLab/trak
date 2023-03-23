@@ -5,6 +5,7 @@ import torch as ch
 
 from trak import TRAKer
 from .utils import construct_rn9, get_dataloader, eval_correlations
+from .utils import download_cifar_checkpoints, download_cifar_betons
 
 
 @pytest.mark.cuda
@@ -15,12 +16,14 @@ def test_featurize_and_score_in_parallel(tmp_path):
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
-    loader_train = get_dataloader(batch_size=batch_size, split='train')
-    loader_val = get_dataloader(batch_size=batch_size, split='val')
+    BETONS_PATH = Path(tmp_path).joinpath('cifar_betons')
+    BETONS = download_cifar_betons(BETONS_PATH)
 
-    # TODO: put this on dropbox as well
-    CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
-    ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
+    loader_train = get_dataloader(BETONS, batch_size=batch_size, split='train')
+    loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
+
+    CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     # this should be essentially equivalent to running each
@@ -50,7 +53,7 @@ def test_featurize_and_score_in_parallel(tmp_path):
     scores = traker.finalize_scores().cpu()
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
-    assert avg_corr > 0.058, 'correlation with 3 CIFAR-2 models should be >= 0.058'
+    assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
 
 
 @pytest.mark.cuda
@@ -61,12 +64,14 @@ def test_score_multiple(tmp_path):
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
 
-    loader_train = get_dataloader(batch_size=batch_size, split='train')
-    loader_val = get_dataloader(batch_size=batch_size, split='val')
+    BETONS_PATH = Path(tmp_path).joinpath('cifar_betons')
+    BETONS = download_cifar_betons(BETONS_PATH)
 
-    # TODO: put this on dropbox as well
-    CKPT_PATH = '/mnt/xfs/projects/trak/checkpoints/resnet9_cifar2/debug'
-    ckpt_files = list(Path(CKPT_PATH).rglob("*.pt"))
+    loader_train = get_dataloader(BETONS, batch_size=batch_size, split='train')
+    loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
+
+    CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     traker = TRAKer(model=model,
@@ -97,4 +102,4 @@ def test_score_multiple(tmp_path):
         scores = traker.finalize_scores().cpu()
 
         avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
-        assert avg_corr > 0.058, 'correlation with 3 CIFAR-2 models should be >= 0.058'
+        assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'

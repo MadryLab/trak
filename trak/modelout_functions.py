@@ -395,8 +395,59 @@ class CLIPModelOutput(AbstractModelOutput):
         return (1 - ps).clone().detach()
 
 
+class TextClassificationModelOutput(AbstractModelOutput):
+    """
+    Margin for text classification models. This assumes that the model takes in
+    input_ids, token_type_ids, and attention_mask.
+    .. math::
+        \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
+        \exp(\text{logit}[i])\right)
+    Version of margin proposed in 'Understanding Influence Functions
+    and Datamodels via Harmonic Analysis'
+    """
+
+    def __init__(self, temperature=1.) -> None:
+        super().__init__()
+        self.softmax = ch.nn.Softmax(-1)
+        self.loss_temperature = temperature
+
+    @staticmethod
+    def get_output(func_model,
+                   weights: Iterable[Tensor],
+                   buffers: Iterable[Tensor],
+                   input_id: Tensor,
+                   token_type_id: Tensor,
+                   attention_mask: Tensor,
+                   label: Tensor,
+                   ) -> Tensor:
+        logits = func_model(weights, buffers, input_id.unsqueeze(0),
+                                token_type_id.unsqueeze(0),
+                                attention_mask.unsqueeze(0))
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
+        logits_correct = logits[bindex, label.unsqueeze(0)]
+
+        cloned_logits = logits.clone()
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(logits.device)
+
+        margins = logits_correct - cloned_logits.logsumexp(dim=-1)
+        return margins.sum()
+
+    def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
+        input_ids, token_type_ids, attention_mask, _ = batch
+        return model(input_ids=input_ids,
+            token_type_ids=token_type_ids,
+            attention_mask=attention_mask)
+
+    def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+        input_ids, token_type_ids, attention_mask, labels = batch
+        logits = func_model(weights, buffers, input_ids, token_type_ids, attention_mask)
+        ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
+        return (1 - ps).clone().detach().unsqueeze(-1)
+
+
 TASK_TO_MODELOUT = {
     ('image_classification', True): ImageClassificationModelOutput,
     ('image_classification', False): IterImageClassificationModelOutput,
+    ('text_classification', True): TextClassificationModelOutput,
     ('clip', True): CLIPModelOutput,
 }

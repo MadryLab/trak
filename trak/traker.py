@@ -22,6 +22,7 @@ class TRAKer():
                  task: Union[AbstractModelOutput, str],
                  train_set_size: int,
                  save_dir: str = './trak_results',
+                 load_from_save_dir: bool = True,
                  device: Union[str, torch.device] = 'cuda',
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
                  projector: Optional[AbstractProjector] = None,
@@ -41,6 +42,10 @@ class TRAKer():
             train_set_size (int): Size of the train set that TRAK is featurizing
             save_dir (str, optional): Directory to save final TRAK scores,
                 intermediate results, and metadata. Defaults to './trak_results'.
+            load_from_save_dir (bool, optional): If True, the TRAKer instance
+                will attempt to load existing metadata from save_dir. May lead
+                to I/O issues if multiple TRAKer instances ran in parallel have
+                this flag set to True. See the SLURM tutorial for more details.
             device (Union[str, torch.device], optional): torch device on which
                 to do computations. Defaults to 'cuda'.
             gradient_computer (AbstractGradientComputer, optional):
@@ -65,6 +70,7 @@ class TRAKer():
         self.init_projector(projector, proj_dim)  # inits self.projector
 
         self.save_dir = Path(save_dir).resolve()
+        self.load_from_save_dir = load_from_save_dir
 
         if type(self.task) is str:
             self.modelout_fn = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
@@ -82,7 +88,8 @@ class TRAKer():
         self.saver = MmapSaver(save_dir=self.save_dir,
                                metadata=metadata,
                                train_set_size=self.train_set_size,
-                               proj_dim=self.proj_dim)
+                               proj_dim=self.proj_dim,
+                               load_from_save_dir=self.load_from_save_dir)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
@@ -315,8 +322,7 @@ class TRAKer():
             model_ids = self.saver.model_ids
 
         _completed = [False] * len(model_ids)
-        _scores = ch.empty(len(model_ids),
-                           self.train_set_size,
+        _scores = ch.zeros(self.train_set_size,
                            self.saver.num_targets,
                            device=self.device)
         _avg_out_to_losses = ch.zeros(self.saver.train_set_size, 1, device=self.device)
@@ -334,7 +340,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_features, device=self.device)
             g_target = ch.as_tensor(self.saver.current_target_grads, device=self.device)
 
-            _scores[j] = self.score_computer.get_scores(g, g_target)
+            _scores += self.score_computer.get_scores(g, g_target)
             _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss, device=self.device)
             _completed[j] = True
 
@@ -343,10 +349,8 @@ class TRAKer():
             else:
                 self.saver.clear_target_grad_count(model_id)
 
-        _scores = _scores[_completed].mean(dim=0)
-
         _num_models_used = float(sum(_completed))
-        self.scores = _scores * (_avg_out_to_losses / _num_models_used)
+        self.scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
         self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
 
         return self.scores
