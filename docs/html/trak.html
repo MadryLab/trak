@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Add a task to TRAKer (subclassing ModelOutput) — BERT-base" href="bert.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>API reference - TRAK 0.1.0 documentation</title>
+        <title>API reference - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -201,7 +201,7 @@
 <span id="trak-traker-module"></span><h2>trak.traker module<a class="headerlink" href="#module-trak.traker" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.traker.TRAKer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.traker.</span></span><span class="sig-name descname"><span class="pre">TRAKer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/traker.html#TRAKer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.traker.</span></span><span class="sig-name descname"><span class="pre">TRAKer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">load_from_save_dir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/traker.html#TRAKer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.traker.TRAKer.featurize">
@@ -769,6 +769,62 @@ model parameters :math:`    heta`.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">TextClassificationModelOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></code></a></p>
+<blockquote>
+<div><p>Margin for text classification models. This assumes that the model takes in
+input_ids, token_type_ids, and attention_mask.
+.. math:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ext</span><span class="p">{</span><span class="n">logit</span><span class="p">}[</span>     <span class="n">ext</span><span class="p">{</span><span class="n">correct</span><span class="p">}]</span> <span class="o">-</span> \<span class="n">log</span>\<span class="n">left</span><span class="p">(</span>\<span class="n">sum_</span><span class="p">{</span><span class="n">i</span> 
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="simple">
+<dt>eq      ext{correct}}</dt><dd><p>exp(   ext{logit}[i])</p>
+</dd>
+<dt>ight)</dt><dd><p>Version of margin proposed in ‘Understanding Influence Functions
+and Datamodels via Harmonic Analysis’</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.forward" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad">
+<span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
+<dd><p>See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on
+what the out-to-loss functions (in the notation of the paper, <span class="math notranslate nohighlight">\(Q\)</span>)
+are in the context of TRAK and how to use &amp; design them.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model (torch.nn.Module): model
+batch (Iterable[Tensor]): input batch</p>
+</dd>
+<dt>Returns:</dt><dd><p>Tensor: gradient of the out-to-loss function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.get_output">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.get_output" title="Permalink to this definition">#</a></dt>
+<dd><p>See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on
+what model output functions are in the context of TRAK and how to use &amp;
+design them.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model (torch.nn.Module): model
+batch (Iterable[Tensor]): input batch</p>
+</dd>
+<dt>Returns:</dt><dd><p>Tensor: model output function</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-trak.projectors">
 <span id="trak-projectors-module"></span><h2>trak.projectors module<a class="headerlink" href="#module-trak.projectors" title="Permalink to this headline">#</a></h2>
@@ -912,7 +968,7 @@ model_id (int): a unique ID for a checkpoint</p>
 <span id="trak-savers-module"></span><h2>trak.savers module<a class="headerlink" href="#module-trak.savers" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.savers.AbstractSaver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">AbstractSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">AbstractSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_from_save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Implementations of Saver class must implement getters and setters for TRAK
 features and scores, as well as intermediate values like gradients and
@@ -993,7 +1049,7 @@ to a given model ID</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.savers.MmapSaver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">MmapSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">MmapSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_from_save_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#trak.savers.AbstractSaver" title="trak.savers.AbstractSaver"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.savers.AbstractSaver</span></code></a></p>
 <p>A saver that uses memory-mapped numpy arrays. This makes small reads and
 writes (e.g.) during featurizing feasible without loading the entire file
