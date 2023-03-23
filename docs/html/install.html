@@ -300,6 +300,28 @@ ubuntu and gcc 10:
 </li>
 </ul>
 </section>
+<section id="verify-that-the-installation-worked">
+<h2>Verify that the installation worked<a class="headerlink" href="#verify-that-the-installation-worked" title="Permalink to this headline">#</a></h2>
+<p>You can quickly verify that <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> has been correctly installed by running
+some of our tests, e.g.:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m pytest -sv tests/test_rademacher.py
+</pre></div>
+</div>
+<p>Note that you’ll need the optional <code class="code docutils literal notranslate"><span class="pre">[tests]</span></code> dependencies to run the tests.</p>
+</section>
+<section id="misc-q-a">
+<h2>Misc Q&amp;A<a class="headerlink" href="#misc-q-a" title="Permalink to this headline">#</a></h2>
+<p><strong>Q: I’m using</strong> <code class="code docutils literal notranslate"><span class="pre">zsh</span></code> <strong>and when running</strong>
+<code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">traker[fast]</span></code>,
+<strong>I get</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">zsh</span><span class="p">:</span> <span class="n">no</span> <span class="n">matches</span> <span class="n">found</span><span class="p">:</span> <span class="n">traker</span><span class="p">[</span><span class="n">fast</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>A: Make sure to escape the square brackets, i.e. run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install traker<span class="se">\[</span>fast<span class="se">\]</span>
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -361,6 +383,8 @@ ubuntu and gcc 10:
 <li><a class="reference internal" href="#how-to-install-trak">How to install <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>?</a></li>
 <li><a class="reference internal" href="#how-to-install-nvcc-cuda-toolkit">How to install <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> (<code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">toolkit</span></code>)?</a></li>
 <li><a class="reference internal" href="#how-to-install-gcc">How to install <code class="code docutils literal notranslate"><span class="pre">gcc</span></code>?</a></li>
+<li><a class="reference internal" href="#verify-that-the-installation-worked">Verify that the installation worked</a></li>
+<li><a class="reference internal" href="#misc-q-a">Misc Q&amp;A</a></li>
 </ul>
 </li>
 </ul>
