@@ -63,6 +63,7 @@ Contents
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    quickstart
    install
