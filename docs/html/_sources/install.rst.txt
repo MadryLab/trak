@@ -118,3 +118,32 @@ Pick one option:
   .. code:: bash
 
     export CXX=g++10 CC=gcc-10
+
+Verify that the installation worked
+-----------------------------------
+
+You can quickly verify that :code:`TRAK` has been correctly installed by running
+some of our tests, e.g.:
+
+.. code-block:: bash
+
+  python -m pytest -sv tests/test_rademacher.py
+
+Note that you'll need the optional :code:`[tests]` dependencies to run the tests.
+
+Misc Q&A
+--------
+
+**Q: I'm using** :code:`zsh` **and when running**
+:code:`pip install traker[fast]`,
+**I get**
+
+.. code::
+
+  zsh: no matches found: traker[fast]
+
+A: Make sure to escape the square brackets, i.e. run
+
+.. code:: bash
+
+  pip install traker\[fast\]
