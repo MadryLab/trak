@@ -48,7 +48,6 @@ def test_cifar_acc(serialize=False, dtype=ch.float32, batch_size=100, tmp_path='
         del traker
         traker = TRAKer(model=model,
                         task='image_classification',
-                        projector=projector,
                         proj_dim=1024,
                         train_set_size=10_000,
                         save_dir=tmp_path,
