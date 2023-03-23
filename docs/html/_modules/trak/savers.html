@@ -220,7 +220,8 @@
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">save_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+                 <span class="n">load_from_save_dir</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Creates the save directory if it doesn&#39;t already exist.</span>
 <span class="sd">        If the save directory already exists, it validates that the current</span>
 <span class="sd">        TRAKer class has the same hyperparameters (metadata) as the one</span>
@@ -234,14 +235,19 @@
 <span class="sd">                intermediate values, and metadata</span>
 <span class="sd">            metadata (Iterable): a dictionary containing metadata related to the</span>
 <span class="sd">                TRAKer class</span>
+<span class="sd">            load_from_save_dir (bool): If True, the Saver instance will attempt</span>
+<span class="sd">                to load existing metadata from save_dir. May lead to I/O issues</span>
+<span class="sd">                if multiple Saver instances ran in parallel have this flag set</span>
+<span class="sd">                to True. See the SLURM tutorial for more details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span> <span class="o">=</span> <span class="n">load_from_save_dir</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># init TRAKer metadata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;metadata.json&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">existsing_metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">existing_jl_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">existsing_metadata</span><span class="p">[</span><span class="s1">&#39;JL dimension&#39;</span><span class="p">])</span>
@@ -254,20 +260,22 @@
                    <span class="sa">f</span><span class="s2">&quot;In </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="si">}</span><span class="s2"> there are models using a </span><span class="si">{</span><span class="n">existing_matrix_type</span><span class="si">}</span><span class="s2"> JL matrix</span><span class="se">\</span>
 <span class="s2">                   , and this TRAKer instance uses a </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;JL matrix type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> JL matrix.&quot;</span>
 
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="c1"># check if there are existing model ids in the save_dir</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;id_*.json&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
+            <span class="c1"># check if there are existing model ids in the save_dir</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;id_*.json&#39;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">existing_model_id_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">existing_model_id_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">existing_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                <span class="n">existing_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span> <span class="n">metadata</span>
-                               <span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">existing_id</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">existing_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">existing_model_id_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">existing_model_id_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">existing_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">existing_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span> <span class="n">metadata</span>
+                                   <span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">existing_id</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">existing_id</span><span class="p">)</span>
+
         <span class="c1"># wlog set num_targets to those of a random model_id we could raise an</span>
         <span class="c1"># error here if different model_ids have different num_targets but this</span>
         <span class="c1"># could be a bit too stringent in some cases</span>
@@ -357,8 +365,10 @@
 <span class="sd">    into memory.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">,</span> <span class="n">load_from_save_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+                         <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+                         <span class="n">load_from_save_dir</span><span class="o">=</span><span class="n">load_from_save_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span> <span class="o">=</span> <span class="n">train_set_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span> <span class="o">=</span> <span class="n">proj_dim</span>
 
