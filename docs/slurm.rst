@@ -70,7 +70,8 @@ For example, :code:`featurize_and_score.py` may look like:
         args = parser.parse_args()
         main(args.model_id)
 
-Now we can 
+Now we can run the above script script in parallel with a :code:`run.sbatch`.
+Here is a minimal example:
 
 .. code-block:: bash
 
