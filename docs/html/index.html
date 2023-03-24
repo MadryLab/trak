@@ -209,14 +209,17 @@ effective, efficient data attribution method for gradient-based learning
 algorithms. <a class="footnote-reference brackets" href="#id2" id="id1">1</a> We designed <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>’s API around the following guiding
 principles:</p>
 <dl class="simple">
-<dt>Simplicity &amp; Ease of use</dt><dd><p>The entire API is less than 1000 lines of code.
-You can apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> in just a few lines of code
-(see <a class="reference internal" href="quickstart.html"><span class="doc">the quickstart guide</span></a> for more details).</p>
+<dt>Ease of use</dt><dd><p>You can apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> in just a few lines of code
+(see <a class="reference internal" href="quickstart.html"><span class="doc">the quickstart guide</span></a>).</p>
 </dd>
 <dt>Speed</dt><dd><p>Our API comes with <em>fast</em>, custom CUDA kernels. Getting state-of-the-art
 attribution for <a class="reference external" href="https://huggingface.co/bert-base-uncased">BERT-base</a> on
 <a class="reference external" href="https://paperswithcode.com/dataset/qnli">QNLI</a> takes ~2 hours on a 8xA100
 node.</p>
+</dd>
+<dt>Simplicity</dt><dd><p>Our API is lightweight - the entire codebase is less than 1000 lines of
+code. It is also quite modular, making it painless adapt any component to
+your needs.</p>
 </dd>
 <dt>Flexibility</dt><dd><p>Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task/modality is easy (check, e.g.,
 <a class="reference internal" href="clip.html"><span class="doc">how to adapt TRAK to CLIP</span></a>).</p>
@@ -245,6 +248,14 @@ use</p>
 <section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">#</a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">API reference</a></li>
+</ul>
 </div>
 </section>
 <section id="indices-and-tables">

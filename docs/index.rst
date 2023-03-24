@@ -21,16 +21,21 @@ algorithms. [1]_ We designed :code:`TRAK`'s API around the following guiding
 principles:
 
 
-Simplicity & Ease of use
-   The entire API is less than 1000 lines of code.
+
+Ease of use
    You can apply :code:`TRAK` in just a few lines of code
-   (see :doc:`the quickstart guide <quickstart>` for more details).
+   (see :doc:`the quickstart guide <quickstart>`).
 
 Speed
    Our API comes with *fast*, custom CUDA kernels. Getting state-of-the-art
    attribution for `BERT-base <https://huggingface.co/bert-base-uncased>`_ on
    `QNLI <https://paperswithcode.com/dataset/qnli>`_ takes ~2 hours on a 8xA100
    node.
+
+Simplicity
+   Our API is lightweight - the entire codebase is less than 1000 lines of
+   code. It is also quite modular, making it painless adapt any component to
+   your needs.
 
 Flexibility
    Applying :code:`TRAK` to a custom task/modality is easy (check, e.g.,
@@ -63,7 +68,6 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    quickstart
    install
