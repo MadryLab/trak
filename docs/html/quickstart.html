@@ -484,7 +484,14 @@ targets be the entire validation set:</p>
 <span class="linenos">8</span><span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>TODO</p>
+<p>Here, <a class="reference internal" href="trak.html#trak.traker.TRAKer.start_scoring_checkpoint" title="trak.traker.TRAKer.start_scoring_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start_scoring_checkpoint()</span></code></a> has a similar function to
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> used during featurizing; this time, instead of
+registering the checkpoint, it asserts that this <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> has been
+featurized, loads the given model checkpoint, and initializes memmory-maps for
+the target gradient features. The <a class="reference internal" href="trak.html#trak.traker.TRAKer.score" title="trak.traker.TRAKer.score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score()</span></code></a> method is conceptually close to
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> - it processes the target batch and computes gradient
+features for each image inside. The <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> and <code class="code docutils literal notranslate"><span class="pre">inds</span></code>
+arguments work in the same way as in <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Be careful that you provide the same <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> for each checkpoint as
@@ -495,10 +502,13 @@ you’ll get bad results.</p>
 issue on github and we might add an <code class="code docutils literal notranslate"><span class="pre">assert</span></code> about <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>
 consistency.</p>
 </div>
+<p>After this, we get our <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores as a <code class="code docutils literal notranslate"><span class="pre">torch.Tensor</span></code> from the
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> method. That’s it! Now let’s take a look at what we
+got.</p>
 </section>
 <section id="visualize-the-attributions">
 <h2>Visualize the attributions!<a class="headerlink" href="#visualize-the-attributions" title="Permalink to this headline">#</a></h2>
-<p>TODO: add images once we have them</p>
+<p>TODO: add images below code snipeets once we have them; some text to explain what’s going on</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># let&#39;s look at two validation images</span>
@@ -527,7 +537,7 @@ consistency.</p>
 </section>
 <section id="extra-evaluate-counterfactuals">
 <h2>Extra: evaluate counterfactuals<a class="headerlink" href="#extra-evaluate-counterfactuals" title="Permalink to this headline">#</a></h2>
-<p>TODO</p>
+<p>TODO: clean up code snippet a bit; add histogram below code snippets once we have it; some text to explain what’s going on</p>
 <p>Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:</p>
 <img alt="_images/main_figure.png" src="_images/main_figure.png" />
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">masks</span> <span class="o">=</span> <span class="o">...</span>
