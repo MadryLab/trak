@@ -199,25 +199,22 @@
 <span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this headline">#</a></h1>
 <p>In this tutorial, we’ll show you how to use the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API to compute data
 attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> on
-<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> <a class="footnote-reference brackets" href="#id3" id="id1">1</a>. All computations take roughly five minutes in a total on a
-single A100 GPU (excluding time to get the trained checkpoints <a class="footnote-reference brackets" href="#id4" id="id2">2</a>).
+<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> <a class="footnote-reference brackets" href="#id2" id="id1">1</a>. All computations take roughly fifteen minutes in a total
+on a single A100 GPU.
 Overall, this tutorial will show you how to:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a></p></li>
 <li><p><a class="reference internal" href="#set-up-the-traker-class"><span class="std std-ref">Set up the TRAKer class</span></a></p></li>
 <li><p><a class="reference internal" href="#compute-trak-features-for-train-data"><span class="std std-ref">Compute TRAK features for train data</span></a></p></li>
 <li><p><a class="reference internal" href="#compute-trak-scores-for-targets"><span class="std std-ref">Compute TRAK scores for targets</span></a></p></li>
-<li><p><a class="reference internal" href="#visualize-the-attribution-scores"><span class="std std-ref">Visualize the attribution scores!</span></a></p></li>
+<li><p><a class="reference internal" href="#visualize-the-attributions"><span class="std std-ref">Visualize the attributions!</span></a></p></li>
 <li><p><a class="reference internal" href="#extra-evaluate-counterfactuals"><span class="std std-ref">Extra: evaluate counterfactuals</span></a></p></li>
 </ul>
 <p>Here we’ll provide tips and tricks for you to quickly get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> up and
 running; for more details, check the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
 <dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
 <dd><p>A subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/CIFAR-10">CIFAR-10</a> dataset containing only the “cat” and “dog” classes</p>
-</dd>
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>Using <a class="reference external" href="ffcv.io/">ffcv</a>, we trained each of the 20 models for only ~30 seconds on one A100 GPU!</p>
 </dd>
 </dl>
 <p>Let’s get started!</p>
@@ -235,6 +232,16 @@ will be fine for the following steps).</p>
 <span class="kn">from</span> <span class="nn">ffcv.transforms</span> <span class="kn">import</span> <span class="n">RandomHorizontalFlip</span><span class="p">,</span> <span class="n">Cutout</span><span class="p">,</span> \
     <span class="n">RandomTranslate</span><span class="p">,</span> <span class="n">Convert</span><span class="p">,</span> <span class="n">ToDevice</span><span class="p">,</span> <span class="n">ToTensor</span><span class="p">,</span> <span class="n">ToTorchImage</span>
 <span class="kn">from</span> <span class="nn">ffcv.transforms.common</span> <span class="kn">import</span> <span class="n">Squeeze</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">wget</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.cuda.amp</span> <span class="kn">import</span> <span class="n">GradScaler</span><span class="p">,</span> <span class="n">autocast</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">Conv2d</span><span class="p">,</span> <span class="n">BatchNorm2d</span>
+<span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">SGD</span><span class="p">,</span> <span class="n">lr_scheduler</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
 
 <span class="n">BETONS</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="s2">&quot;https://www.dropbox.com/s/zn7jsp2rl09e0fh/train.beton?dl=1&quot;</span><span class="p">,</span>
@@ -254,7 +261,7 @@ will be fine for the following steps).</p>
                 <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">label_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">IntDecoder</span><span class="p">(),</span>
                                         <span class="n">ToTensor</span><span class="p">(),</span>
-                                        <span class="n">ToDevice</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)),</span>
+                                        <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)),</span>
                                         <span class="n">Squeeze</span><span class="p">()]</span>
         <span class="n">image_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">SimpleRGBImageDecoder</span><span class="p">()]</span>
 
@@ -267,9 +274,9 @@ will be fine for the following steps).</p>
 
         <span class="n">image_pipeline</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
             <span class="n">ToTensor</span><span class="p">(),</span>
-            <span class="n">ToDevice</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="n">ToTorchImage</span><span class="p">(),</span>
-            <span class="n">Convert</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="n">Convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
             <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]),</span>
         <span class="p">])</span>
 
@@ -288,18 +295,18 @@ will be fine for the following steps).</p>
 
 
 <span class="c1"># Resnet9</span>
-<span class="k">class</span> <span class="nc">Mul</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Mul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Mul</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span>
 
 
-<span class="k">class</span> <span class="nc">Flatten</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Flatten</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Residual</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Residual</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
@@ -308,29 +315,59 @@ will be fine for the following steps).</p>
 
 <span class="k">def</span> <span class="nf">construct_rn9</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">conv_bn</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
-                <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
                             <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-                <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">channels_out</span><span class="p">),</span>
-                <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">channels_out</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
         <span class="n">conv_bn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
         <span class="n">conv_bn</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">Residual</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))),</span>
+        <span class="n">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))),</span>
         <span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-        <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">Residual</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))),</span>
         <span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
-        <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveMaxPool2d</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveMaxPool2d</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
         <span class="n">Flatten</span><span class="p">(),</span>
-        <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
         <span class="n">Mul</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">model</span>
 
-<span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">ch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span> <span class="n">lr_peak_epoch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
+    <span class="n">iters_per_epoch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+    <span class="c1"># Cyclic LR with single triangle</span>
+    <span class="n">lr_schedule</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">((</span><span class="n">epochs</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">),</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">lr_peak_epoch</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">],</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">LambdaLR</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="n">lr_schedule</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span>
+    <span class="n">scaler</span> <span class="o">=</span> <span class="n">GradScaler</span><span class="p">()</span>
+    <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="n">label_smoothing</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="n">model_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="p">(</span><span class="n">ims</span><span class="p">,</span> <span class="n">labs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">ims</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">labs</span><span class="p">)</span>
+
+            <span class="n">scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+            <span class="n">scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;./checkpoints&#39;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training models..&#39;</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader_train</span><span class="p">)</span>
+
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s1">&#39;./checkpoints/sd_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.pt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </details><p>For the remaining steps, we’re going to assume you have <code class="code docutils literal notranslate"><span class="pre">N</span></code> model
@@ -387,19 +424,19 @@ surprisingly, bigger <code class="code docutils literal notranslate"><span class
 </section>
 <section id="compute-trak-features-for-train-data">
 <h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data<a class="headerlink" href="#compute-trak-features-for-train-data" title="Permalink to this headline">#</a></h2>
-<p>Now let’s process the train data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id7" id="id5">3</a></p>
+<p>Now let’s process the train data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id5" id="id3">2</a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
 <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>We’re ready to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> the training samples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">import</span> <span class="nn">tqdm</span>  <span class="c1"># for progress tracking</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>  <span class="c1"># for progress tracking</span>
 <span class="linenos">2</span>
 <span class="linenos">3</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
 <span class="linenos">4</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
 <span class="linenos">5</span>
 <span class="linenos">6</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
-<span class="linenos">7</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+<span class="linenos">7</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="linenos">8</span>
 <span class="linenos">9</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
 </pre></div>
@@ -408,7 +445,7 @@ surprisingly, bigger <code class="code docutils literal notranslate"><span class
 checkpoints, assigning a <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> (just the checkpoint’s index in the
 <code class="code docutils literal notranslate"><span class="pre">ckpt</span></code> array in this case) for each one. Then, on line 4, the
 <a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> method registers the checkpoint in the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>
-class and ties it to the given <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> <a class="footnote-reference brackets" href="#id8" id="id6">4</a>. In lines 6 and 7, we are
+class and ties it to the given <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>. <a class="footnote-reference brackets" href="#id6" id="id4">3</a> In lines 6 and 7, we are
 iterating over the train data, getting gradient features for all examples.
 This step involves computing per-example gradients. Finally, in line 9, we
 perform some post-processing of the computed features (in particular, we compute
@@ -421,10 +458,10 @@ to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" t
 length as the batch, specifying the indices of the examples in the batch within
 the train data.</p>
 <dl class="footnote brackets">
-<dt class="label" id="id7"><span class="brackets"><a class="fn-backref" href="#id5">3</a></span></dt>
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
 <dd><p>Again, we use the methods defined in <a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a>. Adapt this as you wish.</p>
 </dd>
-<dt class="label" id="id8"><span class="brackets"><a class="fn-backref" href="#id6">4</a></span></dt>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
 <dd><p><code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints</p>
 </dd>
 </dl>
@@ -442,7 +479,7 @@ targets be the entire validation set:</p>
 <span class="linenos">3</span>                                    <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
 <span class="linenos">4</span>                                    <span class="n">num_targets</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">loader_targets</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
 <span class="linenos">5</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
-<span class="linenos">6</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+<span class="linenos">6</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="linenos">7</span>
 <span class="linenos">8</span><span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
 </pre></div>
@@ -459,32 +496,73 @@ issue on github and we might add an <code class="code docutils literal notransla
 consistency.</p>
 </div>
 </section>
-<section id="visualize-the-attribution-scores">
-<h2>Visualize the attribution scores!<a class="headerlink" href="#visualize-the-attribution-scores" title="Permalink to this headline">#</a></h2>
-<p>TODO</p>
+<section id="visualize-the-attributions">
+<h2>Visualize the attributions!<a class="headerlink" href="#visualize-the-attributions" title="Permalink to this headline">#</a></h2>
+<p>TODO: add images once we have them</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># let&#39;s look at two validation images</span>
+<span class="n">loader_targets</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
+    <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+    <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Top scorers for target </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">loader_top_scorer</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">scores</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_top_scorer</span><span class="p">:</span>
+        <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">());</span> <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
 </section>
 <section id="extra-evaluate-counterfactuals">
 <h2>Extra: evaluate counterfactuals<a class="headerlink" href="#extra-evaluate-counterfactuals" title="Permalink to this headline">#</a></h2>
 <p>TODO</p>
+<p>Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:</p>
+<img alt="_images/main_figure.png" src="_images/main_figure.png" />
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">masks</span> <span class="o">=</span> <span class="o">...</span>
 <span class="n">margins</span> <span class="o">=</span> <span class="o">...</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">spearmanr</span>
-<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">spearmanr</span>
 
-<span class="k">def</span> <span class="nf">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">val_inds</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">margins</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">masks_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1&#39;</span>
+    <span class="n">margins_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1&#39;</span>
+
+    <span class="n">masks_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;mask.npy&#39;</span><span class="p">)</span>
+    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">masks_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">masks_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># num masks, num train samples</span>
+    <span class="n">masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">masks_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+    <span class="n">margins_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;val_margins.npy&#39;</span><span class="p">)</span>
+    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">margins_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">margins_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># num , num val samples</span>
+    <span class="n">margins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">margins_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span>
+
+    <span class="n">val_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
     <span class="n">preds</span> <span class="o">=</span> <span class="n">masks</span> <span class="o">@</span> <span class="n">scores</span>
     <span class="n">rs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">val_inds</span><span class="p">)):</span>
         <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">spearmanr</span><span class="p">(</span><span class="n">preds</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">],</span> <span class="n">margins</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
         <span class="n">rs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">rs</span><span class="p">,</span> <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Correlation: </span><span class="si">{</span><span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1"> (avg p value </span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
-<span class="n">val_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
-<span class="n">rs</span> <span class="o">=</span> <span class="n">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">val_inds</span><span class="p">,</span> <span class="n">masks</span><span class="p">,</span> <span class="n">margins</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>
+<span class="n">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -550,7 +628,7 @@ consistency.</p>
 <li><a class="reference internal" href="#set-up-the-traker-class">Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
 <li><a class="reference internal" href="#compute-trak-features-for-train-data">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data</a></li>
 <li><a class="reference internal" href="#compute-trak-scores-for-targets">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for targets</a></li>
-<li><a class="reference internal" href="#visualize-the-attribution-scores">Visualize the attribution scores!</a></li>
+<li><a class="reference internal" href="#visualize-the-attributions">Visualize the attributions!</a></li>
 <li><a class="reference internal" href="#extra-evaluate-counterfactuals">Extra: evaluate counterfactuals</a></li>
 </ul>
 </li>
