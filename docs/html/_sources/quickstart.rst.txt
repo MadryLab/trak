@@ -326,7 +326,14 @@ Using a similar interface to the featurizing step:
 
     scores = traker.finalize_scores()
 
-TODO
+Here, :meth:`.start_scoring_checkpoint` has a similar function to
+:meth:`.load_checkpoint` used during featurizing; this time, instead of
+registering the checkpoint, it asserts that this :code:`model_id` has been
+featurized, loads the given model checkpoint, and initializes memmory-maps for
+the target gradient features. The :meth:`.score` method is conceptually close to
+:meth:`.featurize` - it processes the target batch and computes gradient
+features for each image inside. The :code:`num_samples` and :code:`inds`
+arguments work in the same way as in :meth:`.featurize`.
 
 .. note::
 
@@ -339,10 +346,15 @@ TODO
     issue on github and we might add an :code:`assert` about :code:`model_id`
     consistency.
 
+After this, we get our :code:`TRAK` scores as a :code:`torch.Tensor` from the
+:meth:`.finalize_scores` method. That's it! Now let's take a look at what we
+got.
+
+
 Visualize the attributions!
 ---------------------------
 
-TODO: add images once we have them
+TODO: add images below code snipeets once we have them; some text to explain what's going on
 
 .. code-block:: python
 
@@ -375,7 +387,7 @@ TODO: add images once we have them
 Extra: evaluate counterfactuals
 -------------------------------
 
-TODO
+TODO: clean up code snippet a bit; add histogram below code snippets once we have it; some text to explain what's going on
 
 Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:
 
