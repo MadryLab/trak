@@ -15,10 +15,10 @@ class AbstractSaver(ABC):
     Implementations of Saver class must implement getters and setters for TRAK
     features and scores, as well as intermediate values like gradients and
     "out-to-loss-gradient".
-
+    
     The Saver class also handles the recording of metadata associated with each
     TRAK run. For example, hyperparameters like "JL dimension" -- the dimension
-    used for the dimensionality reduction step of TRAk (Johnson-Lindenstrauss
+    used for the dimensionality reduction step of TRAK (Johnson-Lindenstrauss
     projection).
     """
     @abstractmethod
@@ -99,7 +99,9 @@ class AbstractSaver(ABC):
         """ Create metadata for a new model ID (checkpoint).
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int):
+                a unique ID for a checkpoint
+
         """
         ...
 
@@ -109,7 +111,9 @@ class AbstractSaver(ABC):
         to a given model ID
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int):
+                a unique ID for a checkpoint
+
         """
         ...
 
@@ -119,7 +123,9 @@ class AbstractSaver(ABC):
         given model ID (checkpoint).
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int):
+                a unique ID for a checkpoint
+
         """
         ...
 
@@ -132,8 +138,11 @@ class AbstractSaver(ABC):
         features (gradients)
 
         Args:
-            model_id (int): a unique ID for a checkpoint
-            num_targets (int): number of target samples that will be scored
+            model_id (int):
+                a unique ID for a checkpoint
+            num_targets (int):
+                number of target samples that will be scored
+
         """
         ...
 
@@ -142,9 +151,12 @@ class AbstractSaver(ABC):
         """ Delete the intermediate values (gradients) for a given model id
 
         Args:
-            model_id (int): a unique ID for a checkpoint
-            target (bool): if True, delete the gradients of the target samples,
-                otherwise delete the train set gradients.
+            model_id (int):
+                a unique ID for a checkpoint
+            target (bool):
+                if True, delete the gradients of the target samples, otherwise
+                delete the train set gradients.
+
         """
         ...
 
@@ -153,7 +165,9 @@ class AbstractSaver(ABC):
         """ Reset the count for how many targets we are scoring
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int):
+                a unique ID for a checkpoint
+
         """
         ...
 
@@ -185,11 +199,13 @@ class MmapSaver(AbstractSaver):
         3) if not, it creates a metadata file for it and initalizes store mmaps
 
         Args:
-            model_id (int): a unique ID for a checkpoint
+            model_id (int):
+                a unique ID for a checkpoint
 
         Raises:
-            ModelIDException: raised if the model ID to be registered already
-            exists
+            ModelIDException:
+                raised if the model ID to be registered already exists
+
         """
         self.current_model_id = model_id
 
@@ -224,8 +240,11 @@ class MmapSaver(AbstractSaver):
         intermediate values.
 
         Args:
-            model_id (int): a unique ID for a checkpoint
-            mode (str, optional): Defaults to 'r+'.
+            model_id (int):
+                a unique ID for a checkpoint
+            mode (str, optional):
+                Defaults to 'r+'.
+
         """
         self.current_model_id = model_id
         prefix = self.save_dir.joinpath(str(model_id))
@@ -253,11 +272,15 @@ class MmapSaver(AbstractSaver):
                           num_targets: int,
                           mode: Optional[str] = 'r+',
                           ) -> None:
-        """_summary_
+        """ This method uses numpy memmaps for serializing the TRAK intermediate
+        values for targets.
 
         Args:
-            model_id (int): _description_
-            num_targets (int): _description_
+            model_id (int):
+                a unique ID for a checkpoint
+            num_targets (int):
+                number of target samples that will be scored
+
         """
         self.num_targets = num_targets
         self.current_model_id = model_id

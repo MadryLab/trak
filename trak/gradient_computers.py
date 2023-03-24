@@ -16,17 +16,20 @@ class AbstractGradientComputer(ABC):
     Implementations of the GradientComputer class should allow for per-sample
     gradients.
     This is behavior is enabled with three methods:
-    - the `load_model_params` method, well, loads model parameters. It can be as
-      simple as a self.model.load_state_dict(..)
-    - the `compute_per_sample_grad` method computes per-sample gradients of the
-      chosen model output function with respect to the model's parameters.
-    - the `compute_loss_grad` method computes the gradients of the loss function
-       with respect to the model output (which should be a scalar) for every
-       sample.
 
-    The class attribute `is_functional` is used to determine what implementation
-    of ModelOutput to use, i.e. whether it should use `functorch`'s functional
-    models.
+    - the :meth:`.load_model_params` method, well, loads model parameters. It can
+      be as simple as a :code:`self.model.load_state_dict(..)`
+
+    - the :meth:`.compute_per_sample_grad` method computes per-sample gradients
+      of the chosen model output function with respect to the model's parameters.
+
+    - the :meth:`.compute_loss_grad` method computes the gradients of the loss
+      function with respect to the model output (which should be a scalar) for
+      every sample.
+
+    The class attribute :code:`is_functional` is used to determine what
+    implementation of ModelOutput to use, i.e. whether it should use
+    :code:`functorch`'s functional models.
     """
     is_functional = True
 
@@ -76,7 +79,9 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         for more details on `functorch`'s functional models.
 
         Args:
-            model (torch.nn.Module): model to load
+            model (torch.nn.Module):
+                model to load
+
         """
         self.func_model, self.func_weights, self.func_buffers = make_functional_with_buffers(model)
         self.params_dict = get_params_dict(model)
@@ -85,19 +90,24 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                                 batch: Iterable[Tensor],
                                 batch_size: Optional[int] = None,
                                 ) -> Tensor:
-        """ Uses functorch's vmap (see
+        """ Uses functorch's :code:`vmap` (see
         https://pytorch.org/functorch/stable/generated/functorch.vmap.html#functorch.vmap
         for more details) to vectorize the computations of per-sample gradients.
 
-        Doesn't use `batch_size`; only added to follow the abstract method signature.
+        Doesn't use :code:`batch_size`; only added to follow the abstract method
+        signature.
 
         Args:
-            batch (Iterable[Tensor]): batch of data
-            batch_size (int, optional): Defaults to None.
+            batch (Iterable[Tensor]):
+                batch of data
+            batch_size (int, optional):
+                Defaults to None.
 
         Returns:
-            Tensor: gradients of the model output function of each sample in the batch
-                with respect to the model's parameters.
+            Tensor:
+                gradients of the model output function of each sample in the
+                batch with respect to the model's parameters.
+
         """
         # taking the gradient wrt weights (second argument of get_output, hence argnums=1)
         grads_loss = grad(self.modelout_fn.get_output, has_aux=False, argnums=1)
@@ -110,19 +120,28 @@ class FunctionalGradientComputer(AbstractGradientComputer):
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
+
         .. math::
-            \\partial \\ell / \\partial \\text{model output}
+
+            \\partial \\ell / \\partial \\text{(model output)}
 
         Note: For all applications we considered, we analytically derived the
         out-to-loss gradient, thus avoiding the need to do any backward passes
         (let alone per-sample grads). If for your application this is not feasible,
         you'll need to subclass this and modify this method to have a structure
-        similar to the one of `self.get_output`, i.e. something like:
-        ```
-        grad_out_to_loss = grad(self.model_out_to_loss_grad, ...)
-        grads = vmap(grad_out_to_loss, ...)
-        ...
-        ```
+        similar to the one of :meth:`FunctionalGradientComputer:.get_output`,
+        i.e. something like:
+
+        .. code-block:: python
+
+            grad_out_to_loss = grad(self.model_out_to_loss_grad, ...)
+            grads = vmap(grad_out_to_loss, ...)
+            ...
+
+        Args:
+            batch (Iterable[Tensor]):
+                batch of data
+
         """
         return self.modelout_fn.get_out_to_loss_grad(self.func_model,
                                                      self.func_weights,
@@ -150,9 +169,21 @@ class IterativeGradientComputer(AbstractGradientComputer):
                                 ) -> Tensor:
         """ Computes per-sample gradients of the model output function This
         method does not leverage vectorization (and is hence much slower than
-        its equivalent in `FunctionalGradientComputer`). We recommend that
-        you use this only if `functorch` is not available to you, e.g. you have
-        a (very) old version of pytorch.
+        its equivalent in :class:`.FunctionalGradientComputer`). We recommend
+        that you use this only if :code:`functorch` is not available to you,
+        e.g. you have a (very) old version of pytorch.
+
+        Args:
+            batch (Iterable[Tensor]):
+                batch of data
+            batch_size (int, optional):
+                Defaults to None.
+
+        Returns:
+            Tensor:
+                gradients of the model output function of each sample in the
+                batch with respect to the model's parameters.
+
         """
         grads = ch.zeros(batch_size, self.grad_dim).to(batch[0].device)
 
@@ -165,21 +196,28 @@ class IterativeGradientComputer(AbstractGradientComputer):
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
+
         .. math::
-            \\partial \\ell / \\partial \\text{model output}
+
+            \\partial \\ell / \\partial \\text{(model output)}
 
         Note: For all applications we considered, we analytically derived the
         out-to-loss gradient, thus avoiding the need to do any backward passes
         (let alone per-sample grads). If for your application this is not feasible,
         you'll need to subclass this and modify this method to have a structure
-        similar to the one of `self.get_output`, i.e. something like:
+        similar to the one of :meth:`.IterativeGradientComputer.get_output`,
+        i.e. something like:
 
-        ```
-        out_to_loss = self.model_out_to_loss(...)
-        for ind in range(batch_size):
-            grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)
-        ...
-        ```
+        .. code-block:: python
+
+            out_to_loss = self.model_out_to_loss(...)
+            for ind in range(batch_size):
+                grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)
+            ...
+
+        Args:
+            batch (Iterable[Tensor]):
+                batch of data
 
         """
         return self.modelout_fn.get_out_to_loss_grad(self.model, batch)

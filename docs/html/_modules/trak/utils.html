@@ -202,7 +202,7 @@
 <div class="viewcode-block" id="parameters_to_vector"><a class="viewcode-back" href="../../trak.html#trak.utils.parameters_to_vector">[docs]</a><span class="k">def</span> <span class="nf">parameters_to_vector</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Same as https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html</span>
-<span class="sd">    but with `reshape` instead of `view` to avoid a pesky error.</span>
+<span class="sd">    but with :code:`reshape` instead of :code:`view` to avoid a pesky error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vec</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
@@ -227,10 +227,10 @@
 
 <div class="viewcode-block" id="vectorize_and_ignore_buffers"><a class="viewcode-back" href="../../trak.html#trak.utils.vectorize_and_ignore_buffers">[docs]</a><span class="k">def</span> <span class="nf">vectorize_and_ignore_buffers</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">params_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    gradients are given as a tuple (grad_w0, grad_w1, ... grad_wp)</span>
-<span class="sd">    where p is the number of weight matrices. each grad_wi has shape</span>
-<span class="sd">    [batch_size, ...]</span>
-<span class="sd">    this f-n flattens g to have shape [batch_size, num_params]</span>
+<span class="sd">    gradients are given as a tuple :code:`(grad_w0, grad_w1, ... grad_wp)` where</span>
+<span class="sd">    :code:`p` is the number of weight matrices. each :code:`grad_wi` has shape</span>
+<span class="sd">    :code:`[batch_size, ...]` this function flattens :code:`g` to have shape</span>
+<span class="sd">    :code:`[batch_size, num_params]`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>

@@ -6,7 +6,7 @@ ch = torch
 def parameters_to_vector(parameters) -> Tensor:
     """
     Same as https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html
-    but with `reshape` instead of `view` to avoid a pesky error.
+    but with :code:`reshape` instead of :code:`view` to avoid a pesky error.
     """
     vec = []
     for param in parameters:
@@ -31,10 +31,10 @@ def is_not_buffer(ind, params_dict) -> bool:
 
 def vectorize_and_ignore_buffers(g, params_dict=None) -> Tensor:
     """
-    gradients are given as a tuple (grad_w0, grad_w1, ... grad_wp)
-    where p is the number of weight matrices. each grad_wi has shape
-    [batch_size, ...]
-    this f-n flattens g to have shape [batch_size, num_params]
+    gradients are given as a tuple :code:`(grad_w0, grad_w1, ... grad_wp)` where
+    :code:`p` is the number of weight matrices. each :code:`grad_wi` has shape
+    :code:`[batch_size, ...]` this function flattens :code:`g` to have shape
+    :code:`[batch_size, num_params]`.
     """
     batch_size = len(g[0])
     out = []

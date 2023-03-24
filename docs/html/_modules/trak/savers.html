@@ -211,10 +211,10 @@
 <span class="sd">    Implementations of Saver class must implement getters and setters for TRAK</span>
 <span class="sd">    features and scores, as well as intermediate values like gradients and</span>
 <span class="sd">    &quot;out-to-loss-gradient&quot;.</span>
-
+<span class="sd">    </span>
 <span class="sd">    The Saver class also handles the recording of metadata associated with each</span>
 <span class="sd">    TRAK run. For example, hyperparameters like &quot;JL dimension&quot; -- the dimension</span>
-<span class="sd">    used for the dimensionality reduction step of TRAk (Johnson-Lindenstrauss</span>
+<span class="sd">    used for the dimensionality reduction step of TRAK (Johnson-Lindenstrauss</span>
 <span class="sd">    projection).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
@@ -295,7 +295,9 @@
         <span class="sd">&quot;&quot;&quot; Create metadata for a new model ID (checkpoint).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -305,7 +307,9 @@
 <span class="sd">        to a given model ID</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -315,7 +319,9 @@
 <span class="sd">        given model ID (checkpoint).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -328,8 +334,11 @@
 <span class="sd">        features (gradients)</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            num_targets (int): number of target samples that will be scored</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            num_targets (int):</span>
+<span class="sd">                number of target samples that will be scored</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -338,9 +347,12 @@
         <span class="sd">&quot;&quot;&quot; Delete the intermediate values (gradients) for a given model id</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            target (bool): if True, delete the gradients of the target samples,</span>
-<span class="sd">                otherwise delete the train set gradients.</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            target (bool):</span>
+<span class="sd">                if True, delete the gradients of the target samples, otherwise</span>
+<span class="sd">                delete the train set gradients.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -349,7 +361,9 @@
         <span class="sd">&quot;&quot;&quot; Reset the count for how many targets we are scoring</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div></div>
 
@@ -381,11 +395,13 @@
 <span class="sd">        3) if not, it creates a metadata file for it and initalizes store mmaps</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ModelIDException: raised if the model ID to be registered already</span>
-<span class="sd">            exists</span>
+<span class="sd">            ModelIDException:</span>
+<span class="sd">                raised if the model ID to be registered already exists</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>
 
@@ -420,8 +436,11 @@
 <span class="sd">        intermediate values.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            mode (str, optional): Defaults to &#39;r+&#39;.</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            mode (str, optional):</span>
+<span class="sd">                Defaults to &#39;r+&#39;.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">model_id</span><span class="p">))</span>
@@ -449,11 +468,15 @@
                           <span class="n">num_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                           <span class="n">mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;r+&#39;</span><span class="p">,</span>
                           <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;_summary_</span>
+        <span class="sd">&quot;&quot;&quot; This method uses numpy memmaps for serializing the TRAK intermediate</span>
+<span class="sd">        values for targets.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): _description_</span>
-<span class="sd">            num_targets (int): _description_</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            num_targets (int):</span>
+<span class="sd">                number of target samples that will be scored</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_targets</span> <span class="o">=</span> <span class="n">num_targets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>

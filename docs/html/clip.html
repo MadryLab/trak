@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -189,7 +189,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -197,7 +197,15 @@
         <article role="main">
           <section id="add-a-task-to-traker-subclassing-modeloutput-clip">
 <span id="clip-model-output"></span><h1>Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP<a class="headerlink" href="#add-a-task-to-traker-subclassing-modeloutput-clip" title="Permalink to this headline">#</a></h1>
-<p>Coming soon!</p>
+<section id="model-output-funcitons">
+<h2>Model output funcitons<a class="headerlink" href="#model-output-funcitons" title="Permalink to this headline">#</a></h2>
+<p>Computing <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> attribution scores hinges on defining a model output
+function to guide the scoring process. We derive and discuss model output
+functions for multiple tasks (binary and multiclass classification, CLIP loss,
+various NLP tasks, etc) in detail in <a class="reference external" href="link:TODO">our paper</a>. In short, for a
+given train set <span class="math notranslate nohighlight">\(S\)</span>, target example <span class="math notranslate nohighlight">\(z\)</span> and model parameters
+<span class="math notranslate nohighlight">\(\theta\)</span>, we define</p>
+</section>
 </section>
 
         </article>
@@ -243,8 +251,27 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a><ul>
+<li><a class="reference internal" href="#model-output-funcitons">Model output funcitons</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -254,5 +281,6 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

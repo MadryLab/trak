@@ -17,6 +17,48 @@ ch = torch
 
 
 class TRAKer():
+    """ The main front-facing class for TRAK. See the `README
+    <https://github.com/MadryLab/trak>`_ and `docs
+    <https://trak.csail.mit.edu/html/index.html>`_ for example usage.
+
+    Args:
+        model (torch.nn.Module):
+            model to use for TRAK
+        task (Union[AbstractModelOutput, str]):
+            Type of model that TRAK will be ran on. Accepts either one of
+            the following strings:
+            - :code:`image_classification`
+            - :code:`clip`
+            - :code:`bert_...` TODO: @Sam
+
+            or an implementation of :class:`.AbstractModelOutput`.
+        train_set_size (int):
+            Size of the train set that TRAK is featurizing
+        save_dir (str, optional):
+            Directory to save final TRAK scores, intermediate results, and
+            metadata. Defaults to :code:'./trak_results'.
+        load_from_save_dir (bool, optional):
+            If True, the :class`.TRAKer` instance will attempt to load
+            existing metadata from save_dir. May lead to I/O issues if
+            multiple TRAKer instances ran in parallel have this flag set to
+            True. See the SLURM tutorial for more details.
+        device (Union[str, torch.device], optional):
+            torch device on which to do computations. Defaults to 'cuda'.
+        gradient_computer (AbstractGradientComputer, optional):
+            Class to use to get per-example gradients. See
+            :class:`.AbstractGradientComputer` for more details. Defaults to
+            :class:`.FunctionalGradientComputer`.
+        projector (Optional[AbstractProjector], optional):
+            Either set :code:`proj_dim` and a :class:`.CudaProjector`
+            Rademacher projector will be used or give a custom subclass of
+            :class:`.AbstractProjector` class and leave :code:`proj_dim` as
+            None. Defaults to None.
+        proj_dim (int, optional):
+            Dimension of the projected TRAK features. See Section 4.3 of
+            (TODO: link)[our paper] for more details. Defaults to 2048.
+
+
+    """
     def __init__(self,
                  model: torch.nn.Module,
                  task: Union[AbstractModelOutput, str],
@@ -28,37 +70,43 @@ class TRAKer():
                  projector: Optional[AbstractProjector] = None,
                  proj_dim: int = 2048,
                  ) -> None:
-        """ The main front-facing class for TRAK. See the README and docs for
-        example usage.
+        """
 
         Args:
-            model (torch.nn.Module): model to use for TRAK
-            task (Union[AbstractModelOutput, str]): Type of model that TRAK will
-                be ran on. Accepts either one of the following strings:
-                - :code:`image_classification`
-                - :code:`clip`
-                - :code:`bert_...` TODO: @Sam
-                or an implementation of :func:`AbstractModelOutput`.
-            train_set_size (int): Size of the train set that TRAK is featurizing
-            save_dir (str, optional): Directory to save final TRAK scores,
-                intermediate results, and metadata. Defaults to './trak_results'.
-            load_from_save_dir (bool, optional): If True, the TRAKer instance
-                will attempt to load existing metadata from save_dir. May lead
-                to I/O issues if multiple TRAKer instances ran in parallel have
-                this flag set to True. See the SLURM tutorial for more details.
-            device (Union[str, torch.device], optional): torch device on which
-                to do computations. Defaults to 'cuda'.
+            model (torch.nn.Module):
+                model to use for TRAK
+            task (Union[AbstractModelOutput, str]):
+                Type of model that TRAK will be ran on. Accepts either one of
+                the following strings:
+                    - :code:`image_classification`
+                    - :code:`clip`
+                    - :code:`bert_...` TODO: @Sam
+                or an implementation of :class:`.AbstractModelOutput`.
+            train_set_size (int):
+                Size of the train set that TRAK is featurizing
+            save_dir (str, optional):
+                Directory to save final TRAK scores, intermediate results, and
+                metadata. Defaults to :code:'./trak_results'.
+            load_from_save_dir (bool, optional):
+                If True, the :class`.TRAKer` instance will attempt to load
+                existing metadata from save_dir. May lead to I/O issues if
+                multiple TRAKer instances ran in parallel have this flag set to
+                True. See the SLURM tutorial for more details.
+            device (Union[str, torch.device], optional):
+                torch device on which to do computations. Defaults to 'cuda'.
             gradient_computer (AbstractGradientComputer, optional):
                 Class to use to get per-example gradients. See
-                :func:`AbstractGradientComputer` for more details. Defaults to
-                FunctionalGradientComputer.
-            projector (Optional[AbstractProjector], optional): Either set
-                :code:`proj_dim` and a :func:`CudaProjector` Rademacher
-                projector will be used or give a custom :code:`Projector` class
-                and leave :code:`proj_dim` to None. Defaults to None.
-            proj_dim (int, optional): Dimension of the projected TRAK features.
-                See Section 4.3 of (TODO: link)[our paper] for more details.
-                Defaults to 2048.
+                :class:`.AbstractGradientComputer` for more details. Defaults to
+                :class:`.FunctionalGradientComputer`.
+            projector (Optional[AbstractProjector], optional):
+                Either set :code:`proj_dim` and a :class:`.CudaProjector`
+                Rademacher projector will be used or give a custom subclass of
+                :class:`.AbstractProjector` class and leave :code:`proj_dim` as
+                None. Defaults to None.
+            proj_dim (int, optional):
+                Dimension of the projected TRAK features. See Section 4.3 of
+                (TODO: link)[our paper] for more details. Defaults to 2048.
+
         """
 
         self.model = model
@@ -95,7 +143,9 @@ class TRAKer():
         """ Initialize the projector for a traker class
 
         Args:
-            projector (AbstractProjector): JL projector
+            projector (AbstractProjector):
+                JL projector
+
         """
 
         self.projector = projector
@@ -117,12 +167,15 @@ class TRAKer():
         to store TRAK features for that checkpoint, tied to the model ID.
 
         Args:
-            checkpoint (Iterable[Tensor]): state_dict to load
-            model_id (int): a unique ID for a checkpoint
-            _allow_featurizing_already_registered (bool, optional): Only use if
-                you want to override the default behaviour that
+            checkpoint (Iterable[Tensor]):
+                state_dict to load
+            model_id (int):
+                a unique ID for a checkpoint
+            _allow_featurizing_already_registered (bool, optional):
+                Only use if you want to override the default behaviour that
                 :code:`featurize` is forbidden on already registered model IDs.
                 Defaults to None.
+
         """
         if self.saver.model_ids.get(model_id) is None:
             self.saver.register_model_id(model_id,
@@ -157,11 +210,13 @@ class TRAKer():
         the :func:`TRAKer`.
 
         Args:
-            batch (Iterable[Tensor]): input batch
-            inds (Optional[Iterable[int]], optional): Indices of the batch
-            samples in the train set. Defaults to None.
-            num_samples (Optional[int], optional): Number of samples in the
-            batch. Defaults to None.
+            batch (Iterable[Tensor]):
+                input batch
+            inds (Optional[Iterable[int]], optional):
+                Indices of the batch samples in the train set. Defaults to None.
+            num_samples (Optional[int], optional):
+                Number of samples in the batch. Defaults to None.
+
         """
         assert (inds is None) or (num_samples is None),\
             "Exactly one of num_samples and inds should be specified"
@@ -201,8 +256,9 @@ class TRAKer():
         Args:
             model_ids (Iterable[int], optional): A list of model IDs for which
                 features should be finalized. If None, features are finalized
-                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`
+                for all model IDs in the :code:`save_dir` of the :class:`.TRAKer`
                 class. Defaults to None.
+
         """
         if model_ids is None:
             model_ids = list(self.saver.model_ids.keys())
@@ -233,13 +289,17 @@ class TRAKer():
                                  model_id: int,
                                  num_targets: int,
                                  ) -> None:
-        """ This method prepares the internal store of the :func:`TRAKer` class
+        """ This method prepares the internal store of the :class:`.TRAKer` class
         to start computing scores for a set of targets.
 
         Args:
-            checkpoint (Iterable[Tensor]): model checkpoint (state dict)
-            model_id (int): a unique ID for a checkpoint
-            num_targets (int): number of targets to score
+            checkpoint (Iterable[Tensor]):
+                model checkpoint (state dict)
+            model_id (int):
+                a unique ID for a checkpoint
+            num_targets (int):
+                number of targets to score
+
         """
         self.saver.load_target_store(model_id, num_targets, mode='w+')
 
@@ -255,18 +315,20 @@ class TRAKer():
               ) -> None:
         """ This method computes the (intermediate per-checkpoint) TRAK scores
         for a batch of targets and stores them in the internal store of the
-        :func:`TRAKer` class.
+        :class:`.TRAKer` class.
 
         Either :code:`inds` or :code:`num_samples` must be specified. Using
         :code:`num_samples` will write sequentially into the internal store of
-        the :func:`TRAKer`.
+        the :class:`.TRAKer`.
 
         Args:
-            batch (Iterable[Tensor]): input batch
-            inds (Optional[Iterable[int]], optional): Indices of the batch
-            samples in the train set. Defaults to None.
-            num_samples (Optional[int], optional): Number of samples in the
-            batch. Defaults to None.
+            batch (Iterable[Tensor]):
+                input batch
+            inds (Optional[Iterable[int]], optional):
+                Indices of the batch samples in the train set. Defaults to None.
+            num_samples (Optional[int], optional):
+                Number of samples in the batch. Defaults to None.
+
         """
         assert (inds is None) or (num_samples is None),\
             "Exactly one of num_samples and inds should be specified"
@@ -300,20 +362,23 @@ class TRAKer():
         train samples, and model checkpoints (specified by model IDs).
 
         Args:
-            model_ids (Iterable[int], optional): A list of model IDs for which
+            model_ids (Iterable[int], optional):
+                A list of model IDs for which
                 scores should be finalized. If None, scores are computed
-                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`
+                for all model IDs in the :code:`save_dir` of the :class:`.TRAKer`
                 class. Defaults to None.
-            del_grads (bool, optional): If True, the target gradients
-                (intermediate results) are deleted from the internal store of the
-                :func:`TRAKer` class.  Defaults to True.
-            exp_name (str, optional): Used to name the scores :code:`.npy`
-                array produced by this method in the :code:`save_dir` of the
-                :func:`TRAKer` class. If None, a random uuid is generated.
-                Defaults to None.
+            del_grads (bool, optional):
+                If True, the target gradients (intermediate results) are deleted
+                from the internal store of the :class:`.TRAKer` class.  Defaults
+                to True.
+            exp_name (str, optional):
+                Used to name the scores :code:`.npy` array produced by this
+                method in the :code:`save_dir` of the :class:`.TRAKer` class. If
+                None, a random uuid is generated.  Defaults to None.
 
         Returns:
             Tensor: TRAK scores
+
         """
         # reset counter for inds used for scoring
         self._last_ind_target = 0

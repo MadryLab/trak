@@ -1,16 +1,19 @@
 """
 Here we provide an abstract "model output" class AbstractModelOutput, together with a number
 of subclasses for particular applications (vision, language, etc):
-- :code:`ImageClassificationModelOutput`
-- :code:`IterImageClassificationModelOutput`
-- :code:`CLIPModelOutput`
+
+- :class:`.ImageClassificationModelOutput`
+- :class:`.IterImageClassificationModelOutput`
+- :class:`.CLIPModelOutput`
 
 These classes implement methods that transform input batches to the desired model output
 (e.g. logits, loss, etc).
 See Sections 2 & 3 of (TODO: link)[our paper] for more details on what model output functions are
 in the context of TRAK and how to use & design them.
 
-See [TODO: docs link] for examples on how to subclass AbstractModelOutput for a task of your choice.
+See, e.g. `this tutorial <https://trak.csail.mit.edu/html/clip.html>`_ for an
+example on how to subclass :code:`AbstractModelOutput` for a task of your
+choice.
 """
 from abc import ABC, abstractmethod
 from typing import Iterable
@@ -20,19 +23,21 @@ import torch as ch
 
 
 class AbstractModelOutput(ABC):
-    """ See [TODO: docs link] for examples on how to subclass
-    :code:`AbstractModelOutput` for a task of your choice.
+    """ See, e.g. `this tutorial <https://trak.csail.mit.edu/html/clip.html>`_
+    for an example on how to subclass :code:`AbstractModelOutput` for a task of
+    your choice.
 
     Subclasses must implement:
+
     - a :code:`get_output` method that takes in a batch of inputs and model
-    weights to produce outputs that TRAK will be trained to predict. In the
-    notation of the paper, :code:`get_output` should return :math:`f(z,\\theta)`
+      weights to produce outputs that TRAK will be trained to predict. In the
+      notation of the paper, :code:`get_output` should return :math:`f(z,\\theta)`
 
     - a :code:`get_out_to_loss_grad` method that takes in a batch of inputs and
-    model weights to produce the gradient of the function that transforms the
-    model outputs above into the loss with respect to the batch. In the notation
-    of the paper, :code:`get_out_to_loss_grad` returns (entries along the
-    diagonal of) :math:`Q`.
+      model weights to produce the gradient of the function that transforms the
+      model outputs above into the loss with respect to the batch. In the
+      notation of the paper, :code:`get_out_to_loss_grad` returns (entries along
+      the diagonal of) :math:`Q`.
 
     """
     @abstractmethod
@@ -48,11 +53,14 @@ class AbstractModelOutput(ABC):
         design them.
 
         Args:
-            model (torch.nn.Module): model
-            batch (Iterable[Tensor]): input batch
+            model (torch.nn.Module):
+                model
+            batch (Iterable[Tensor]):
+                input batch
 
         Returns:
-            Tensor: model output function
+            Tensor:
+                model output function
         """
         ...
 
@@ -76,8 +84,8 @@ class AbstractModelOutput(ABC):
 
 class ImageClassificationModelOutput(AbstractModelOutput):
     """
-    Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]
-    for more details.
+    Margin for (multiclass) image classification. See Section 3.3 of (TODO:
+    link)[our paper] for more details.
     """
 
     def __init__(self, temperature: float = 1.) -> None:
@@ -99,7 +107,9 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         """ For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
         let :math:`p(z, \\theta)` be the softmax probability of the correct class.
         This method implements the model output function
+
         .. math::
+
             \\log(\\frac{p(z, \\theta)}{1 - p(z, \\theta)}).
 
         It uses functorch's functional models to make the per-sample gradient computations faster.
@@ -114,15 +124,21 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         PR with a fix.
 
         Args:
-            func_model (func): functorch functional model
-            weights (Iterable[Tensor]): functorch model weights
-            buffers (Iterable[Tensor]): functorch model buffers
-            image (Tensor): input image, should not have batch dimension
-            label (Tensor): input label, should not have batch dimension
+            func_model (func):
+                functorch functional model
+            weights (Iterable[Tensor]):
+                functorch model weights
+            buffers (Iterable[Tensor]):
+                functorch model buffers
+            image (Tensor):
+                input image, should not have batch dimension
+            label (Tensor):
+                input label, should not have batch dimension
 
         Returns:
-            Tensor: model output for the given image-label pair :math:`z` and
-            weights & buffers :math:`\\theta`.
+            Tensor:
+                model output for the given image-label pair :math:`z` and
+                weights & buffers :math:`\\theta`.
         """
         logits = func_model(weights, buffers, image.unsqueeze(0))
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
@@ -144,11 +160,14 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         that uses different parts of the input batch.
 
         Args:
-            model (Module): model
-            batch (Iterable[Tensor]): input batch
+            model (Module):
+                model
+            batch (Iterable[Tensor]):
+                input batch
 
         Returns:
-            Tensor: model output (not to be confused with the model output function)
+            Tensor:
+                model output (not to be confused with the model output function)
         """
         images, _ = batch
         return model(images)
@@ -157,13 +176,18 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         """ Computes the (reweighting term Q in the paper)
 
         Args:
-            func_model (func): functorch functional model
-            weights (Iterable[Tensor]): functorch model weights
-            buffers (Iterable[Tensor]): functorch model buffers
-            batch (Iterable[Tensor]): input batch
+            func_model (func):
+                functorch functional model
+            weights (Iterable[Tensor]):
+                functorch model weights
+            buffers (Iterable[Tensor]):
+                functorch model buffers
+            batch (Iterable[Tensor]):
+                input batch
 
         Returns:
-            Tensor: out-to-loss (reweighting term) for the input batch
+            Tensor:
+                out-to-loss (reweighting term) for the input batch
         """
         images, labels = batch
         logits = func_model(weights, buffers, images)
@@ -175,15 +199,16 @@ class ImageClassificationModelOutput(AbstractModelOutput):
 
 class IterImageClassificationModelOutput(AbstractModelOutput):
     """
-    Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]
-    for more details.
+    Margin for (multiclass) image classification. See Section 3.3 of (TODO:
+    link)[our paper] for more details.
     """
 
     def __init__(self, temperature=1.) -> None:
         """
         Args:
-            temperature (float, optional): Temperature to use inside the
-            softmax for the out-to-loss function. Defaults to 1.
+            temperature (float, optional):
+                Temperature to use inside the softmax for the out-to-loss
+                function. Defaults to 1.
         """
         super().__init__()
         self.softmax = ch.nn.Softmax(-1)
@@ -196,17 +221,23 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
         """ For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
         let :math:`p(z, \\theta)` be the softmax probability of the correct class.
         This method implements the model output function
+
         .. math::
+
             \\log(\\frac{p(z, \\theta)}{1 - p(z, \\theta)}).
 
         Args:
-            model (torch.nn.Module): model
-            image (Tensor): input images
-            label (Tensor): input labels
+            model (torch.nn.Module):
+                model
+            images (Tensor):
+                input images
+            labels (Tensor):
+                input labels
 
         Returns:
-            Tensor: model output for the given image-label pair :math:`z` and
-            model parameters :math:`\theta`.
+            Tensor:
+                model output for the given image-label pair :math:`z` and model
+                parameters :math:`\\theta`.
         """
         logits = model(images)
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
@@ -224,11 +255,14 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
         """ Computes the (reweighting term Q in the paper)
 
         Args:
-            model (torch.nn.Module): model
-            batch (Iterable[Tensor]): input batch
+            model (torch.nn.Module)
+                model
+            batch (Iterable[Tensor]):
+                input batch
 
         Returns:
-            Tensor: out-to-loss (reweighting term) for the input batch
+            Tensor:
+                out-to-loss (reweighting term) for the input batch
         """
         images, labels = batch
         logits = model(images)
@@ -254,13 +288,17 @@ class CLIPModelOutput(AbstractModelOutput):
 
     def __init__(self, temperature: float = None, simulated_batch_size: int = 300) -> None:
         """
+
         Args:
-            temperature (float, optional): Temperature to use inside the
-                softmax for the out-to-loss function. If None, CLIP's
-                :code:`logit_scale` is used.  Defaults to None
-            simulated_batch_size (int, optional): Size of the "simulated" batch
-                size for the model output function. See Section 5.1 of the TRAK
-                paper for more details. Defaults to 300.
+            temperature (float, optional):
+                Temperature to use inside the softmax for the out-to-loss
+                function. If None, CLIP's :code:`logit_scale` is used.  Defaults
+                to None
+            simulated_batch_size (int, optional):
+                Size of the "simulated" batch size for the model output
+                function. See Section 5.1 of the TRAK paper for more details.
+                Defaults to 300.
+
         """
         super().__init__()
         self.softmax = ch.nn.Softmax(-1)
@@ -281,15 +319,23 @@ class CLIPModelOutput(AbstractModelOutput):
         attributes :code:`image_embeddings` and :code:`text_embeddings`.
 
         Args:
-            model (torch.nn.Module): model
-            loader (): data loader
-            batch_size (int): input batch size
-            size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.
-            embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.
-            preprocess_fn_img (func, optional): Transforms to apply to images
-            from the loader before forward pass. Defaults to None.
-            preprocess_fn_txt (func, optional): Transforms to apply to images
-            from the loader before forward pass. Defaults to None.
+            model (torch.nn.Module):
+                model
+            loader ():
+                data loader
+            batch_size (int):
+                input batch size
+            size (int, optional):
+                Maximum number of embeddings to compute. Defaults to 50_000.
+            embedding_dim (int, optional):
+                Dimension of CLIP embedding. Defaults to 1024.
+            preprocess_fn_img (func, optional):
+                Transforms to apply to images from the loader before forward
+                pass. Defaults to None.
+            preprocess_fn_txt (func, optional):
+                Transforms to apply to images from the loader before forward
+                pass. Defaults to None.
+
         """
         img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
             ch.zeros(size, embedding_dim).cuda()
@@ -320,12 +366,14 @@ class CLIPModelOutput(AbstractModelOutput):
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor) -> Tensor:
-        """ For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
-        let :math:`\\phi(x, \\theta)` be the CLIP image embedding and
-        :math:`\\psi(y, \\theta)` be the CLIP text embedding. Last, let
-        :math:`B` be a (simulated) batch. This method implements the model
-        output function
+        """ For a given input :math:`z=(x, y)` and model parameters
+        :math:`\\theta`, let :math:`\\phi(x, \\theta)` be the CLIP image
+        embedding and :math:`\\psi(y, \\theta)` be the CLIP text embedding.
+        Last, let :math:`B` be a (simulated) batch. This method implements the
+        model output function
+
         .. math::
+
             -\\log(\\frac{\\phi(x)\\cdot \\psi(y)}{\\sum_{(x', y')\\in B}
             \\phi(x)\\cdot \\psi(y')})
             -\\log(\\frac{\\phi(x)\\cdot \\psi(y)}{\\sum_{(x', y')\\in B}
@@ -344,15 +392,21 @@ class CLIPModelOutput(AbstractModelOutput):
         PR with a fix.
 
         Args:
-            func_model (func): functorch functional model
-            weights (Iterable[Tensor]): functorch model weights
-            buffers (Iterable[Tensor]): functorch model buffers
-            image (Tensor): input image, should not have batch dimension
-            label (Tensor): input label, should not have batch dimension
+            func_model (func):
+                functorch functional model
+            weights (Iterable[Tensor]):
+                functorch model weights
+            buffers (Iterable[Tensor]):
+                functorch model buffers
+            image (Tensor):
+                input image, should not have batch dimension
+            label (Tensor):
+                input label, should not have batch dimension
 
         Returns:
-            Tensor: model output for the given image-label pair :math:`z` and
-            weights & buffers :math:`\\theta`.
+            Tensor:
+                model output for the given image-label pair :math:`z` and
+                weights & buffers :math:`\\theta`.
         """
         all_im_embs = CLIPModelOutput.image_embeddings
         all_txt_embs = CLIPModelOutput.text_embeddings
@@ -379,13 +433,19 @@ class CLIPModelOutput(AbstractModelOutput):
         """ Computes the (reweighting term Q in the paper)
 
         Args:
-            func_model (func): functorch functional model
-            weights (Iterable[Tensor]): functorch model weights
-            buffers (Iterable[Tensor]): functorch model buffers
-            batch (Iterable[Tensor]): input batch
+            func_model (func):
+                functorch functional model
+            weights (Iterable[Tensor]):
+                functorch model weights
+            buffers (Iterable[Tensor]):
+                functorch model buffers
+            batch (Iterable[Tensor]):
+                input batch
 
         Returns:
-            Tensor: out-to-loss (reweighting term) for the input batch
+            Tensor:
+                out-to-loss (reweighting term) for the input batch
+
         """
         image_embeddings, text_embeddings, temp = func_model(weights, buffers, *batch)
         if self.temperature is None:
@@ -396,14 +456,14 @@ class CLIPModelOutput(AbstractModelOutput):
 
 
 class TextClassificationModelOutput(AbstractModelOutput):
-    """
-    Margin for text classification models. This assumes that the model takes in
-    input_ids, token_type_ids, and attention_mask.
+    """ Margin for text classification models. This assumes that the model takes
+    in input_ids, token_type_ids, and attention_mask.
+
     .. math::
-        \text{logit}[\text{correct}] - \log\left(\sum_{i \neq \text{correct}}
-        \exp(\text{logit}[i])\right)
-    Version of margin proposed in 'Understanding Influence Functions
-    and Datamodels via Harmonic Analysis'
+
+        \\text{logit}[\\text{correct}] - \\log\\left(\\sum_{i \\neq
+        \\text{correct}} \\exp(\\text{logit}[i])\\right)
+
     """
 
     def __init__(self, temperature=1.) -> None:
