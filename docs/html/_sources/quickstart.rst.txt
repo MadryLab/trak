@@ -5,8 +5,8 @@ Quickstart --- get :code:`TRAK` scores for :code:`CIFAR`
 
 In this tutorial, we'll show you how to use the :code:`TRAK` API to compute data
 attribution scores for `ResNet-9 <https://github.com/wbaek/torchskeleton>`_ on
-:code:`CIFAR-2` [1]_. All computations take roughly five minutes in a total on a
-single A100 GPU (excluding time to get the trained checkpoints [2]_).
+:code:`CIFAR-2` [1]_. All computations take roughly fifteen minutes in a total
+on a single A100 GPU.
 Overall, this tutorial will show you how to:
 
 * :ref:`Save model checkpoints`
@@ -17,7 +17,7 @@ Overall, this tutorial will show you how to:
 
 * :ref:`Compute :code:\`TRAK\` scores for targets`
 
-* :ref:`Visualize the attribution scores!`
+* :ref:`Visualize the attributions!`
 
 * :ref:`Extra: evaluate counterfactuals`
 
@@ -25,7 +25,6 @@ Here we'll provide tips and tricks for you to quickly get :code:`TRAK` up and
 running; for more details, check the :ref:`API reference`.
 
 .. [1] A subset of the `CIFAR-10 <https://en.wikipedia.org/wiki/CIFAR-10>`_ dataset containing only the "cat" and "dog" classes
-.. [2] Using `ffcv <ffcv.io/>`_, we trained each of the 20 models for only ~30 seconds on one A100 GPU!
 
 Let's get started!
 
@@ -52,6 +51,16 @@ will be fine for the following steps).
         RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
     from ffcv.transforms.common import Squeeze
 
+    import os
+    import wget
+    from tqdm import tqdm
+    import numpy as np
+    import torch
+    from torch.cuda.amp import GradScaler, autocast
+    from torch.nn import CrossEntropyLoss, Conv2d, BatchNorm2d
+    from torch.optim import SGD, lr_scheduler
+    import torchvision
+
     BETONS = {
             'train': "https://www.dropbox.com/s/zn7jsp2rl09e0fh/train.beton?dl=1",
             'val': "https://www.dropbox.com/s/4p73milxxafv4cm/val.beton?dl=1",
@@ -70,7 +79,7 @@ will be fine for the following steps).
                     indices=None):
             label_pipeline: List[Operation] = [IntDecoder(),
                                             ToTensor(),
-                                            ToDevice(ch.device('cuda:0')),
+                                            ToDevice(torch.device('cuda:0')),
                                             Squeeze()]
             image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
 
@@ -83,16 +92,16 @@ will be fine for the following steps).
 
             image_pipeline.extend([
                 ToTensor(),
-                ToDevice(ch.device('cuda:0'), non_blocking=True),
+                ToDevice(torch.device('cuda:0'), non_blocking=True),
                 ToTorchImage(),
-                Convert(ch.float32),
+                Convert(torch.float32),
                 torchvision.transforms.Normalize(STATS['mean'], STATS['std']),
             ])
-            
+
             beton_url = BETONS[split]
             beton_path = f'./{split}.beton'
             wget.download(beton_url, out=str(beton_path), bar=None)
-            
+
             return Loader(beton_path,
                         batch_size=batch_size,
                         num_workers=num_workers,
@@ -104,18 +113,18 @@ will be fine for the following steps).
 
 
     # Resnet9
-    class Mul(ch.nn.Module):
+    class Mul(torch.nn.Module):
         def __init__(self, weight):
             super(Mul, self).__init__()
             self.weight = weight
         def forward(self, x): return x * self.weight
 
-    
-    class Flatten(ch.nn.Module):
+
+    class Flatten(torch.nn.Module):
         def forward(self, x): return x.view(x.size(0), -1)
 
 
-    class Residual(ch.nn.Module):
+    class Residual(torch.nn.Module):
         def __init__(self, module):
             super(Residual, self).__init__()
             self.module = module
@@ -124,29 +133,59 @@ will be fine for the following steps).
 
     def construct_rn9(num_classes=2):
         def conv_bn(channels_in, channels_out, kernel_size=3, stride=1, padding=1, groups=1):
-            return ch.nn.Sequential(
-                    ch.nn.Conv2d(channels_in, channels_out, kernel_size=kernel_size,
+            return torch.nn.Sequential(
+                    torch.nn.Conv2d(channels_in, channels_out, kernel_size=kernel_size,
                                 stride=stride, padding=padding, groups=groups, bias=False),
-                    ch.nn.BatchNorm2d(channels_out),
-                    ch.nn.ReLU(inplace=True)
+                    torch.nn.BatchNorm2d(channels_out),
+                    torch.nn.ReLU(inplace=True)
             )
-        model = ch.nn.Sequential(
+        model = torch.nn.Sequential(
             conv_bn(3, 64, kernel_size=3, stride=1, padding=1),
             conv_bn(64, 128, kernel_size=5, stride=2, padding=2),
-            Residual(ch.nn.Sequential(conv_bn(128, 128), conv_bn(128, 128))),
+            Residual(torch.nn.Sequential(conv_bn(128, 128), conv_bn(128, 128))),
             conv_bn(128, 256, kernel_size=3, stride=1, padding=1),
-            ch.nn.MaxPool2d(2),
-            Residual(ch.nn.Sequential(conv_bn(256, 256), conv_bn(256, 256))),
+            torch.nn.MaxPool2d(2),
+            Residual(torch.nn.Sequential(conv_bn(256, 256), conv_bn(256, 256))),
             conv_bn(256, 128, kernel_size=3, stride=1, padding=0),
-            ch.nn.AdaptiveMaxPool2d((1, 1)),
+            torch.nn.AdaptiveMaxPool2d((1, 1)),
             Flatten(),
-            ch.nn.Linear(128, num_classes, bias=False),
+            torch.nn.Linear(128, num_classes, bias=False),
             Mul(0.2)
         )
         return model
 
-    model = construct_rn9().to(memory_format=ch.channels_last).cuda()
-    model = model.eval()
+    def train(model, loader, lr=0.4, epochs=100, momentum=0.9, weight_decay=5e-4, lr_peak_epoch=5, label_smoothing=0.0):
+        opt = SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+        iters_per_epoch = len(loader)
+        # Cyclic LR with single triangle
+        lr_schedule = np.interp(np.arange((epochs+1) * iters_per_epoch),
+                                [0, lr_peak_epoch * iters_per_epoch, epochs * iters_per_epoch],
+                                [0, 1, 0])
+        scheduler = lr_scheduler.LambdaLR(opt, lr_schedule.__getitem__)
+        scaler = GradScaler()
+        loss_fn = CrossEntropyLoss(label_smoothing=label_smoothing)
+
+        for ep in range(epochs):
+            model_count = 0
+            for it, (ims, labs) in enumerate(loader):
+                opt.zero_grad(set_to_none=True)
+                with autocast():
+                    out = model(ims)
+                    loss = loss_fn(out, labs)
+
+                scaler.scale(loss).backward()
+                scaler.step(opt)
+                scaler.update()
+                scheduler.step()
+
+    os.makedirs('./checkpoints', exist_ok=True)
+
+    for i in tqdm(range(20), desc='Training models..'):
+        model = construct_rn9().to(memory_format=torch.channels_last).cuda()
+        loader_train = get_dataloader(batch_size=512, split='train')
+        train(model, loader_train)
+        
+        torch.save(model.state_dict(), f'./checkpoints/sd_{i}.pt')
 
 .. raw:: html
 
@@ -220,7 +259,7 @@ surprisingly, bigger :code:`proj_dim` is not always better!)
 Compute :code:`TRAK` features for train data
 --------------------------------------------
 
-Now let's process the train data. For that, we'll need a data loader:[3]_
+Now let's process the train data. For that, we'll need a data loader:[2]_
 
 .. code-block:: python
 
@@ -232,13 +271,13 @@ We're ready to :meth:`.featurize` the training samples:
 .. code-block:: python
     :linenos:
 
-    import tqdm  # for progress tracking
+    from tqdm import tqdm  # for progress tracking
 
     for model_id, ckpt in enumerate(tqdm(ckpts)):
         traker.load_checkpoint(ckpt, model_id=model_id)
 
         for batch in loader_train:
-            traker.featurize(batch=batch, num_samples=batch_size)
+            traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 
     traker.finalize_features()
 
@@ -246,7 +285,7 @@ Let's analyze this step by step. On line 3, we're iterating over the
 checkpoints, assigning a :code:`model_id` (just the checkpoint's index in the
 :code:`ckpt` array in this case) for each one. Then, on line 4, the
 :meth:`.load_checkpoint` method registers the checkpoint in the :class:`.TRAKer`
-class and ties it to the given :code:`model_id` [4]_. In lines 6 and 7, we are
+class and ties it to the given :code:`model_id`. [3]_ In lines 6 and 7, we are
 iterating over the train data, getting gradient features for all examples.
 This step involves computing per-example gradients. Finally, in line 9, we
 perform some post-processing of the computed features (in particular, we compute
@@ -260,8 +299,8 @@ to :meth:`.featurize`. In that case, :code:`inds` should be an array of the same
 length as the batch, specifying the indices of the examples in the batch within
 the train data.
 
-.. [3] Again, we use the methods defined in :ref:`Save model checkpoints`. Adapt this as you wish.
-.. [4] :code:`model_id`\ s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints
+.. [2] Again, we use the methods defined in :ref:`Save model checkpoints`. Adapt this as you wish.
+.. [3] :code:`model_id`\ s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints
 
 Compute :code:`TRAK` scores for targets
 ---------------------------------------
@@ -283,7 +322,7 @@ Using a similar interface to the featurizing step:
                                         model_id=model_id,
                                         num_targets=len(loader_targets.indices))
         for batch in loader_targets:
-            traker.score(batch=batch, num_samples=batch_size)
+            traker.score(batch=batch, num_samples=batch[0].shape[0])
 
     scores = traker.finalize_scores()
 
@@ -300,15 +339,47 @@ TODO
     issue on github and we might add an :code:`assert` about :code:`model_id`
     consistency.
 
-Visualize the attribution scores!
----------------------------------
+Visualize the attributions!
+---------------------------
 
-TODO
+TODO: add images once we have them
+
+.. code-block:: python
+
+    from matplotlib import pyplot as plt
+
+    targets = [1, 2]  # let's look at two validation images
+    loader_targets = get_dataloader(batch_size=2, split='val', indices=targets, should_augment=False)
+
+    for batch in loader_targets:
+        ims, _ = batch
+        ims = (ims - ims.min()) / (ims.max() - ims.min())
+        for image in ims:
+            plt.figure(figsize=(1.5,1.5))
+            plt.imshow(image.cpu().permute([1, 2, 0]).numpy())
+            plt.axis('off'); plt.show()
+
+.. code-block:: python
+
+    for target in targets:
+        print(f'Top scorers for target {target}')
+        loader_top_scorer = get_dataloader(batch_size=3, split='train', indices=scores[target].argsort()[-3:].cpu().numpy(), should_augment=False)
+        for batch in loader_top_scorer:
+            ims, _ = batch
+            ims = (ims - ims.min()) / (ims.max() - ims.min())
+            for image in ims:
+                plt.figure(figsize=(1.5, 1.5))
+                plt.imshow(image.cpu().permute([1, 2, 0]).numpy()); plt.axis('off'); plt.show()
+
 
 Extra: evaluate counterfactuals
 -------------------------------
 
 TODO
+
+Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:
+
+.. image:: assets/main_figure.png
 
 .. code-block:: python
 
@@ -318,19 +389,32 @@ TODO
 
 .. code-block:: python
 
-    import numpy as np
     from scipy.stats import spearmanr
-    from matplotlib import pyplot as plt
 
-    def eval_correlations(scores, val_inds, masks, margins):
-        preds = masks @ scores 
+    def eval_correlations(scores, tmp_path):
+        masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
+        margins_url = 'https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1'
+
+        masks_path = Path(tmp_path).joinpath('mask.npy')
+        wget.download(masks_url, out=str(masks_path), bar=None)
+        # num masks, num train samples
+        masks = torch.as_tensor(np.load(masks_path, mmap_mode='r')).float()
+
+        margins_path = Path(tmp_path).joinpath('val_margins.npy')
+        wget.download(margins_url, out=str(margins_path), bar=None)
+        # num , num val samples
+        margins = torch.as_tensor(np.load(margins_path, mmap_mode='r'))
+
+        val_inds = np.arange(2000)
+        preds = masks @ scores
         rs = []
+        ps = []
         for ind, j in tqdm(enumerate(val_inds)):
             r, p = spearmanr(preds[:, ind], margins[:, j])
             rs.append(r)
-        return np.array(rs)
+            ps.append(p)
+        rs, ps = np.array(rs), np.array(ps)
+        print(f'Correlation: {rs.mean()} (avg p value {ps.mean()})')
+    return rs.mean()
 
-    val_inds = np.arange(2000)
-    rs = eval_correlations(scores.cpu().numpy(), val_inds, masks, margins)
-    plt.hist(rs)
-
+    eval_correlations(scores.cpu(), '.')
