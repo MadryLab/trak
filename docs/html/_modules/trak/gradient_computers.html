@@ -212,17 +212,20 @@
 <span class="sd">    Implementations of the GradientComputer class should allow for per-sample</span>
 <span class="sd">    gradients.</span>
 <span class="sd">    This is behavior is enabled with three methods:</span>
-<span class="sd">    - the `load_model_params` method, well, loads model parameters. It can be as</span>
-<span class="sd">      simple as a self.model.load_state_dict(..)</span>
-<span class="sd">    - the `compute_per_sample_grad` method computes per-sample gradients of the</span>
-<span class="sd">      chosen model output function with respect to the model&#39;s parameters.</span>
-<span class="sd">    - the `compute_loss_grad` method computes the gradients of the loss function</span>
-<span class="sd">       with respect to the model output (which should be a scalar) for every</span>
-<span class="sd">       sample.</span>
 
-<span class="sd">    The class attribute `is_functional` is used to determine what implementation</span>
-<span class="sd">    of ModelOutput to use, i.e. whether it should use `functorch`&#39;s functional</span>
-<span class="sd">    models.</span>
+<span class="sd">    - the :meth:`.load_model_params` method, well, loads model parameters. It can</span>
+<span class="sd">      be as simple as a :code:`self.model.load_state_dict(..)`</span>
+
+<span class="sd">    - the :meth:`.compute_per_sample_grad` method computes per-sample gradients</span>
+<span class="sd">      of the chosen model output function with respect to the model&#39;s parameters.</span>
+
+<span class="sd">    - the :meth:`.compute_loss_grad` method computes the gradients of the loss</span>
+<span class="sd">      function with respect to the model output (which should be a scalar) for</span>
+<span class="sd">      every sample.</span>
+
+<span class="sd">    The class attribute :code:`is_functional` is used to determine what</span>
+<span class="sd">    implementation of ModelOutput to use, i.e. whether it should use</span>
+<span class="sd">    :code:`functorch`&#39;s functional models.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">is_functional</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -272,7 +275,9 @@
 <span class="sd">        for more details on `functorch`&#39;s functional models.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model to load</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model to load</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">func_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func_buffers</span> <span class="o">=</span> <span class="n">make_functional_with_buffers</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">params_dict</span> <span class="o">=</span> <span class="n">get_params_dict</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
@@ -281,19 +286,24 @@
                                 <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                                 <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Uses functorch&#39;s vmap (see</span>
+        <span class="sd">&quot;&quot;&quot; Uses functorch&#39;s :code:`vmap` (see</span>
 <span class="sd">        https://pytorch.org/functorch/stable/generated/functorch.vmap.html#functorch.vmap</span>
 <span class="sd">        for more details) to vectorize the computations of per-sample gradients.</span>
 
-<span class="sd">        Doesn&#39;t use `batch_size`; only added to follow the abstract method signature.</span>
+<span class="sd">        Doesn&#39;t use :code:`batch_size`; only added to follow the abstract method</span>
+<span class="sd">        signature.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batch (Iterable[Tensor]): batch of data</span>
-<span class="sd">            batch_size (int, optional): Defaults to None.</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                batch of data</span>
+<span class="sd">            batch_size (int, optional):</span>
+<span class="sd">                Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: gradients of the model output function of each sample in the batch</span>
-<span class="sd">                with respect to the model&#39;s parameters.</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                gradients of the model output function of each sample in the</span>
+<span class="sd">                batch with respect to the model&#39;s parameters.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># taking the gradient wrt weights (second argument of get_output, hence argnums=1)</span>
         <span class="n">grads_loss</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span><span class="o">.</span><span class="n">get_output</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">argnums</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -306,19 +316,28 @@
 
 <div class="viewcode-block" id="FunctionalGradientComputer.compute_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.gradient_computers.FunctionalGradientComputer.compute_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Computes the gradient of the loss with respect to the model output</span>
+
 <span class="sd">        .. math::</span>
-<span class="sd">            \\partial \\ell / \\partial \\text{model output}</span>
+
+<span class="sd">            \\partial \\ell / \\partial \\text{(model output)}</span>
 
 <span class="sd">        Note: For all applications we considered, we analytically derived the</span>
 <span class="sd">        out-to-loss gradient, thus avoiding the need to do any backward passes</span>
 <span class="sd">        (let alone per-sample grads). If for your application this is not feasible,</span>
 <span class="sd">        you&#39;ll need to subclass this and modify this method to have a structure</span>
-<span class="sd">        similar to the one of `self.get_output`, i.e. something like:</span>
-<span class="sd">        ```</span>
-<span class="sd">        grad_out_to_loss = grad(self.model_out_to_loss_grad, ...)</span>
-<span class="sd">        grads = vmap(grad_out_to_loss, ...)</span>
-<span class="sd">        ...</span>
-<span class="sd">        ```</span>
+<span class="sd">        similar to the one of :meth:`FunctionalGradientComputer:.get_output`,</span>
+<span class="sd">        i.e. something like:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            grad_out_to_loss = grad(self.model_out_to_loss_grad, ...)</span>
+<span class="sd">            grads = vmap(grad_out_to_loss, ...)</span>
+<span class="sd">            ...</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                batch of data</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span><span class="o">.</span><span class="n">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_model</span><span class="p">,</span>
                                                      <span class="bp">self</span><span class="o">.</span><span class="n">func_weights</span><span class="p">,</span>
@@ -346,9 +365,21 @@
                                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Computes per-sample gradients of the model output function This</span>
 <span class="sd">        method does not leverage vectorization (and is hence much slower than</span>
-<span class="sd">        its equivalent in `FunctionalGradientComputer`). We recommend that</span>
-<span class="sd">        you use this only if `functorch` is not available to you, e.g. you have</span>
-<span class="sd">        a (very) old version of pytorch.</span>
+<span class="sd">        its equivalent in :class:`.FunctionalGradientComputer`). We recommend</span>
+<span class="sd">        that you use this only if :code:`functorch` is not available to you,</span>
+<span class="sd">        e.g. you have a (very) old version of pytorch.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                batch of data</span>
+<span class="sd">            batch_size (int, optional):</span>
+<span class="sd">                Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                gradients of the model output function of each sample in the</span>
+<span class="sd">                batch with respect to the model&#39;s parameters.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">grads</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_dim</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
@@ -361,21 +392,28 @@
 
 <div class="viewcode-block" id="IterativeGradientComputer.compute_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.gradient_computers.IterativeGradientComputer.compute_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Computes the gradient of the loss with respect to the model output</span>
+
 <span class="sd">        .. math::</span>
-<span class="sd">            \\partial \\ell / \\partial \\text{model output}</span>
+
+<span class="sd">            \\partial \\ell / \\partial \\text{(model output)}</span>
 
 <span class="sd">        Note: For all applications we considered, we analytically derived the</span>
 <span class="sd">        out-to-loss gradient, thus avoiding the need to do any backward passes</span>
 <span class="sd">        (let alone per-sample grads). If for your application this is not feasible,</span>
 <span class="sd">        you&#39;ll need to subclass this and modify this method to have a structure</span>
-<span class="sd">        similar to the one of `self.get_output`, i.e. something like:</span>
+<span class="sd">        similar to the one of :meth:`.IterativeGradientComputer.get_output`,</span>
+<span class="sd">        i.e. something like:</span>
 
-<span class="sd">        ```</span>
-<span class="sd">        out_to_loss = self.model_out_to_loss(...)</span>
-<span class="sd">        for ind in range(batch_size):</span>
-<span class="sd">            grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)</span>
-<span class="sd">        ...</span>
-<span class="sd">        ```</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            out_to_loss = self.model_out_to_loss(...)</span>
+<span class="sd">            for ind in range(batch_size):</span>
+<span class="sd">                grads[ind] = torch.autograd.grad(out_to_loss[ind], ...)</span>
+<span class="sd">            ...</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                batch of data</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span><span class="o">.</span><span class="n">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span></div></div>
