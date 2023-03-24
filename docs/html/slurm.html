@@ -254,7 +254,8 @@ For example, <code class="code docutils literal notranslate"><span class="pre">f
 <span class="linenos">26</span>    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">model_id</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now we can</p>
+<p>Now we can run the above script script in parallel with a <code class="code docutils literal notranslate"><span class="pre">run.sbatch</span></code>.
+Here is a minimal example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 <span class="c1">#SBATCH --nodes=1</span>
 <span class="c1">#SBATCH --cpus-per-task=8</span>
