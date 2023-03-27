@@ -1,15 +1,3 @@
-function updateLegendPosition(layout) {
-    layout.legend = {
-        x: 0.5,
-        y: 1.2,
-        xanchor: 'center',
-        orientation: 'h',
-    };
-
-    Plotly.update('scatterplot-container1', {}, layout);
-    Plotly.update('scatterplot-container2', {}, layout);
-}
-
 const table1 = [
     { method: "TRAK", computationTime: 1, correlation: 0.058, error: 0.0039 },
     { method: "TRAK", computationTime: 5, correlation: 0.12, error: 0.0036 },
@@ -73,9 +61,11 @@ const colors = [
 ];
 
 
-const scatterPlot = (data, id) => {
+function dataToTraces(data, ind) {
     const traces = methods.map((method, index) => {
         return {
+            xaxis: "x" + ind,
+            yaxis: "y" + ind,
             x: data
                 .filter((entry) => entry.method === method)
                 .map((entry) => entry.computationTime),
@@ -95,45 +85,80 @@ const scatterPlot = (data, id) => {
             marker: { color: colors[index], size: 12 }
         };
     });
+    return traces;
+}
+
+const singleScatterPlot = (id, data) => {
+    let trace = dataToTraces(data);
 
     // Define chart layout
-    // Log scale x axis
     const bgColor = 'rgb(33, 37, 41)';
+    const axisConfig = {
+        gridcolor: 'rgba(255, 255, 255, 0.2)',
+        zerolinecolor: 'rgba(255, 255, 255, 0.4)',
+        linecolor: 'rgba(255, 255, 255, 0.6)',
+    };
+
     const layout = {
         plot_bgcolor: bgColor,
         paper_bgcolor: bgColor,
         font: { color: 'white' },
         xaxis: { 
+            ...axisConfig,
             title: "Computation Time (mins)", 
             type: 'log',
-            gridcolor: 'rgba(255, 255, 255, 0.2)',
-            zerolinecolor: 'rgba(255, 255, 255, 0.4)',
-            linecolor: 'rgba(255, 255, 255, 0.6)',
         },
         yaxis: { 
+            ...axisConfig,
             title: "Correlation", 
-            gridcolor: 'rgba(255, 255, 255, 0.2)',
-            zerolinecolor: 'rgba(255, 255, 255, 0.4)',
-            linecolor: 'rgba(255, 255, 255, 0.6)',
         },
-        // legend: { orientation: "h" },
+        legend: {
+            x: 1.02,
+            y: 0.5,
+            xanchor: 'left',
+            yanchor: 'middle',
+            orientation: 'v'
+        },
         autosize: true
     };
 
     // Draw the chart
-    Plotly.newPlot(id, traces, layout, { responsive: true });
+    Plotly.newPlot(id, trace, layout, { responsive: true });
     return layout;
 };
 
 // Update the legend position when the window is resized
 // window.addEventListener('resize', () => updateLegendPosition(layout));
 window.addEventListener('load', () => {
-    scatterPlot(table1, 'scatterplot-container1');
-    document.getElementById('scatterplot-container1');
-    // .on('plotly_ready', () => {
-        // updateLegendPosition(layout);
-        // Plotly.Plots.resize('scatterplot-container1');
-    // });
-    scatterPlot(table2, 'scatterplot-container2');
-    // updateLegendPosition(layout);
+    singleScatterPlot('scatterplot-container1', table1);
+});
+
+const carousel = document.getElementById('trak-carousel');
+let isMouseDown = false;
+let startX;
+let scrollLeft;
+
+carousel.addEventListener('mousedown', (e) => {
+    isMouseDown = true;
+    carousel.style.cursor = 'grabbing';
+    startX = e.pageX - carousel.offsetLeft;
+    scrollLeft = carousel.scrollLeft;
+});
+
+carousel.addEventListener('mouseleave', () => {
+    isMouseDown = false;
+    carousel.style.cursor = 'pointer';
+});
+
+carousel.addEventListener('mouseup', () => {
+    isMouseDown = false;
+    carousel.style.cursor = 'pointer';
+});
+
+carousel.addEventListener('mousemove', (e) => {
+    if (!isMouseDown) return;
+    e.preventDefault();
+    const x = e.pageX - carousel.offsetLeft;
+    const scrollX = (x - startX) * 2;
+    carousel.scrollLeft = scrollLeft - scrollX;
 });

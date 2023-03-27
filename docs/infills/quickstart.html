@@ -1,0 +1,80 @@
+<div class="container px-2 py-5" id="quickstart">
+        <h1 class="pb-2 border-bottom">Quickstart</h1>
+
+        <div class="row justify-content-around">
+          <div class="g-4 py-4 col-lg-10 col-sm-10 col-md-10 text-start">
+            <h3 class="fs-2 text-left">Installation</h3>
+            <br />
+            <p class="lead">For a fast version with custom CUDA code, use</p>
+            <pre>
+              <code class="language-bash">pip install traker[fast]</code>
+            </pre>
+            <p class="lead">
+              You will need <code>CUDA toolkit</code> and <code>gcc</code> to
+              compile it. For the version that does not require compilation, use
+            </p>
+            <pre>
+              <code class="language-bash">pip install traker</code>
+            </pre>
+            <p class="lead">
+              For more details, visit the
+              <a href="html/index.html" class="link-info">installation FAQs</a>.
+            </p>
+          </div>
+
+          <!-- end of row div below -->
+        </div>
+        <div class="row justify-content-around">
+          <div class="g-4 py-4 col-lg-10 col-sm-12 col-md-10 text-start">
+            <h3 class="fs-2 text-left">Basic usage</h3>
+            <br />
+            <p class="text-start">
+              Below we provide a minimal (pseudo)code example showcasing the
+              basic workflow of getting <code>TRAK</code> scores for a given
+              model-dataset pair. For more in-depth examples, including, check
+              <a href="html/index.html" class="link-info"
+                >the tutorials in our docs</a
+              >. Those include how to use <code>TRAK</code> with BERT, how to
+              set up <code>TRAK</code> with SLURM, and more!
+            </p>
+            <p class="text-start">
+              First, intialize your model and data loaders you want to score
+              with
+              <code>TRAK</code>. For example,
+            </p>
+            <pre class="text-start">
+            <code class="language-python">from torchvision import models
+model = models.resnet18()
+checkpoint = model.state_dict()
+train_loader = ImageNetDataloader(train=True, ...)</code></pre>
+            <p class="text-start">
+              Then initalize the <code>TRAKer</code> class and process
+              (featurize) the train set.
+            </p>
+            <pre class="text-start text-muted">
+              <code class="language-python">traker = TRAKer(model=model, task='image_classification', train_set_size=...)
+
+traker.load_checkpoint(ckeckpoint)
+for batch in train_loader:
+  traker.featurize(batch=batch, num_samples=train_loader.batch_size)
+traker.finalize_features()</code></pre>
+            <p class="text-start">
+              Finally, get the <code>TRAK</code> scores for your targets, e.g.
+              all ImageNet validation samples:
+            </p>
+            <pre
+              class="text-start text-muted"
+            ><code class="language-python">targets_loader = ImageNetLoader(train=False, ...)
+traker.start_scoring_checkpoint(ckeckpoint, num_targets=...)
+for batch in targets_loader:
+    traker.score(batch=batch, num_samples=targets_loader.batch_size)
+scores = traker.finalize_scores()</code></pre>
+            <p class="text-start">
+              That's it! Now you're have the <code>TRAK</code> scores in a
+              <code>numpy</code> array. Check out
+              <a href="#hanging-icons" class="link-info">the section below</a>
+              for some examples!
+            </p>
+          </div>
+        </div>
+      </div>

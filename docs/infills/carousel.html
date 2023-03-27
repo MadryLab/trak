@@ -1,0 +1,74 @@
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.trak-carousel-wrapper {
+    position: relative;
+    height: 300px;
+}
+
+.trak-carousel {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+    scrollbar-width: none; /* Hide the scrollbar */
+    -ms-overflow-style: none;
+    touch-action: pan-y;
+}
+
+.trak-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.trak-carousel-inner {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.trak-carousel-image {
+    display: inline-block;
+    width: calc(100% / 3); /* Adjust the denominator to control how many images are visible at once */
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.trak-carousel-wrapper::before,
+.trak-carousel-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20px; /* Adjust the width of the shadows */
+    pointer-events: none;
+}
+
+.trak-carousel-wrapper::before {
+    left: 0;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+}
+
+.trak-carousel-wrapper::after {
+    right: 0;
+    background-image: linear-gradient(to left, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+}
+</style>
+<div class="trak-carousel-wrapper">
+    <div class="trak-carousel" id="trak-carousel">
+        <div class="trak-carousel-inner" id="trak-carousel-inner">
+            <!-- Add your images here with the appropriate src and onclick attributes -->
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <img src="assets/webfigure/2/nns_0.png" alt="Image 1" class="trak-carousel-image" onclick="">
+            <!-- Add more images as needed -->
+        </div>
+    </div>
+</div>
