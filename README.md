@@ -81,7 +81,7 @@ If you use this code in your work, please cite using the following BibTeX entry:
 @inproceedings{park2023trak,
   title = {TRAK: Attributing Model Behavior at Scale},
   author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
-  booktitle = {Arxiv preprint arXiv:2212.08037},
+  booktitle = {Arxiv preprint arXiv:2303.14186},
   year = {2023}
 }
 ```
