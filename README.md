@@ -9,7 +9,7 @@
 
 # TRAK: Attributing Model Behavior at Scale
 
-In our [paper](https://arxiv.org/abs/2303.14186), we introduce a new data attribution called `TRAK` (Tracing with the
+In our [paper](https://arxiv.org/abs/2303.14186), we introduce a new data attribution method called `TRAK` (Tracing with the
 Randomly-Projected After Kernel). Using `TRAK`, you can make  accurate
 counterfactual predictions (e.g., answers to questions of the form “what would
 happen to this prediction if these examples are removed from the training set?").
