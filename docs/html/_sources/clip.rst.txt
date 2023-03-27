@@ -14,7 +14,7 @@ Computing :code:`TRAK` attribution scores requires defining an appropriate ``mod
 function`` to guide the scoring process. Intuitively, you can just think of it as a
 loss function. We derive and discuss model output
 functions for multiple tasks (binary and multiclass classification, CLIP loss,
-and various NLP tasks, etc) in detail in `our paper <link:TODO>`_.
+and various NLP tasks, etc) in detail in `our paper <https://arxiv.org/abs/2303.14186>`_.
 
 In short, given the following:
 
@@ -115,9 +115,6 @@ embeddings for multiple examples, we implement an additional utility method
 to pay too much attention to it in this tutorial; let's just assume we have
 access to the arrays :code:`all_img_embeddings` and :code:`all_txt_embeddings`.
 
-TODO: @Sam - we need to add a bit more text explaining what's going on
-(especially functorch stuff)
-
 Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
 
 .. code-block:: python
@@ -136,9 +133,16 @@ Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
                  -ch.logsumexp(-text_embeddings @ (image_embeddings - all_img_embeddings[ii]).T, dim=1)
         return result.sum()  # shape of result should be [1], .sum() just removes the extra dimension
 
+We are using `code`:functorch`\ s :code:`vmap` to make the per-sample gradient
+computations faster (more parallel). Check out, e.g., `this functorch tutorial
+<https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html>`_ to
+learn more about how to use :code:`functorch` (e.g. learn what
+:code:`func_model`, :code:`weights` and :code:`buffers` are). The rest of
+:meth:`.CLIPModelOutput.get_output` is simply implementing in code the equation
+we derived earlier.
 
-TODO: @Sam - add a short snippet about
-:meth:`.CLIPModelOutput.get_out_to_loss_grad` and the :math:`Q` term.
+Finally, we need to make a simple adaptation to the :math:`Q` term in the
+:meth:`.CLIPModelOutput.get_out_to_loss_grad`:
 
 .. code-block:: python
 
@@ -150,3 +154,7 @@ TODO: @Sam - add a short snippet about
         ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.
         return (1 - ps).clone().detach()
 
+Note, again, that we are directly implementing the *gradient* (which we
+analytically derive) of the out-to-loss function here.
+
+That's all, now you're ready to adapt :code:`TRAK` to your custom tasks!

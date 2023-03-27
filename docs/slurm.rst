@@ -41,7 +41,7 @@ in parallel, and get the final :code:`TRAK` scores using :code:`gather.py`.
 
 
 1. Featurizing each checkpoint
---------------------------
+------------------------------
 
 Everything needed for scoring prior to :meth:`.finalize_scores` will go in
 :code:`featurize_and_score.py`.
@@ -49,7 +49,7 @@ For example, :code:`featurize_and_score.py` can be as follows:
 
 .. code-block:: python
     :linenos:
-    :emphasize-lines: 6,7,14
+    :emphasize-lines: 6,7,16
 
     from argparse import ArgumentParser
     from trak import TRAKer
@@ -82,7 +82,7 @@ For example, :code:`featurize_and_score.py` can be as follows:
         main(args.model_id)
 
 2. Run featurize in parallel
---------------------------
+----------------------------
 
 
 Now we can run the above script script in parallel with a :code:`run.sbatch`.
@@ -106,7 +106,7 @@ The above script will submit 10 jobs in parallel or us: this is specified by the
 ID for :code:`TRAK`. To learn more about the :code:`SBATCH`, check out
 :code:`SLURM`\ s `docs <https://slurm.schedmd.com/sbatch.html>`_.
 
-Note that on line 15 of the example :code:`featurize_and_score.py` above, we
+Note that on line 16 of the example :code:`featurize_and_score.py` above, we
 call :meth:`.finalize_features` with :code:`model_ids=[model_id]`. This is
 important --- if we don't specify this, :code:`TRAK` by default attempts to
 finalize the features for all :code:`model_id`\ s (checkpoints) in the
@@ -122,7 +122,7 @@ in the terminal will populate the specified :code:`save_dir` with all
 intermediate results we need to compute the final :code:`TRAK` scores.
 
 3. Gather final scores
---------------------------
+----------------------
 
 The only thing left to do is call :meth:`.TRAKer.finalize_scores`. This method
 combines the scores across checkpoints (think of it as a :code:`gather`).
