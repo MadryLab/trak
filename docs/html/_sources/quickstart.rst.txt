@@ -156,7 +156,7 @@ checkpoints in :code:`./checkpoints`:
     ckpt_files = list(Path('./checkpoints').rglob('*.pt'))
     ckpts = [torch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
-.. [1] For our own experiments, we used `ffcv <https://ffcv.io/>`_ to train models faster. Check `this <https://github.com/MadryLab/trak/blob/main/examples/imagenet.py>` training script that trains the same ResNet-9 models using :code:`ffcv` dataloaders.
+.. [1] For our own experiments, we used `ffcv <https://ffcv.io/>`_ to train models faster. Check `this <https://github.com/MadryLab/trak/blob/main/examples/imagenet.py>`_ training script that trains the same ResNet-9 models using :code:`ffcv` dataloaders.
 
 Set up the :class:`.TRAKer` class
 ---------------------------------
