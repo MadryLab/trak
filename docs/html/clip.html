@@ -206,7 +206,7 @@ the final result.</p>
 <span class="pre">function</span></code> to guide the scoring process. Intuitively, you can just think of it as a
 loss function. We derive and discuss model output
 functions for multiple tasks (binary and multiclass classification, CLIP loss,
-and various NLP tasks, etc) in detail in <a class="reference external" href="link:TODO">our paper</a>.</p>
+and various NLP tasks, etc) in detail in <a class="reference external" href="https://arxiv.org/abs/2303.14186">our paper</a>.</p>
 <p>In short, given the following:</p>
 <ul class="simple">
 <li><p>a training set of examples <span class="math notranslate nohighlight">\(S = \{z_1, z_2, \ldots, z_n\}\)</span>
@@ -296,8 +296,6 @@ embeddings for multiple examples, we implement an additional utility method
 <a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_embeddings" title="trak.modelout_functions.CLIPModelOutput.get_embeddings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_embeddings()</span></code></a>. This is a bit too specific to CLIP, so we’re not going
 to pay too much attention to it in this tutorial; let’s just assume we have
 access to the arrays <code class="code docutils literal notranslate"><span class="pre">all_img_embeddings</span></code> and <code class="code docutils literal notranslate"><span class="pre">all_txt_embeddings</span></code>.</p>
-<p>TODO: &#64;Sam - we need to add a bit more text explaining what’s going on
-(especially functorch stuff)</p>
 <p>Now we are ready to implement <a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_output" title="trak.modelout_functions.CLIPModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_output()</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
                <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
@@ -314,8 +312,14 @@ access to the arrays <code class="code docutils literal notranslate"><span class
     <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># shape of result should be [1], .sum() just removes the extra dimension</span>
 </pre></div>
 </div>
-<p>TODO: &#64;Sam - add a short snippet about
-<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_out_to_loss_grad()</span></code></a> and the <span class="math notranslate nohighlight">\(Q\)</span> term.</p>
+<p>We are using <cite>code</cite>:functorch`s <code class="code docutils literal notranslate"><span class="pre">vmap</span></code> to make the per-sample gradient
+computations faster (more parallel). Check out, e.g., <a class="reference external" href="https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html">this functorch tutorial</a> to
+learn more about how to use <code class="code docutils literal notranslate"><span class="pre">functorch</span></code> (e.g. learn what
+<code class="code docutils literal notranslate"><span class="pre">func_model</span></code>, <code class="code docutils literal notranslate"><span class="pre">weights</span></code> and <code class="code docutils literal notranslate"><span class="pre">buffers</span></code> are). The rest of
+<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_output" title="trak.modelout_functions.CLIPModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_output()</span></code></a> is simply implementing in code the equation
+we derived earlier.</p>
+<p>Finally, we need to make a simple adaptation to the <span class="math notranslate nohighlight">\(Q\)</span> term in the
+<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_out_to_loss_grad()</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
     <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="o">*</span><span class="n">batch</span><span class="p">)</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -325,6 +329,9 @@ access to the arrays <code class="code docutils literal notranslate"><span class
     <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 </pre></div>
 </div>
+<p>Note, again, that we are directly implementing the <em>gradient</em> (which we
+analytically derive) of the out-to-loss function here.</p>
+<p>That’s all, now you’re ready to adapt <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to your custom tasks!</p>
 </section>
 </section>
 
