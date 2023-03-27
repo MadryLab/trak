@@ -1,13 +1,13 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>trak.modelout_functions - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -201,11 +201,13 @@
 <span class="sd">- :class:`.ImageClassificationModelOutput`</span>
 <span class="sd">- :class:`.IterImageClassificationModelOutput`</span>
 <span class="sd">- :class:`.CLIPModelOutput`</span>
+<span class="sd">- :class:`.TextClassificationModelOutput`</span>
 
 <span class="sd">These classes implement methods that transform input batches to the desired model output</span>
 <span class="sd">(e.g. logits, loss, etc).</span>
-<span class="sd">See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on what model output functions are</span>
-<span class="sd">in the context of TRAK and how to use &amp; design them.</span>
+<span class="sd">See Sections 2 &amp; 3 of `our paper &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more</span>
+<span class="sd">details on what model output functions are in the context of TRAK and how to use</span>
+<span class="sd">&amp; design them.</span>
 
 <span class="sd">See, e.g. `this tutorial &lt;https://trak.csail.mit.edu/html/clip.html&gt;`_ for an</span>
 <span class="sd">example on how to subclass :code:`AbstractModelOutput` for a task of your</span>
@@ -219,7 +221,7 @@
 
 
 <div class="viewcode-block" id="AbstractModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.AbstractModelOutput">[docs]</a><span class="k">class</span> <span class="nc">AbstractModelOutput</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; See, e.g. `this tutorial &lt;https://trak.csail.mit.edu/html/clip.html&gt;`_</span>
+    <span class="sd">&quot;&quot;&quot; See, e.g. `this tutorial &lt;https://trak.csail.mit.edu/html/clip.html&gt;`_</span>
 <span class="sd">    for an example on how to subclass :code:`AbstractModelOutput` for a task of</span>
 <span class="sd">    your choice.</span>
 
@@ -236,17 +238,18 @@
 <span class="sd">      the diagonal of) :math:`Q`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="AbstractModelOutput.__init__"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.AbstractModelOutput.__init__">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">pass</span>
+        <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="AbstractModelOutput.get_output"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.AbstractModelOutput.get_output">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">model</span><span class="p">,</span>
                    <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on</span>
-<span class="sd">        what model output functions are in the context of TRAK and how to use &amp;</span>
-<span class="sd">        design them.</span>
+        <span class="sd">&quot;&quot;&quot; See Sections 2 &amp; 3 of `our paper</span>
+<span class="sd">        &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more details on what model</span>
+<span class="sd">        output functions are in the context of TRAK and how to use &amp; design</span>
+<span class="sd">        them.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            model (torch.nn.Module):</span>
@@ -264,9 +267,10 @@
     <span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                              <span class="n">model</span><span class="p">,</span>
                              <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on</span>
-<span class="sd">        what the out-to-loss functions (in the notation of the paper, :math:`Q`)</span>
-<span class="sd">        are in the context of TRAK and how to use &amp; design them.</span>
+        <span class="sd">&quot;&quot;&quot; See Sections 2 &amp; 3 of `our paper</span>
+<span class="sd">        &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more details on what the</span>
+<span class="sd">        out-to-loss functions (in the notation of the paper, :math:`Q`) are in</span>
+<span class="sd">        the context of TRAK and how to use &amp; design them.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            model (torch.nn.Module): model</span>
@@ -279,20 +283,19 @@
 
 
 <div class="viewcode-block" id="ImageClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">ImageClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO:</span>
-<span class="sd">    link)[our paper] for more details.</span>
+    <span class="sd">&quot;&quot;&quot; Margin for (multiclass) image classification. See Section 3.3 of `our</span>
+<span class="sd">    paper &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ImageClassificationModelOutput.__init__"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            temperature (float, optional): Temperature to use inside the</span>
 <span class="sd">            softmax for the out-to-loss function. Defaults to 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span></div>
 
 <div class="viewcode-block" id="ImageClassificationModelOutput.get_output"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput.get_output">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
@@ -300,7 +303,7 @@
                    <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                    <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
                    <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
+        <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
 <span class="sd">        let :math:`p(z, \\theta)` be the softmax probability of the correct class.</span>
 <span class="sd">        This method implements the model output function</span>
 
@@ -349,7 +352,7 @@
         <span class="k">return</span> <span class="n">margins</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="ImageClassificationModelOutput.forward"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Utility method to make forward passes compatible across different models,</span>
+        <span class="sd">&quot;&quot;&quot; Utility method to make forward passes compatible across different models,</span>
 <span class="sd">        e.g. image classification models take in only the images in the batch,</span>
 <span class="sd">        but CLIP takes in both the images and captions --- using this method,</span>
 <span class="sd">        the TRAKer class does not need to be modified when we have a new model</span>
@@ -369,7 +372,7 @@
         <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ImageClassificationModelOutput.get_out_to_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput.get_out_to_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
+        <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            func_model (func):</span>
@@ -394,13 +397,13 @@
 
 
 <div class="viewcode-block" id="IterImageClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.IterImageClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">IterImageClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO:</span>
-<span class="sd">    link)[our paper] for more details.</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of `our paper</span>
+<span class="sd">    &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="IterImageClassificationModelOutput.__init__"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.IterImageClassificationModelOutput.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            temperature (float, optional):</span>
 <span class="sd">                Temperature to use inside the softmax for the out-to-loss</span>
@@ -408,13 +411,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span></div>
 
 <div class="viewcode-block" id="IterImageClassificationModelOutput.get_output"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.IterImageClassificationModelOutput.get_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                    <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
                    <span class="n">images</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
                    <span class="n">labels</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
+        <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
 <span class="sd">        let :math:`p(z, \\theta)` be the softmax probability of the correct class.</span>
 <span class="sd">        This method implements the model output function</span>
 
@@ -448,7 +451,7 @@
         <span class="k">return</span> <span class="n">margins</span></div>
 
 <div class="viewcode-block" id="IterImageClassificationModelOutput.get_out_to_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.IterImageClassificationModelOutput.get_out_to_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
+        <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            model (torch.nn.Module)</span>
@@ -469,8 +472,8 @@
 
 
 <div class="viewcode-block" id="CLIPModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.CLIPModelOutput">[docs]</a><span class="k">class</span> <span class="nc">CLIPModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Margin for multimodal contrastive learning (CLIP). See Section 5.1 of</span>
-<span class="sd">    (TODO: link)[our paper] for more details.</span>
+    <span class="sd">&quot;&quot;&quot; Margin for multimodal contrastive learning (CLIP). See Section 5.1 of</span>
+<span class="sd">    `our paper &lt;https://arxiv.org/abs/2303.14186&gt;`_ for more details.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        AssertionError: this model output function requires using additional</span>
@@ -482,8 +485,8 @@
     <span class="n">image_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">text_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">simulated_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CLIPModelOutput.__init__"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.CLIPModelOutput.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">simulated_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            temperature (float, optional):</span>
@@ -501,7 +504,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temperature</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">sim_batch_size</span> <span class="o">=</span> <span class="n">simulated_batch_size</span>
-        <span class="n">CLIPModelOutput</span><span class="o">.</span><span class="n">sim_batch_size</span> <span class="o">=</span> <span class="n">simulated_batch_size</span>
+        <span class="n">CLIPModelOutput</span><span class="o">.</span><span class="n">sim_batch_size</span> <span class="o">=</span> <span class="n">simulated_batch_size</span></div>
 
 <div class="viewcode-block" id="CLIPModelOutput.get_embeddings"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.CLIPModelOutput.get_embeddings">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_embeddings</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
@@ -511,7 +514,7 @@
                        <span class="n">embedding_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
                        <span class="n">preprocess_fn_img</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">preprocess_fn_txt</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Computes (image and text) embeddings and saves them in the class</span>
+        <span class="sd">&quot;&quot;&quot; Computes (image and text) embeddings and saves them in the class</span>
 <span class="sd">        attributes :code:`image_embeddings` and :code:`text_embeddings`.</span>
 
 <span class="sd">        Args:</span>
@@ -562,7 +565,7 @@
                    <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                    <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
                    <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters</span>
+        <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters</span>
 <span class="sd">        :math:`\\theta`, let :math:`\\phi(x, \\theta)` be the CLIP image</span>
 <span class="sd">        embedding and :math:`\\psi(y, \\theta)` be the CLIP text embedding.</span>
 <span class="sd">        Last, let :math:`B` be a (simulated) batch. This method implements the</span>
@@ -626,7 +629,7 @@
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># shape of result should be [1]</span></div>
 
 <div class="viewcode-block" id="CLIPModelOutput.get_out_to_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
+        <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            func_model (func):</span>
@@ -652,7 +655,7 @@
 
 
 <div class="viewcode-block" id="TextClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">TextClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Margin for text classification models. This assumes that the model takes</span>
+    <span class="sd">&quot;&quot;&quot; Margin for text classification models. This assumes that the model takes</span>
 <span class="sd">    in input_ids, token_type_ids, and attention_mask.</span>
 
 <span class="sd">    .. math::</span>
@@ -662,10 +665,10 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TextClassificationModelOutput.__init__"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span></div>
 
 <div class="viewcode-block" id="TextClassificationModelOutput.get_output"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput.get_output">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
@@ -740,8 +743,9 @@
     </aside>
   </div>
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     </body>
 </html>
