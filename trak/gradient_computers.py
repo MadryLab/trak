@@ -12,10 +12,8 @@ except ImportError:
 
 
 class AbstractGradientComputer(ABC):
-    """
-    Implementations of the GradientComputer class should allow for per-sample
-    gradients.
-    This is behavior is enabled with three methods:
+    """ Implementations of the GradientComputer class should allow for
+    per-sample gradients.  This is behavior is enabled with three methods:
 
     - the :meth:`.load_model_params` method, well, loads model parameters. It can
       be as simple as a :code:`self.model.load_state_dict(..)`

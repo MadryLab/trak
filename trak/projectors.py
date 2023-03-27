@@ -13,9 +13,9 @@ class ProjectionType(str, Enum):
 
 
 class AbstractProjector(ABC):
-    """
-    Implementations of the Projector class must implement the `project` method,
-    which takes in model gradients and returns
+    """ Implementations of the Projector class must implement the
+    :meth:`AbstractProjector.project` method, which takes in model gradients and
+    returns
     """
     @abstractmethod
     def __init__(self,
@@ -27,18 +27,23 @@ class AbstractProjector(ABC):
         """ Initializes hyperparameters for the projection.
 
         Args:
-            grad_dim (int): number of parameters in the model (dimension of the
-                gradient vectors)
-            proj_dim (int): dimension after the projection
-            seed (int): random seed for the generation of the sketching
-                (projection) matrix
-            proj_type (Union[str, ProjectionType]): the random projection
-                (JL transform) guearantees that distances will be approximately
-                preserved for a variety of choices of the random matrix (see
-                e.g. https://arxiv.org/abs/1411.2404). Here, we provide an
-                implementation for matrices with iid Gaussian entries and iid
-                Rademacher entries.
-            device (Union[str, torch.device]): CUDA device to use
+            grad_dim (int):
+                number of parameters in the model (dimension of the gradient
+                vectors)
+            proj_dim (int):
+                dimension after the projection
+            seed (int):
+                random seed for the generation of the sketching (projection)
+                matrix
+            proj_type (Union[str, ProjectionType]):
+                the random projection (JL transform) guearantees that distances
+                will be approximately preserved for a variety of choices of the
+                random matrix (see e.g. https://arxiv.org/abs/1411.2404). Here,
+                we provide an implementation for matrices with iid Gaussian
+                entries and iid Rademacher entries.
+            device (Union[str, torch.device]):
+                CUDA device to use
+
         """
         self.grad_dim = grad_dim
         self.proj_dim = proj_dim

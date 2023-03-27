@@ -21,43 +21,6 @@ class TRAKer():
     <https://github.com/MadryLab/trak>`_ and `docs
     <https://trak.csail.mit.edu/html/index.html>`_ for example usage.
 
-    Args:
-        model (torch.nn.Module):
-            model to use for TRAK
-        task (Union[AbstractModelOutput, str]):
-            Type of model that TRAK will be ran on. Accepts either one of
-            the following strings:
-            - :code:`image_classification`
-            - :code:`clip`
-            - :code:`bert_...` TODO: @Sam
-
-            or an implementation of :class:`.AbstractModelOutput`.
-        train_set_size (int):
-            Size of the train set that TRAK is featurizing
-        save_dir (str, optional):
-            Directory to save final TRAK scores, intermediate results, and
-            metadata. Defaults to :code:'./trak_results'.
-        load_from_save_dir (bool, optional):
-            If True, the :class`.TRAKer` instance will attempt to load
-            existing metadata from save_dir. May lead to I/O issues if
-            multiple TRAKer instances ran in parallel have this flag set to
-            True. See the SLURM tutorial for more details.
-        device (Union[str, torch.device], optional):
-            torch device on which to do computations. Defaults to 'cuda'.
-        gradient_computer (AbstractGradientComputer, optional):
-            Class to use to get per-example gradients. See
-            :class:`.AbstractGradientComputer` for more details. Defaults to
-            :class:`.FunctionalGradientComputer`.
-        projector (Optional[AbstractProjector], optional):
-            Either set :code:`proj_dim` and a :class:`.CudaProjector`
-            Rademacher projector will be used or give a custom subclass of
-            :class:`.AbstractProjector` class and leave :code:`proj_dim` as
-            None. Defaults to None.
-        proj_dim (int, optional):
-            Dimension of the projected TRAK features. See Section 4.3 of
-            (TODO: link)[our paper] for more details. Defaults to 2048.
-
-
     """
     def __init__(self,
                  model: torch.nn.Module,
@@ -78,9 +41,9 @@ class TRAKer():
             task (Union[AbstractModelOutput, str]):
                 Type of model that TRAK will be ran on. Accepts either one of
                 the following strings:
-                    - :code:`image_classification`
-                    - :code:`clip`
-                    - :code:`bert_...` TODO: @Sam
+                - :code:`image_classification`
+                - :code:`clip`
+                - :code:`bert_...` TODO: @Sam
                 or an implementation of :class:`.AbstractModelOutput`.
             train_set_size (int):
                 Size of the train set that TRAK is featurizing
