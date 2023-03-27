@@ -1,5 +1,5 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
-<!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
+[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
 
 [[docs & tutorials]](https://trak.csail.mit.edu/html/index.html)
 [[paper]](https://arxiv.org/abs/2303.14186)
@@ -13,13 +13,26 @@ In our [paper](https://arxiv.org/abs/2303.14186), we introduce a new data attrib
 Randomly-Projected After Kernel). Using `TRAK`, you can make  accurate
 counterfactual predictions (e.g., answers to questions of the form “what would
 happen to this prediction if these examples are removed from the training set?").
-Computing TRAK scores comes at a small fraction of the cost of prior data attribution methods
-that are comparably effective (e.g., TRAK is 2-3 orders of magnitude cheaper
-than comparable methods, on CIFAR-10 and QNLI):
+Computing  data attribution with  TRAK is 2-3 orders of magnitude cheaper than
+comaprably effective methods, e.g., see our evaluation on:
 
 ![Main figure](/docs/assets/main_figure.png)
 
+## Citation
+If you use this code in your work, please cite using the following BibTeX entry:
+```
+@inproceedings{park2023trak,
+  title = {TRAK: Attributing Model Behavior at Scale},
+  author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
+  booktitle = {Arxiv preprint arXiv:2303.14186},
+  year = {2023}
+}
+```
+
 ## Usage
+
+
+[[quickstart]](https://trak.csail.mit.edu/html/quickstart.html)
 
 Check [our docs](https://trak.csail.mit.edu/html) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
@@ -74,19 +87,8 @@ compilation, use
 pip install traker
 ```
 
-
-## Citation
-If you use this code in your work, please cite using the following BibTeX entry:
-```
-@inproceedings{park2023trak,
-  title = {TRAK: Attributing Model Behavior at Scale},
-  author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
-  booktitle = {Arxiv preprint arXiv:2303.14186},
-  year = {2023}
-}
-```
-
 ## Maintainers:
+
 [Kristian Georgiev](https://twitter.com/kris_georgiev1)<br>
 [Andrew Ilyas](https://twitter.com/andrew_ilyas)<br>
 [Guillaume Leclerc](https://twitter.com/gpoleclerc)<br>
