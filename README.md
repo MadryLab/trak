@@ -1,5 +1,5 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
-[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
+[![arXiv](https://img.shields.io/badge/arXiv-2303.14186-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
 
 [[docs & tutorials]](https://trak.csail.mit.edu/html/index.html)
 [[paper]](https://arxiv.org/abs/2303.14186)
