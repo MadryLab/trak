@@ -1,13 +1,13 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
         <title>trak.score_computers - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -200,7 +200,7 @@
 
 
 <div class="viewcode-block" id="AbstractScoreComputer"><a class="viewcode-back" href="../../trak.html#trak.score_computers.AbstractScoreComputer">[docs]</a><span class="k">class</span> <span class="nc">AbstractScoreComputer</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The :code:`ScoreComputer` class</span>
 <span class="sd">    Implementations of the ScoreComputer class must implement three methods:</span>
 <span class="sd">    - :code:`get_xtx`</span>
@@ -225,7 +225,7 @@
 
 
 <div class="viewcode-block" id="BasicSingleBlockScoreComputer"><a class="viewcode-back" href="../../trak.html#trak.score_computers.BasicSingleBlockScoreComputer">[docs]</a><span class="k">class</span> <span class="nc">BasicSingleBlockScoreComputer</span><span class="p">(</span><span class="n">AbstractScoreComputer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; A bare-bones implementation of :code:`ScoreComputer` that will likely</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A bare-bones implementation of :code:`ScoreComputer` that will likely</span>
 <span class="sd">    OOM for almost all applications. Here for testing purposes only. Unless you</span>
 <span class="sd">    have a good reason not to, you should use :func:`BasicScoreComputer`</span>
 <span class="sd">    instead.</span>
@@ -244,11 +244,11 @@
 
 
 <div class="viewcode-block" id="BasicScoreComputer"><a class="viewcode-back" href="../../trak.html#trak.score_computers.BasicScoreComputer">[docs]</a><span class="k">class</span> <span class="nc">BasicScoreComputer</span><span class="p">(</span><span class="n">AbstractScoreComputer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; An implementation of :code:`ScoreComputer` that computes matmuls in a</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; An implementation of :code:`ScoreComputer` that computes matmuls in a</span>
 <span class="sd">    block-wise manner.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">CUDA_MAX_DIM_SIZE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100_000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            device (Union[str, torch.device]): torch device to do matmuls on</span>
 <span class="sd">            CUDA_MAX_DIM_SIZE (int, optional): Size of block for block-wise</span>
@@ -327,9 +327,8 @@
     </aside>
   </div>
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     </body>
 </html>

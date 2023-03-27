@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation FAQs" href="install.html" /><link rel="prev" title="TRAK: Attributing Model Behavior at Scale" href="index.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
         <title>Quickstart — get TRAK scores for CIFAR - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -196,37 +196,38 @@
         </div>
         <article role="main">
           <section id="quickstart-get-trak-scores-for-cifar">
-<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this headline">#</a></h1>
+<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this heading">#</a></h1>
 <p>In this tutorial, we’ll show you how to use the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API to compute data
-attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> on
-<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> <a class="footnote-reference brackets" href="#id2" id="id1">1</a>. All computations take roughly fifteen minutes in a total
-on a single A100 GPU.
-Overall, this tutorial will show you how to:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a></p></li>
-<li><p><a class="reference internal" href="#set-up-the-traker-class"><span class="std std-ref">Set up the TRAKer class</span></a></p></li>
-<li><p><a class="reference internal" href="#compute-trak-features-for-train-data"><span class="std std-ref">Compute TRAK features for train data</span></a></p></li>
-<li><p><a class="reference internal" href="#compute-trak-scores-for-targets"><span class="std std-ref">Compute TRAK scores for targets</span></a></p></li>
-<li><p><a class="reference internal" href="#visualize-the-attributions"><span class="std std-ref">Visualize the attributions!</span></a></p></li>
-<li><p><a class="reference internal" href="#extra-evaluate-counterfactuals"><span class="std std-ref">Extra: evaluate counterfactuals</span></a></p></li>
-</ul>
-<p>Here we’ll provide tips and tricks for you to quickly get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> up and
-running; for more details, check the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>A subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/CIFAR-10">CIFAR-10</a> dataset containing only the “cat” and “dog” classes</p>
-</dd>
-</dl>
+attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> models trained on
+<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code>. <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.</p>
+<p>Overall, this tutorial will show you how to:</p>
+<ol class="arabic simple">
+<li><p><span class="xref std std-ref">Load model checkpoints</span></p></li>
+<li><p><span class="xref std std-ref">Set up the :class:`.TRAKer` class</span></p></li>
+<li><p><a class="reference internal" href="#compute-trak-features-for-training-data"><span class="std std-ref">Compute TRAK features for training data</span></a></p></li>
+<li><p><a class="reference internal" href="#compute-trak-scores-for-target-examples"><span class="std std-ref">Compute TRAK scores for target examples</span></a></p></li>
+<li><p><a class="reference internal" href="#visualize-the-attributions-found-by-trak"><span class="std std-ref">Visualize the attributions found by TRAK</span></a></p></li>
+<li><p><a class="reference internal" href="#bonus-evaluate-counterfactuals"><span class="std std-ref">Bonus: Evaluate counterfactuals</span></a></p></li>
+</ol>
+<p>You can also try this tutorial as a
+<a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/cifar2_correlation.ipynb">Jupyter notebook</a>.
+All computations take roughly fifteen minutes in total
+on a single A100 GPU.</p>
 <p>Let’s get started!</p>
-<section id="save-model-checkpoints">
-<h2>Save model checkpoints<a class="headerlink" href="#save-model-checkpoints" title="Permalink to this headline">#</a></h2>
-<p>First, we need to have model checkpoints (e.g. <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s) to apply
-<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> on. You can either use the script below to train twenty copies of
-Resnet-9 on <code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> and save the checkpoints, or bring your own
-checkpoint (any architecture/dataset combination within image classification
-will be fine for the following steps).</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>A subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/CIFAR-10">CIFAR-10</a> dataset containing only the “cat” and “dog” classes</p>
+</aside>
+</aside>
+<section id="load-model-checkpoints">
+<h2>0. Load model checkpoints<a class="headerlink" href="#load-model-checkpoints" title="Permalink to this heading">#</a></h2>
+<p>First, you need models to apply
+<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to. You can either use the script below to train three
+ResNet-9 models on <code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> and save the checkpoints (e.g., <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s), or
+use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + CIFAR-2 with any architecture + classification task of your choice.)</p>
 <details>
-<summary><a>Check the exact training script we used.</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ffcv.fields.decoders</span> <span class="kn">import</span> <span class="n">IntDecoder</span><span class="p">,</span> <span class="n">SimpleRGBImageDecoder</span>
+<summary><a>Training code for CIFAR-2</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ffcv.fields.decoders</span> <span class="kn">import</span> <span class="n">IntDecoder</span><span class="p">,</span> <span class="n">SimpleRGBImageDecoder</span>
 <span class="kn">from</span> <span class="nn">ffcv.loader</span> <span class="kn">import</span> <span class="n">Loader</span><span class="p">,</span> <span class="n">OrderOption</span>
 <span class="kn">from</span> <span class="nn">ffcv.pipeline.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">ffcv.transforms</span> <span class="kn">import</span> <span class="n">RandomHorizontalFlip</span><span class="p">,</span> <span class="n">Cutout</span><span class="p">,</span> \
@@ -370,7 +371,7 @@ will be fine for the following steps).</p>
     <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s1">&#39;./checkpoints/sd_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.pt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</details><p>For the remaining steps, we’re going to assume you have <code class="code docutils literal notranslate"><span class="pre">N</span></code> model
+</details><p>For the remaining steps, we’ll assume you have <code class="code docutils literal notranslate"><span class="pre">N</span></code> model
 checkpoints in <code class="code docutils literal notranslate"><span class="pre">./checkpoints</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
@@ -381,99 +382,100 @@ checkpoints in <code class="code docutils literal notranslate"><span class="pre"
 </div>
 </section>
 <section id="set-up-the-traker-class">
-<h2>Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this headline">#</a></h2>
-<p>First, let’s initlaize our model. Using the methods from the
-section above:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>The <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class is the entry point to the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API. The two
-most important arguments for its <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> are:</p>
+<h2>1. Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this heading">#</a></h2>
+<p>The <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class is the entry point to the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API. Construct it by calling <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> with three arguments:</p>
 <ul class="simple">
-<li><p>a model architecture (a <code class="code docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance)</p></li>
+<li><p>a <code class="code docutils literal notranslate"><span class="pre">model</span></code> (a <code class="code docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance) — this is the model architecture/class that you want to compute attributions for. Note that this model you pass in does not need to be initialized (we’ll do that separately below).</p></li>
 <li><p>a <code class="code docutils literal notranslate"><span class="pre">task</span></code> (a string or a <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a> instance) — this
-specifies what type of learning task we are attributing with <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>,
-e.g. image classification, language modeling, CLIP-style contrastive learning
-natural language supervision, etc.</p></li>
+specifies the type of learning task you want to attribue with <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>,
+e.g. image classification, language modeling, CLIP-style contrastive learning, etc.</p></li>
+<li><p>a <code class="code docutils literal notranslate"><span class="pre">train_set_size</span></code> (an integer) — the size of the training set you want to keep trak of</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">trak</span> <span class="kn">import</span> <span class="n">TRAKer</span>
+
+<span class="c1"># Replace with your choice of model constructor</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
 <span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
                 <span class="n">task</span><span class="o">=</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span>
                 <span class="n">train_set_size</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>  <span class="c1"># CIFAR-2 has 10,000 train examples</span>
 </pre></div>
 </div>
-<p>We need to specify the size of the train set so that <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> can
-initialize <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.memmap.html">memory-maps</a> of the
-correct size for gradient features and attribution scores.
-By default, all metadata and arrays created by <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> are stored in
+<p>By default, all metadata and arrays created by <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> are stored in
 <code class="code docutils literal notranslate"><span class="pre">./trak_results</span></code>. You can override this by specifying a custom
 <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> to <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>.</p>
-<p>You can initalize multiple <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> objects with the same
-<code class="code docutils literal notranslate"><span class="pre">save_dir</span></code>. In fact, running multiple <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>s in parallel, all
-writing to the same <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code>, is not only supported, but encouraged!
-Check out how to <a class="reference internal" href="slurm.html#slurm-tutorial"><span class="std std-ref">Parallelize TRAK scoring with SLURM</span></a> for more details.</p>
-<p>In addition, we can specify the size of the “out” dimension of the
-dimensionality reduction step in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with the <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code>
-argument, e.g.:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">proj_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+<p>In addition, you can specify the dimension of the features used by <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with the <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code>
+argument, e.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">proj_dim</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>  <span class="c1"># default dimension is 2048</span>
 </pre></div>
 </div>
-<p>See our paper for ablations on the size of the “out” dimension (maybe
-surprisingly, bigger <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> is not always better!)</p>
+<p>(For the curious, this corresponds to the dimension of the output of random projections in our algorithm.
+We recommend <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> between 1,000 and 40,000.)</p>
+<p>For more customizations, check out the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
 </section>
-<section id="compute-trak-features-for-train-data">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data<a class="headerlink" href="#compute-trak-features-for-train-data" title="Permalink to this headline">#</a></h2>
-<p>Now let’s process the train data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id5" id="id3">2</a></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
-<span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+<section id="compute-trak-features-for-training-data">
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data<a class="headerlink" href="#compute-trak-features-for-training-data" title="Permalink to this heading">#</a></h2>
+<p>Now that we have constructed a  <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object, let’s use it to process the training data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id4" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace with your choice of data loader (should be deterministic ordering)</span>
+<span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We’re ready to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> the training samples:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>  <span class="c1"># for progress tracking</span>
-<span class="linenos">2</span>
-<span class="linenos">3</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
-<span class="linenos">4</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
-<span class="linenos">5</span>
-<span class="linenos">6</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
-<span class="linenos">7</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="linenos">8</span>
-<span class="linenos">9</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
+<p>We process the training examples by calling <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
+<span class="linenos"> 4</span>    <span class="c1"># TRAKer loads the provided checkpoint and also associates</span>
+<span class="linenos"> 5</span>    <span class="c1"># the provided (unique) model_id with the checkpoint.</span>
+<span class="linenos"> 6</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
+<span class="linenos"> 9</span>        <span class="c1"># TRAKer computes features corresponding to the batch of examples,</span>
+<span class="linenos">10</span>        <span class="c1"># using the checkpoint loaded above.</span>
+<span class="linenos">11</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="c1"># Tells TRAKer that we&#39;ve given it all the information, at which point</span>
+<span class="linenos">14</span><span class="c1"># TRAKer does some post-processing to get ready for the next step</span>
+<span class="linenos">15</span><span class="c1"># (scoring target examples).</span>
+<span class="linenos">16</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Let’s analyze this step by step. On line 3, we’re iterating over the
-checkpoints, assigning a <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> (just the checkpoint’s index in the
-<code class="code docutils literal notranslate"><span class="pre">ckpt</span></code> array in this case) for each one. Then, on line 4, the
-<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> method registers the checkpoint in the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>
-class and ties it to the given <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>. <a class="footnote-reference brackets" href="#id6" id="id4">3</a> In lines 6 and 7, we are
-iterating over the train data, getting gradient features for all examples.
-This step involves computing per-example gradients. Finally, in line 9, we
-perform some post-processing of the computed features (in particular, we compute
-the reweighting term, check our paper if you’re curious what that is).</p>
-<p>Note that the loader we are using is <strong>not</strong> shuffled. Because of that, we only
-need to specify how many samples are in batch, and <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> writes
-sequentially in the memory-map for gradient features. Alternatively, we can use
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Here we assume that the data loader we are using is <strong>not</strong> shuffled,
+so we only need to specify how many samples are in batch.
+Alternatively, we can use
 a shuffled data loader, and pass in <code class="code docutils literal notranslate"><span class="pre">inds</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code>
 to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>. In that case, <code class="code docutils literal notranslate"><span class="pre">inds</span></code> should be an array of the same
 length as the batch, specifying the indices of the examples in the batch within
-the train data.</p>
-<dl class="footnote brackets">
-<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
-<dd><p>Again, we use the methods defined in <a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a>. Adapt this as you wish.</p>
-</dd>
-<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
-<dd><p><code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints</p>
-</dd>
-</dl>
+the training dataset.</p>
+</div>
+<p>Above, we sequentially iterate over multiple model checkpoints
+.. note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>While you can still compute :code:`TRAK` with a single checkpoint, using multiple checkpoints significantly improves TRAK&#39;s performance. See our
+</pre></div>
+</div>
+<p>But you can also—and we recommend you to—parallelize this step across multiple jobs.
+All you have to do is  initialize a different <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object with the same
+<code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> within each job and specify the appropriate <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> when calling
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a>.
+For more details, check out how to <a class="reference internal" href="slurm.html#slurm-tutorial"><span class="std std-ref">Parallelize TRAK scoring with SLURM</span></a>.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id4" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
+<p>Again, we use the methods defined in <span class="xref std std-ref">Save model checkpoints</span>.</p>
+</aside>
+</aside>
 </section>
-<section id="compute-trak-scores-for-targets">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for targets<a class="headerlink" href="#compute-trak-scores-for-targets" title="Permalink to this headline">#</a></h2>
-<p>Finally, time for scoring! For the purpose of this tutorial, let’s make the
+<section id="compute-trak-scores-for-target-examples">
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples<a class="headerlink" href="#compute-trak-scores-for-target-examples" title="Permalink to this heading">#</a></h2>
+<p>Finally, we are ready to compute attribution scores.
+To do this, you need to choose a set of target examples that you want to attribute.
+For the purpose of this tutorial, let’s make the
 targets be the entire validation set:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loader_targets</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Using a similar interface to the featurizing step:</p>
+<p>As before, we iterate over checkpoints and batches of data:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
 <span class="linenos">2</span>    <span class="n">traker</span><span class="o">.</span><span class="n">start_scoring_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span>
 <span class="linenos">3</span>                                    <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
@@ -485,30 +487,30 @@ targets be the entire validation set:</p>
 </pre></div>
 </div>
 <p>Here, <a class="reference internal" href="trak.html#trak.traker.TRAKer.start_scoring_checkpoint" title="trak.traker.TRAKer.start_scoring_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start_scoring_checkpoint()</span></code></a> has a similar function to
-<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> used during featurizing; this time, instead of
-registering the checkpoint, it asserts that this <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> has been
-featurized, loads the given model checkpoint, and initializes memmory-maps for
-the target gradient features. The <a class="reference internal" href="trak.html#trak.traker.TRAKer.score" title="trak.traker.TRAKer.score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score()</span></code></a> method is conceptually close to
-<a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> - it processes the target batch and computes gradient
-features for each image inside. The <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> and <code class="code docutils literal notranslate"><span class="pre">inds</span></code>
-arguments work in the same way as in <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>.</p>
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> used when featuring the training set; it prepares the
+<a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> by loading the checkpoint and initializing internal data structures.
+The <a class="reference internal" href="trak.html#trak.traker.TRAKer.score" title="trak.traker.TRAKer.score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score()</span></code></a> method is analogous to
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>; it processes the target batch and computes
+the corresponding features.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Be careful that you provide the same <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> for each checkpoint as
-in the featurizing step - <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> will <strong>not</strong> check that you did that.
-If you shuffle the <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s, you’ll not receive an error, but
-you’ll get bad results.</p>
-<p>P.S.: if you know a clean, robust way to hash model parameters, open an
-issue on github and we might add an <code class="code docutils literal notranslate"><span class="pre">assert</span></code> about <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>
+<p>Be careful that you provide the <strong>same</strong> <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> for each checkpoint as
+in the featurizing step—<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> will <strong>not</strong> check that you did that.
+If you use the wrong <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> will silently fail.</p>
+<p>P.S.: If you know of a clean, robust way to hash model parameters to detect a changed checkpoint,
+open an issue on github and we can add an <code class="code docutils literal notranslate"><span class="pre">assert</span></code> to check for <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>
 consistency.</p>
 </div>
-<p>After this, we get our <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores as a <code class="code docutils literal notranslate"><span class="pre">torch.Tensor</span></code> from the
-<a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> method. That’s it! Now let’s take a look at what we
-got.</p>
+<p>The final line above returns <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores as a <code class="code docutils literal notranslate"><span class="pre">numpy.array</span></code> from the
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> method.</p>
+<p>That’s it!
+Once you have your model(s) and your data, just a few API-calls to TRAK
+let’s you compute data attribution scores.</p>
 </section>
-<section id="visualize-the-attributions">
-<h2>Visualize the attributions!<a class="headerlink" href="#visualize-the-attributions" title="Permalink to this headline">#</a></h2>
-<p>TODO: add images below code snipeets once we have them; some text to explain what’s going on</p>
+<section id="visualize-the-attributions-found-by-trak">
+<h2>Visualize the attributions found by TRAK<a class="headerlink" href="#visualize-the-attributions-found-by-trak" title="Permalink to this heading">#</a></h2>
+<p>Let’s take a look at what the attribution scores look like.
+TODO: add images below code snipeets once we have them; some text to explain what’s going on</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
 
 <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># let&#39;s look at two validation images</span>
@@ -535,15 +537,14 @@ got.</p>
 </pre></div>
 </div>
 </section>
-<section id="extra-evaluate-counterfactuals">
-<h2>Extra: evaluate counterfactuals<a class="headerlink" href="#extra-evaluate-counterfactuals" title="Permalink to this headline">#</a></h2>
-<p>TODO: clean up code snippet a bit; add histogram below code snippets once we have it; some text to explain what’s going on</p>
-<p>Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:</p>
+<section id="bonus-evaluate-counterfactuals">
+<h2>Bonus: Evaluate counterfactuals<a class="headerlink" href="#bonus-evaluate-counterfactuals" title="Permalink to this heading">#</a></h2>
+<p>In our paper, we introduce a quantitative way of evaluating data attribution methods using
+what we called the <em>linear datamodeling score</em>.
+Intuitively, this score is a number between 0 and 1 indicating how <em>counterfactually predictive</em> the computed attribution scores are.
+For example, this is used in our main evaluation (Figure 1 from our paper):</p>
 <img alt="_images/main_figure.png" src="_images/main_figure.png" />
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">masks</span> <span class="o">=</span> <span class="o">...</span>
-<span class="n">margins</span> <span class="o">=</span> <span class="o">...</span>
-</pre></div>
-</div>
+<p>Computing this score requires having an (independent) set of models trained on random subsets of the training dataset. For our CIFAR-2 example, we provide pre-computed data which can be downloaded as in the code below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">spearmanr</span>
 
 <span class="k">def</span> <span class="nf">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
@@ -552,12 +553,16 @@ got.</p>
 
     <span class="n">masks_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;mask.npy&#39;</span><span class="p">)</span>
     <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">masks_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">masks_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="c1"># num masks, num train samples</span>
+
+    <span class="c1"># Boolean matrix of size [num models] x [num training examples]</span>
+    <span class="c1"># indicating the random subset on which the model was trained on</span>
     <span class="n">masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">masks_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
 
     <span class="n">margins_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;val_margins.npy&#39;</span><span class="p">)</span>
     <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">margins_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">margins_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="c1"># num , num val samples</span>
+
+    <span class="c1"># Float matrix of size [num models] x [num targets]</span>
+    <span class="c1"># indicating the random subset on which the model was trained on</span>
     <span class="n">margins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">margins_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span>
 
     <span class="n">val_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
@@ -575,6 +580,11 @@ got.</p>
 <span class="n">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>For our example, the above code outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Correlation</span><span class="p">:</span> <span class="mf">0.0629</span>
+</pre></div>
+</div>
+<p>(Note: the exact value might flucutate a little bit depending on the particular checkpoints used, but should still concentrate around the above value. Also, the above was based on <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> computed over three checkpoints; the score will increase with more checkpoints used.)</p>
 </section>
 </section>
 
@@ -634,12 +644,12 @@ got.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a><ul>
-<li><a class="reference internal" href="#save-model-checkpoints">Save model checkpoints</a></li>
-<li><a class="reference internal" href="#set-up-the-traker-class">Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
-<li><a class="reference internal" href="#compute-trak-features-for-train-data">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data</a></li>
-<li><a class="reference internal" href="#compute-trak-scores-for-targets">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for targets</a></li>
-<li><a class="reference internal" href="#visualize-the-attributions">Visualize the attributions!</a></li>
-<li><a class="reference internal" href="#extra-evaluate-counterfactuals">Extra: evaluate counterfactuals</a></li>
+<li><a class="reference internal" href="#load-model-checkpoints">0. Load model checkpoints</a></li>
+<li><a class="reference internal" href="#set-up-the-traker-class">1. Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
+<li><a class="reference internal" href="#compute-trak-features-for-training-data">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data</a></li>
+<li><a class="reference internal" href="#compute-trak-scores-for-target-examples">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples</a></li>
+<li><a class="reference internal" href="#visualize-the-attributions-found-by-trak">Visualize the attributions found by TRAK</a></li>
+<li><a class="reference internal" href="#bonus-evaluate-counterfactuals">Bonus: Evaluate counterfactuals</a></li>
 </ul>
 </li>
 </ul>
@@ -652,9 +662,8 @@ got.</p>
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
 </html>

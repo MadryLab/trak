@@ -3,17 +3,18 @@
 Add  a :code:`task` to :code:`TRAKer` (subclassing :code:`ModelOutput`\ ) --- CLIP
 ==================================================================================
 
-In this tutorial, we'll go through the process of adapting :code:`TRAK` to a new
-custom task - attributing CLIP models. Check out :class:`.CLIPModelOutput` for
+In this tutorial, we'll go through the process of applying :code:`TRAK` to a new
+custom task, using CLIP as an example. Check out :class:`.CLIPModelOutput` for
 the final result.
 
-Model output funcitons
+Model output functions
 ----------------------
 
-Computing :code:`TRAK` attribution scores hinges on defining a model output
-function to guide the scoring process. We derive and discuss model output
+Computing :code:`TRAK` attribution scores requires defining an appropriate ``model output
+function`` to guide the scoring process. Intuitively, you can just think of it as a
+loss function. We derive and discuss model output
 functions for multiple tasks (binary and multiclass classification, CLIP loss,
-various NLP tasks, etc) in detail in `our paper <link:TODO>`_. 
+and various NLP tasks, etc) in detail in `our paper <link:TODO>`_.
 
 In short, given the following:
 
@@ -79,7 +80,7 @@ gradient computation.
     to follow the structure of :meth:`.AbstractModelOutput.get_output` and pass
     it to :code:`autograd` as well.
 
-What you need to do for a new task 
+What you need to do for a new task
 ----------------------------------
 
 When we adapt :code:`TRAK` for a new task, we only need to create a new subclass of
@@ -103,7 +104,7 @@ We end up choosing the following model output function (check Section 5.1.1 of
 our papers for details on why this is a good model output function):
 
 .. math::
-    
+
     f_{CLIP}(x_i, y_i) =
     -\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ij}))
     -\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ji}))
