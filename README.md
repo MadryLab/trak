@@ -87,7 +87,7 @@ If you use this code in your work, please cite using the following BibTeX entry:
 ```
 
 ## Maintainers:
-[Kristian Georgiev](https://twitter.com/kristian_georgiev1)<br>
+[Kristian Georgiev](https://twitter.com/kris_georgiev1)<br>
 [Andrew Ilyas](https://twitter.com/andrew_ilyas)<br>
 [Guillaume Leclerc](https://twitter.com/gpoleclerc)<br>
 [Sung Min Park](https://twitter.com/smsampark)
