@@ -115,7 +115,7 @@ const singleScatterPlot = (id, data) => {
         font: { color: 'white' },
         xaxis: { 
             ...axisConfig,
-            title: "Computation Time (mins)", 
+            title: "Computation Time (minutes on 1xA100)", 
             type: 'log',
         },
         yaxis: { 
