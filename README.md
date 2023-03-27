@@ -25,7 +25,7 @@ Check [our docs](https://trak.csail.mit.edu/html) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
 steps needed to get `TRAK` attribution scores with our API.
 
-### Setting up the `TRAK` scorer
+### Make a `TRAKer` instance
 
 ```python
 from trak import TRAKer
@@ -36,7 +36,7 @@ train_loader = ...
 traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 ```
 
-### Getting `TRAK` features for the train data
+### Compute `TRAK` features on training data
 
 ```python
 for model_id, checkpoint in enumerate(checkpoints):
@@ -46,7 +46,7 @@ for model_id, checkpoint in enumerate(checkpoints):
 traker.finalize_features()
 ```
 
-### Getting `TRAK` scores
+### Compute `TRAK` scores for target examples
 
 ```python
 targets_loader = ...
@@ -85,3 +85,9 @@ If you use this code in your work, please cite using the following BibTeX entry:
   year = {2023}
 }
 ```
+
+## Maintainers:
+[Kristian Georgiev](https://twitter.com/kristian_georgiev1)<br>
+[Andrew Ilyas](https://twitter.com/andrew_ilyas)<br>
+[Guillaume Leclerc](https://twitter.com/gpoleclerc)<br>
+[Sung Min Park](https://twitter.com/smsampark)
