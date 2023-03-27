@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Parallelize TRAK scoring with SLURM" href="slurm.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Add a task to TRAKer (subclassing ModelOutput) — BERT-base" href="bert.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>API reference - TRAK 0.1.0 documentation</title>
+        <title>API reference - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -155,10 +155,11 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API reference</a></li>
 </ul>
 
@@ -195,13 +196,52 @@
         </div>
         <article role="main">
           <section id="api-reference">
-<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">#</a></h1>
+<span id="api-reference-doc"></span><h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">#</a></h1>
 <section id="module-trak.traker">
 <span id="trak-traker-module"></span><h2>trak.traker module<a class="headerlink" href="#module-trak.traker" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.traker.TRAKer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.traker.</span></span><span class="sig-name descname"><span class="pre">TRAKer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/traker.html#TRAKer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.traker.</span></span><span class="sig-name descname"><span class="pre">TRAKer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">load_from_save_dir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/traker.html#TRAKer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The main front-facing class for TRAK. See the <a class="reference external" href="https://github.com/MadryLab/trak">README</a> and <a class="reference external" href="https://trak.csail.mit.edu/html/index.html">docs</a> for example usage.</p>
+<dl>
+<dt>Args:</dt><dd><dl>
+<dt>model (torch.nn.Module):</dt><dd><p>model to use for TRAK</p>
+</dd>
+<dt>task (Union[AbstractModelOutput, str]):</dt><dd><p>Type of model that TRAK will be ran on. Accepts either one of
+the following strings:
+- <code class="code docutils literal notranslate"><span class="pre">image_classification</span></code>
+- <code class="code docutils literal notranslate"><span class="pre">clip</span></code>
+- <code class="code docutils literal notranslate"><span class="pre">bert_...</span></code> TODO: &#64;Sam</p>
+<p>or an implementation of <a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>.</p>
+</dd>
+<dt>train_set_size (int):</dt><dd><p>Size of the train set that TRAK is featurizing</p>
+</dd>
+<dt>save_dir (str, optional):</dt><dd><p>Directory to save final TRAK scores, intermediate results, and
+metadata. Defaults to :code:’./trak_results’.</p>
+</dd>
+<dt>load_from_save_dir (bool, optional):</dt><dd><p>If True, the :class`.TRAKer` instance will attempt to load
+existing metadata from save_dir. May lead to I/O issues if
+multiple TRAKer instances ran in parallel have this flag set to
+True. See the SLURM tutorial for more details.</p>
+</dd>
+<dt>device (Union[str, torch.device], optional):</dt><dd><p>torch device on which to do computations. Defaults to ‘cuda’.</p>
+</dd>
+<dt>gradient_computer (AbstractGradientComputer, optional):</dt><dd><p>Class to use to get per-example gradients. See
+<a class="reference internal" href="#trak.gradient_computers.AbstractGradientComputer" title="trak.gradient_computers.AbstractGradientComputer"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractGradientComputer</span></code></a> for more details. Defaults to
+<a class="reference internal" href="#trak.gradient_computers.FunctionalGradientComputer" title="trak.gradient_computers.FunctionalGradientComputer"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionalGradientComputer</span></code></a>.</p>
+</dd>
+<dt>projector (Optional[AbstractProjector], optional):</dt><dd><p>Either set <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> and a <a class="reference internal" href="#trak.projectors.CudaProjector" title="trak.projectors.CudaProjector"><code class="xref py py-class docutils literal notranslate"><span class="pre">CudaProjector</span></code></a>
+Rademacher projector will be used or give a custom subclass of
+<a class="reference internal" href="#trak.projectors.AbstractProjector" title="trak.projectors.AbstractProjector"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractProjector</span></code></a> class and leave <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> as
+None. Defaults to None.</p>
+</dd>
+<dt>proj_dim (int, optional):</dt><dd><p>Dimension of the projected TRAK features. See Section 4.3 of
+(TODO: link)[our paper] for more details. Defaults to 2048.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.traker.TRAKer.featurize">
 <span class="sig-name descname"><span class="pre">featurize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.featurize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.featurize" title="Permalink to this definition">#</a></dt>
@@ -217,11 +257,14 @@ function (in the notation of the paper, the <span class="math notranslate nohigh
 <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> will write sequentially into the internal store of
 the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>batch (Iterable[Tensor]): input batch
-inds (Optional[Iterable[int]], optional): Indices of the batch
-samples in the train set. Defaults to None.
-num_samples (Optional[int], optional): Number of samples in the
-batch. Defaults to None.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+<dt>inds (Optional[Iterable[int]], optional):</dt><dd><p>Indices of the batch samples in the train set. Defaults to None.</p>
+</dd>
+<dt>num_samples (Optional[int], optional):</dt><dd><p>Number of samples in the batch. Defaults to None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -237,7 +280,7 @@ class.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
 <dt>model_ids (Iterable[int], optional): A list of model IDs for which</dt><dd><p>features should be finalized. If None, features are finalized
-for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
+for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>
 class. Defaults to None.</p>
 </dd>
 </dl>
@@ -252,16 +295,18 @@ class. Defaults to None.</p>
 train samples, and model checkpoints (specified by model IDs).</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
-<dt>model_ids (Iterable[int], optional): A list of model IDs for which</dt><dd><p>scores should be finalized. If None, scores are computed
-for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>
+<dt>model_ids (Iterable[int], optional):</dt><dd><p>A list of model IDs for which
+scores should be finalized. If None, scores are computed
+for all model IDs in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>
 class. Defaults to None.</p>
 </dd>
-<dt>del_grads (bool, optional): If True, the target gradients</dt><dd><p>(intermediate results) are deleted from the internal store of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.  Defaults to True.</p>
+<dt>del_grads (bool, optional):</dt><dd><p>If True, the target gradients (intermediate results) are deleted
+from the internal store of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class.  Defaults
+to True.</p>
 </dd>
-<dt>exp_name (str, optional): Used to name the scores <code class="code docutils literal notranslate"><span class="pre">.npy</span></code></dt><dd><p>array produced by this method in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class. If None, a random uuid is generated.
-Defaults to None.</p>
+<dt>exp_name (str, optional):</dt><dd><p>Used to name the scores <code class="code docutils literal notranslate"><span class="pre">.npy</span></code> array produced by this
+method in the <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class. If
+None, a random uuid is generated.  Defaults to None.</p>
 </dd>
 </dl>
 </dd>
@@ -275,7 +320,10 @@ Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">init_projector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_dim</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.init_projector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.init_projector" title="Permalink to this definition">#</a></dt>
 <dd><p>Initialize the projector for a traker class</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>projector (AbstractProjector): JL projector</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>projector (AbstractProjector):</dt><dd><p>JL projector</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -285,15 +333,17 @@ Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">load_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_allow_featurizing_already_registered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.load_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.load_checkpoint" title="Permalink to this definition">#</a></dt>
 <dd><p>Loads state dictionary for the given checkpoint; initializes arrays
 to store TRAK features for that checkpoint, tied to the model ID.</p>
-<dl>
-<dt>Args:</dt><dd><p>checkpoint (Iterable[Tensor]): state_dict to load
-model_id (int): a unique ID for a checkpoint
-_allow_featurizing_already_registered (bool, optional): Only use if</p>
-<blockquote>
-<div><p>you want to override the default behaviour that
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>checkpoint (Iterable[Tensor]):</dt><dd><p>state_dict to load</p>
+</dd>
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>_allow_featurizing_already_registered (bool, optional):</dt><dd><p>Only use if you want to override the default behaviour that
 <code class="code docutils literal notranslate"><span class="pre">featurize</span></code> is forbidden on already registered model IDs.
 Defaults to None.</p>
-</div></blockquote>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -303,16 +353,19 @@ Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.score" title="Permalink to this definition">#</a></dt>
 <dd><p>This method computes the (intermediate per-checkpoint) TRAK scores
 for a batch of targets and stores them in the internal store of the
-<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class.</p>
+<a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class.</p>
 <p>Either <code class="code docutils literal notranslate"><span class="pre">inds</span></code> or <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> must be specified. Using
 <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> will write sequentially into the internal store of
-the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a>.</p>
+the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>batch (Iterable[Tensor]): input batch
-inds (Optional[Iterable[int]], optional): Indices of the batch
-samples in the train set. Defaults to None.
-num_samples (Optional[int], optional): Number of samples in the
-batch. Defaults to None.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+<dt>inds (Optional[Iterable[int]], optional):</dt><dd><p>Indices of the batch samples in the train set. Defaults to None.</p>
+</dd>
+<dt>num_samples (Optional[int], optional):</dt><dd><p>Number of samples in the batch. Defaults to None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -320,12 +373,17 @@ batch. Defaults to None.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.traker.TRAKer.start_scoring_checkpoint">
 <span class="sig-name descname"><span class="pre">start_scoring_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.start_scoring_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.start_scoring_checkpoint" title="Permalink to this definition">#</a></dt>
-<dd><p>This method prepares the internal store of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-func docutils literal notranslate"><span class="pre">TRAKer()</span></code></a> class
+<dd><p>This method prepares the internal store of the <a class="reference internal" href="#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class
 to start computing scores for a set of targets.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>checkpoint (Iterable[Tensor]): model checkpoint (state dict)
-model_id (int): a unique ID for a checkpoint
-num_targets (int): number of targets to score</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>checkpoint (Iterable[Tensor]):</dt><dd><p>model checkpoint (state dict)</p>
+</dd>
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>num_targets (int):</dt><dd><p>number of targets to score</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -341,24 +399,19 @@ num_targets (int): number of targets to score</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Implementations of the GradientComputer class should allow for per-sample
 gradients.
-This is behavior is enabled with three methods:
-- the <cite>load_model_params</cite> method, well, loads model parameters. It can be as</p>
-<blockquote>
-<div><p>simple as a self.model.load_state_dict(..)</p>
-</div></blockquote>
+This is behavior is enabled with three methods:</p>
 <ul class="simple">
-<li><p>the <cite>compute_per_sample_grad</cite> method computes per-sample gradients of the
-chosen model output function with respect to the model’s parameters.</p></li>
-<li><dl class="simple">
-<dt>the <cite>compute_loss_grad</cite> method computes the gradients of the loss function</dt><dd><p>with respect to the model output (which should be a scalar) for every
-sample.</p>
-</dd>
-</dl>
-</li>
+<li><p>the <a class="reference internal" href="#trak.gradient_computers.AbstractGradientComputer.load_model_params" title="trak.gradient_computers.AbstractGradientComputer.load_model_params"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_model_params()</span></code></a> method, well, loads model parameters. It can
+be as simple as a <code class="code docutils literal notranslate"><span class="pre">self.model.load_state_dict(..)</span></code></p></li>
+<li><p>the <a class="reference internal" href="#trak.gradient_computers.AbstractGradientComputer.compute_per_sample_grad" title="trak.gradient_computers.AbstractGradientComputer.compute_per_sample_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_per_sample_grad()</span></code></a> method computes per-sample gradients
+of the chosen model output function with respect to the model’s parameters.</p></li>
+<li><p>the <a class="reference internal" href="#trak.gradient_computers.AbstractGradientComputer.compute_loss_grad" title="trak.gradient_computers.AbstractGradientComputer.compute_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_loss_grad()</span></code></a> method computes the gradients of the loss
+function with respect to the model output (which should be a scalar) for
+every sample.</p></li>
 </ul>
-<p>The class attribute <cite>is_functional</cite> is used to determine what implementation
-of ModelOutput to use, i.e. whether it should use <cite>functorch</cite>’s functional
-models.</p>
+<p>The class attribute <code class="code docutils literal notranslate"><span class="pre">is_functional</span></code> is used to determine what
+implementation of ModelOutput to use, i.e. whether it should use
+<code class="code docutils literal notranslate"><span class="pre">functorch</span></code>’s functional models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.gradient_computers.AbstractGradientComputer.compute_loss_grad">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#AbstractGradientComputer.compute_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.AbstractGradientComputer.compute_loss_grad" title="Permalink to this definition">#</a></dt>
@@ -388,36 +441,50 @@ models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.gradient_computers.FunctionalGradientComputer.compute_loss_grad">
 <span class="sig-name descname"><span class="pre">compute_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#FunctionalGradientComputer.compute_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.FunctionalGradientComputer.compute_loss_grad" title="Permalink to this definition">#</a></dt>
-<dd><p>Computes the gradient of the loss with respect to the model output
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">partial</span> \<span class="n">ell</span> <span class="o">/</span> \<span class="n">partial</span> \<span class="n">text</span><span class="p">{</span><span class="n">model</span> <span class="n">output</span><span class="p">}</span>
-</pre></div>
+<dd><p>Computes the gradient of the loss with respect to the model output</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\partial \ell / \partial \text{(model output)}\]</div>
 </div>
 <p>Note: For all applications we considered, we analytically derived the
 out-to-loss gradient, thus avoiding the need to do any backward passes
 (let alone per-sample grads). If for your application this is not feasible,
 you’ll need to subclass this and modify this method to have a structure
-similar to the one of <cite>self.get_output</cite>, i.e. something like:
-<code class="docutils literal notranslate"><span class="pre">`</span>
-<span class="pre">grad_out_to_loss</span> <span class="pre">=</span> <span class="pre">grad(self.model_out_to_loss_grad,</span> <span class="pre">...)</span>
-<span class="pre">grads</span> <span class="pre">=</span> <span class="pre">vmap(grad_out_to_loss,</span> <span class="pre">...)</span>
-<span class="pre">...</span>
-<span class="pre">`</span></code></p>
+similar to the one of <code class="xref py py-meth docutils literal notranslate"><span class="pre">FunctionalGradientComputer:.get_output()</span></code>,
+i.e. something like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">grad_out_to_loss</span> <span class="o">=</span> <span class="n">grad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_out_to_loss_grad</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">grads</span> <span class="o">=</span> <span class="n">vmap</span><span class="p">(</span><span class="n">grad_out_to_loss</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>batch of data</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.gradient_computers.FunctionalGradientComputer.compute_per_sample_grad">
 <span class="sig-name descname"><span class="pre">compute_per_sample_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#FunctionalGradientComputer.compute_per_sample_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.FunctionalGradientComputer.compute_per_sample_grad" title="Permalink to this definition">#</a></dt>
-<dd><p>Uses functorch’s vmap (see
+<dd><p>Uses functorch’s <code class="code docutils literal notranslate"><span class="pre">vmap</span></code> (see
 <a class="reference external" href="https://pytorch.org/functorch/stable/generated/functorch.vmap.html#functorch.vmap">https://pytorch.org/functorch/stable/generated/functorch.vmap.html#functorch.vmap</a>
 for more details) to vectorize the computations of per-sample gradients.</p>
-<p>Doesn’t use <cite>batch_size</cite>; only added to follow the abstract method signature.</p>
+<p>Doesn’t use <code class="code docutils literal notranslate"><span class="pre">batch_size</span></code>; only added to follow the abstract method
+signature.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>batch (Iterable[Tensor]): batch of data
-batch_size (int, optional): Defaults to None.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>batch of data</p>
+</dd>
+<dt>batch_size (int, optional):</dt><dd><p>Defaults to None.</p>
+</dd>
+</dl>
 </dd>
 <dt>Returns:</dt><dd><dl class="simple">
-<dt>Tensor: gradients of the model output function of each sample in the batch</dt><dd><p>with respect to the model’s parameters.</p>
+<dt>Tensor:</dt><dd><p>gradients of the model output function of each sample in the
+batch with respect to the model’s parameters.</p>
 </dd>
 </dl>
 </dd>
@@ -432,7 +499,10 @@ with its weights and buffers. See
 <a class="reference external" href="https://pytorch.org/functorch/stable/generated/functorch.make_functional_with_buffers.html#functorch-make-functional-with-buffers">https://pytorch.org/functorch/stable/generated/functorch.make_functional_with_buffers.html#functorch-make-functional-with-buffers</a>
 for more details on <cite>functorch</cite>’s functional models.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model to load</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model to load</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -446,22 +516,30 @@ for more details on <cite>functorch</cite>’s functional models.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.gradient_computers.IterativeGradientComputer.compute_loss_grad">
 <span class="sig-name descname"><span class="pre">compute_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#IterativeGradientComputer.compute_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.IterativeGradientComputer.compute_loss_grad" title="Permalink to this definition">#</a></dt>
-<dd><p>Computes the gradient of the loss with respect to the model output
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">partial</span> \<span class="n">ell</span> <span class="o">/</span> \<span class="n">partial</span> \<span class="n">text</span><span class="p">{</span><span class="n">model</span> <span class="n">output</span><span class="p">}</span>
-</pre></div>
+<dd><p>Computes the gradient of the loss with respect to the model output</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\partial \ell / \partial \text{(model output)}\]</div>
 </div>
 <p>Note: For all applications we considered, we analytically derived the
 out-to-loss gradient, thus avoiding the need to do any backward passes
 (let alone per-sample grads). If for your application this is not feasible,
 you’ll need to subclass this and modify this method to have a structure
-similar to the one of <cite>self.get_output</cite>, i.e. something like:</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a>`
-out_to_loss = self.model_out_to_loss(…)
-for ind in range(batch_size):</p>
-<blockquote>
-<div><p>grads[ind] = torch.autograd.grad(out_to_loss[ind], …)</p>
-</div></blockquote>
+similar to the one of <code class="xref py py-meth docutils literal notranslate"><span class="pre">IterativeGradientComputer.get_output()</span></code>,
+i.e. something like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">out_to_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_out_to_loss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+    <span class="n">grads</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">grad</span><span class="p">(</span><span class="n">out_to_loss</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>batch of data</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -469,9 +547,24 @@ for ind in range(batch_size):</p>
 <span class="sig-name descname"><span class="pre">compute_per_sample_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#IterativeGradientComputer.compute_per_sample_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.IterativeGradientComputer.compute_per_sample_grad" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes per-sample gradients of the model output function This
 method does not leverage vectorization (and is hence much slower than
-its equivalent in <cite>FunctionalGradientComputer</cite>). We recommend that
-you use this only if <cite>functorch</cite> is not available to you, e.g. you have
-a (very) old version of pytorch.</p>
+its equivalent in <a class="reference internal" href="#trak.gradient_computers.FunctionalGradientComputer" title="trak.gradient_computers.FunctionalGradientComputer"><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionalGradientComputer</span></code></a>). We recommend
+that you use this only if <code class="code docutils literal notranslate"><span class="pre">functorch</span></code> is not available to you,
+e.g. you have a (very) old version of pytorch.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>batch (Iterable[Tensor]):</dt><dd><p>batch of data</p>
+</dd>
+<dt>batch_size (int, optional):</dt><dd><p>Defaults to None.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>gradients of the model output function of each sample in the
+batch with respect to the model’s parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -490,32 +583,37 @@ a (very) old version of pytorch.</p>
 <section id="module-trak.modelout_functions">
 <span id="trak-modelout-functions-module"></span><h2>trak.modelout_functions module<a class="headerlink" href="#module-trak.modelout_functions" title="Permalink to this headline">#</a></h2>
 <p>Here we provide an abstract “model output” class AbstractModelOutput, together with a number
-of subclasses for particular applications (vision, language, etc):
-- <code class="code docutils literal notranslate"><span class="pre">ImageClassificationModelOutput</span></code>
-- <code class="code docutils literal notranslate"><span class="pre">IterImageClassificationModelOutput</span></code>
-- <code class="code docutils literal notranslate"><span class="pre">CLIPModelOutput</span></code></p>
+of subclasses for particular applications (vision, language, etc):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#trak.modelout_functions.ImageClassificationModelOutput" title="trak.modelout_functions.ImageClassificationModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageClassificationModelOutput</span></code></a></p></li>
+<li><p><a class="reference internal" href="#trak.modelout_functions.IterImageClassificationModelOutput" title="trak.modelout_functions.IterImageClassificationModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">IterImageClassificationModelOutput</span></code></a></p></li>
+<li><p><a class="reference internal" href="#trak.modelout_functions.CLIPModelOutput" title="trak.modelout_functions.CLIPModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CLIPModelOutput</span></code></a></p></li>
+</ul>
 <p>These classes implement methods that transform input batches to the desired model output
 (e.g. logits, loss, etc).
 See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on what model output functions are
 in the context of TRAK and how to use &amp; design them.</p>
-<p>See [TODO: docs link] for examples on how to subclass AbstractModelOutput for a task of your choice.</p>
+<p>See, e.g. <a class="reference external" href="https://trak.csail.mit.edu/html/clip.html">this tutorial</a> for an
+example on how to subclass <code class="code docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code> for a task of your
+choice.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.modelout_functions.AbstractModelOutput">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">AbstractModelOutput</span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#AbstractModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.AbstractModelOutput" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<p>See [TODO: docs link] for examples on how to subclass
-<code class="code docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code> for a task of your choice.</p>
-<p>Subclasses must implement:
-- a <code class="code docutils literal notranslate"><span class="pre">get_output</span></code> method that takes in a batch of inputs and model
-weights to produce outputs that TRAK will be trained to predict. In the
-notation of the paper, <code class="code docutils literal notranslate"><span class="pre">get_output</span></code> should return <span class="math notranslate nohighlight">\(f(z,\theta)\)</span></p>
+<p>See, e.g. <a class="reference external" href="https://trak.csail.mit.edu/html/clip.html">this tutorial</a>
+for an example on how to subclass <code class="code docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code> for a task of
+your choice.</p>
+<p>Subclasses must implement:</p>
 <ul class="simple">
-<li><p>a <code class="code docutils literal notranslate"><span class="pre">get_out_to_loss_grad</span></code> method that takes in a batch of inputs and</p></li>
+<li><p>a <code class="code docutils literal notranslate"><span class="pre">get_output</span></code> method that takes in a batch of inputs and model
+weights to produce outputs that TRAK will be trained to predict. In the
+notation of the paper, <code class="code docutils literal notranslate"><span class="pre">get_output</span></code> should return <span class="math notranslate nohighlight">\(f(z,\theta)\)</span></p></li>
+<li><p>a <code class="code docutils literal notranslate"><span class="pre">get_out_to_loss_grad</span></code> method that takes in a batch of inputs and
+model weights to produce the gradient of the function that transforms the
+model outputs above into the loss with respect to the batch. In the
+notation of the paper, <code class="code docutils literal notranslate"><span class="pre">get_out_to_loss_grad</span></code> returns (entries along
+the diagonal of) <span class="math notranslate nohighlight">\(Q\)</span>.</p></li>
 </ul>
-<p>model weights to produce the gradient of the function that transforms the
-model outputs above into the loss with respect to the batch. In the notation
-of the paper, <code class="code docutils literal notranslate"><span class="pre">get_out_to_loss_grad</span></code> returns (entries along the
-diagonal of) <span class="math notranslate nohighlight">\(Q\)</span>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#AbstractModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
@@ -538,10 +636,17 @@ batch (Iterable[Tensor]): input batch</p>
 what model output functions are in the context of TRAK and how to use &amp;
 design them.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-batch (Iterable[Tensor]): input batch</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: model output function</p>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output function</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -566,15 +671,24 @@ method. This method should be invoked before featurizing.</p>
 <dd><p>Computes (image and text) embeddings and saves them in the class
 attributes <code class="code docutils literal notranslate"><span class="pre">image_embeddings</span></code> and <code class="code docutils literal notranslate"><span class="pre">text_embeddings</span></code>.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-loader (): data loader
-batch_size (int): input batch size
-size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.
-embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.
-preprocess_fn_img (func, optional): Transforms to apply to images
-from the loader before forward pass. Defaults to None.
-preprocess_fn_txt (func, optional): Transforms to apply to images
-from the loader before forward pass. Defaults to None.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
+</dd>
+<dt>loader ():</dt><dd><p>data loader</p>
+</dd>
+<dt>batch_size (int):</dt><dd><p>input batch size</p>
+</dd>
+<dt>size (int, optional):</dt><dd><p>Maximum number of embeddings to compute. Defaults to 50_000.</p>
+</dd>
+<dt>embedding_dim (int, optional):</dt><dd><p>Dimension of CLIP embedding. Defaults to 1024.</p>
+</dd>
+<dt>preprocess_fn_img (func, optional):</dt><dd><p>Transforms to apply to images from the loader before forward
+pass. Defaults to None.</p>
+</dd>
+<dt>preprocess_fn_txt (func, optional):</dt><dd><p>Transforms to apply to images from the loader before forward
+pass. Defaults to None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -584,12 +698,21 @@ from the loader before forward pass. Defaults to None.</p>
 <span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#CLIPModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes the (reweighting term Q in the paper)</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>func_model (func): functorch functional model
-weights (Iterable[Tensor]): functorch model weights
-buffers (Iterable[Tensor]): functorch model buffers
-batch (Iterable[Tensor]): input batch</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>func_model (func):</dt><dd><p>functorch functional model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: out-to-loss (reweighting term) for the input batch</p>
+<dt>weights (Iterable[Tensor]):</dt><dd><p>functorch model weights</p>
+</dd>
+<dt>buffers (Iterable[Tensor]):</dt><dd><p>functorch model buffers</p>
+</dd>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>out-to-loss (reweighting term) for the input batch</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -597,17 +720,17 @@ batch (Iterable[Tensor]): input batch</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.modelout_functions.CLIPModelOutput.get_output">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#CLIPModelOutput.get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.CLIPModelOutput.get_output" title="Permalink to this definition">#</a></dt>
-<dd><p>For a given input <span class="math notranslate nohighlight">\(z=(x, y)\)</span> and model parameters <span class="math notranslate nohighlight">\(\theta\)</span>,
-let <span class="math notranslate nohighlight">\(\phi(x, \theta)\)</span> be the CLIP image embedding and
-<span class="math notranslate nohighlight">\(\psi(y, \theta)\)</span> be the CLIP text embedding. Last, let
-<span class="math notranslate nohighlight">\(B\)</span> be a (simulated) batch. This method implements the model
-output function
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span>\<span class="n">log</span><span class="p">(</span>\<span class="n">frac</span><span class="p">{</span>\<span class="n">phi</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>\<span class="n">cdot</span> \<span class="n">psi</span><span class="p">(</span><span class="n">y</span><span class="p">)}{</span>\<span class="n">sum_</span><span class="p">{(</span><span class="n">x</span><span class="s1">&#39;, y&#39;</span><span class="p">)</span>\<span class="ow">in</span> <span class="n">B</span><span class="p">}</span>
-\<span class="n">phi</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>\<span class="n">cdot</span> \<span class="n">psi</span><span class="p">(</span><span class="n">y</span><span class="s1">&#39;)})</span>
-<span class="o">-</span>\<span class="n">log</span><span class="p">(</span>\<span class="n">frac</span><span class="p">{</span>\<span class="n">phi</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>\<span class="n">cdot</span> \<span class="n">psi</span><span class="p">(</span><span class="n">y</span><span class="p">)}{</span>\<span class="n">sum_</span><span class="p">{(</span><span class="n">x</span><span class="s1">&#39;, y&#39;</span><span class="p">)</span>\<span class="ow">in</span> <span class="n">B</span><span class="p">}</span>
-\<span class="n">phi</span><span class="p">(</span><span class="n">x</span><span class="s1">&#39;)\cdot \psi(y)})</span>
-</pre></div>
+<dd><p>For a given input <span class="math notranslate nohighlight">\(z=(x, y)\)</span> and model parameters
+<span class="math notranslate nohighlight">\(\theta\)</span>, let <span class="math notranslate nohighlight">\(\phi(x, \theta)\)</span> be the CLIP image
+embedding and <span class="math notranslate nohighlight">\(\psi(y, \theta)\)</span> be the CLIP text embedding.
+Last, let <span class="math notranslate nohighlight">\(B\)</span> be a (simulated) batch. This method implements the
+model output function</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[-\log(\frac{\phi(x)\cdot \psi(y)}{\sum_{(x', y')\in B}
+\phi(x)\cdot \psi(y')})
+-\log(\frac{\phi(x)\cdot \psi(y)}{\sum_{(x', y')\in B}
+\phi(x')\cdot \psi(y)})\]</div>
 </div>
 <p>It uses functorch’s functional models to make the per-sample gradient
 computations faster.  For more details on what func_model, weights &amp;
@@ -620,14 +743,24 @@ internally by <code class="xref py py-func docutils literal notranslate"><span c
 If you’re reading this and feel strongly about it, feel free to make a
 PR with a fix.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>func_model (func): functorch functional model
-weights (Iterable[Tensor]): functorch model weights
-buffers (Iterable[Tensor]): functorch model buffers
-image (Tensor): input image, should not have batch dimension
-label (Tensor): input label, should not have batch dimension</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>func_model (func):</dt><dd><p>functorch functional model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and
+<dt>weights (Iterable[Tensor]):</dt><dd><p>functorch model weights</p>
+</dd>
+<dt>buffers (Iterable[Tensor]):</dt><dd><p>functorch model buffers</p>
+</dd>
+<dt>image (Tensor):</dt><dd><p>input image, should not have batch dimension</p>
+</dd>
+<dt>label (Tensor):</dt><dd><p>input label, should not have batch dimension</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and
 weights &amp; buffers <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -658,8 +791,8 @@ weights &amp; buffers <span class="math notranslate nohighlight">\(\theta\)</spa
 <dt class="sig sig-object py" id="trak.modelout_functions.ImageClassificationModelOutput">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">ImageClassificationModelOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/modelout_functions.html#ImageClassificationModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.ImageClassificationModelOutput" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></code></a></p>
-<p>Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]
-for more details.</p>
+<p>Margin for (multiclass) image classification. See Section 3.3 of (TODO:
+link)[our paper] for more details.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.modelout_functions.ImageClassificationModelOutput.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#ImageClassificationModelOutput.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.ImageClassificationModelOutput.forward" title="Permalink to this definition">#</a></dt>
@@ -669,10 +802,17 @@ but CLIP takes in both the images and captions — using this method,
 the TRAKer class does not need to be modified when we have a new model
 that uses different parts of the input batch.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (Module): model
-batch (Iterable[Tensor]): input batch</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (Module):</dt><dd><p>model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: model output (not to be confused with the model output function)</p>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output (not to be confused with the model output function)</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -682,12 +822,21 @@ batch (Iterable[Tensor]): input batch</p>
 <span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#ImageClassificationModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.ImageClassificationModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes the (reweighting term Q in the paper)</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>func_model (func): functorch functional model
-weights (Iterable[Tensor]): functorch model weights
-buffers (Iterable[Tensor]): functorch model buffers
-batch (Iterable[Tensor]): input batch</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>func_model (func):</dt><dd><p>functorch functional model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: out-to-loss (reweighting term) for the input batch</p>
+<dt>weights (Iterable[Tensor]):</dt><dd><p>functorch model weights</p>
+</dd>
+<dt>buffers (Iterable[Tensor]):</dt><dd><p>functorch model buffers</p>
+</dd>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>out-to-loss (reweighting term) for the input batch</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -697,10 +846,10 @@ batch (Iterable[Tensor]): input batch</p>
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#ImageClassificationModelOutput.get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.ImageClassificationModelOutput.get_output" title="Permalink to this definition">#</a></dt>
 <dd><p>For a given input <span class="math notranslate nohighlight">\(z=(x, y)\)</span> and model parameters <span class="math notranslate nohighlight">\(\theta\)</span>,
 let <span class="math notranslate nohighlight">\(p(z, \theta)\)</span> be the softmax probability of the correct class.
-This method implements the model output function
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">log</span><span class="p">(</span>\<span class="n">frac</span><span class="p">{</span><span class="n">p</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> \<span class="n">theta</span><span class="p">)}{</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> \<span class="n">theta</span><span class="p">)})</span><span class="o">.</span>
-</pre></div>
+This method implements the model output function</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\log(\frac{p(z, \theta)}{1 - p(z, \theta)}).\]</div>
 </div>
 <p>It uses functorch’s functional models to make the per-sample gradient computations faster.
 For more details on what func_model, weights &amp; buffers are, and how to use them, please
@@ -712,14 +861,24 @@ internally by <code class="xref py py-func docutils literal notranslate"><span c
 If you’re reading this and feel strongly about it, feel free to make a
 PR with a fix.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>func_model (func): functorch functional model
-weights (Iterable[Tensor]): functorch model weights
-buffers (Iterable[Tensor]): functorch model buffers
-image (Tensor): input image, should not have batch dimension
-label (Tensor): input label, should not have batch dimension</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>func_model (func):</dt><dd><p>functorch functional model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and
+<dt>weights (Iterable[Tensor]):</dt><dd><p>functorch model weights</p>
+</dd>
+<dt>buffers (Iterable[Tensor]):</dt><dd><p>functorch model buffers</p>
+</dd>
+<dt>image (Tensor):</dt><dd><p>input image, should not have batch dimension</p>
+</dd>
+<dt>label (Tensor):</dt><dd><p>input label, should not have batch dimension</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and
 weights &amp; buffers <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -730,17 +889,24 @@ weights &amp; buffers <span class="math notranslate nohighlight">\(\theta\)</spa
 <dt class="sig sig-object py" id="trak.modelout_functions.IterImageClassificationModelOutput">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">IterImageClassificationModelOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/modelout_functions.html#IterImageClassificationModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.IterImageClassificationModelOutput" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></code></a></p>
-<p>Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]
-for more details.</p>
+<p>Margin for (multiclass) image classification. See Section 3.3 of (TODO:
+link)[our paper] for more details.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.modelout_functions.IterImageClassificationModelOutput.get_out_to_loss_grad">
 <span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#IterImageClassificationModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.IterImageClassificationModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
 <dd><p>Computes the (reweighting term Q in the paper)</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-batch (Iterable[Tensor]): input batch</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module)</dt><dd><p>model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: out-to-loss (reweighting term) for the input batch</p>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>out-to-loss (reweighting term) for the input batch</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -750,18 +916,81 @@ batch (Iterable[Tensor]): input batch</p>
 <span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#IterImageClassificationModelOutput.get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.IterImageClassificationModelOutput.get_output" title="Permalink to this definition">#</a></dt>
 <dd><p>For a given input <span class="math notranslate nohighlight">\(z=(x, y)\)</span> and model parameters <span class="math notranslate nohighlight">\(\theta\)</span>,
 let <span class="math notranslate nohighlight">\(p(z, \theta)\)</span> be the softmax probability of the correct class.
-This method implements the model output function
-.. math:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">log</span><span class="p">(</span>\<span class="n">frac</span><span class="p">{</span><span class="n">p</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> \<span class="n">theta</span><span class="p">)}{</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> \<span class="n">theta</span><span class="p">)})</span><span class="o">.</span>
-</pre></div>
+This method implements the model output function</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\log(\frac{p(z, \theta)}{1 - p(z, \theta)}).\]</div>
 </div>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-image (Tensor): input images
-label (Tensor): input labels</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
 </dd>
-<dt>Returns:</dt><dd><p>Tensor: model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and
-model parameters :math:`    heta`.</p>
+<dt>images (Tensor):</dt><dd><p>input images</p>
+</dd>
+<dt>labels (Tensor):</dt><dd><p>input labels</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output for the given image-label pair <span class="math notranslate nohighlight">\(z\)</span> and model
+parameters <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">TextClassificationModelOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></code></a></p>
+<p>Margin for text classification models. This assumes that the model takes
+in input_ids, token_type_ids, and attention_mask.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\text{logit}[\text{correct}] - \log\left(\sum_{i \neq
+\text{correct}} \exp(\text{logit}[i])\right)\]</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.forward" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad">
+<span class="sig-name descname"><span class="pre">get_out_to_loss_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.get_out_to_loss_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad" title="Permalink to this definition">#</a></dt>
+<dd><p>See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on
+what the out-to-loss functions (in the notation of the paper, <span class="math notranslate nohighlight">\(Q\)</span>)
+are in the context of TRAK and how to use &amp; design them.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>model (torch.nn.Module): model
+batch (Iterable[Tensor]): input batch</p>
+</dd>
+<dt>Returns:</dt><dd><p>Tensor: gradient of the out-to-loss function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="trak.modelout_functions.TextClassificationModelOutput.get_output">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_type_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#TextClassificationModelOutput.get_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.TextClassificationModelOutput.get_output" title="Permalink to this definition">#</a></dt>
+<dd><p>See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on
+what model output functions are in the context of TRAK and how to use &amp;
+design them.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
+</dd>
+<dt>batch (Iterable[Tensor]):</dt><dd><p>input batch</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>Tensor:</dt><dd><p>model output function</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -911,21 +1140,24 @@ model_id (int): a unique ID for a checkpoint</p>
 <span id="trak-savers-module"></span><h2>trak.savers module<a class="headerlink" href="#module-trak.savers" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.savers.AbstractSaver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">AbstractSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">AbstractSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_from_save_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>Implementations of Saver class must implement getters and setters for TRAK
 features and scores, as well as intermediate values like gradients and
 “out-to-loss-gradient”.</p>
 <p>The Saver class also handles the recording of metadata associated with each
 TRAK run. For example, hyperparameters like “JL dimension” – the dimension
-used for the dimensionality reduction step of TRAk (Johnson-Lindenstrauss
+used for the dimensionality reduction step of TRAK (Johnson-Lindenstrauss
 projection).</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.savers.AbstractSaver.clear_target_grad_count">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_target_grad_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver.clear_target_grad_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver.clear_target_grad_count" title="Permalink to this definition">#</a></dt>
 <dd><p>Reset the count for how many targets we are scoring</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -934,12 +1166,14 @@ projection).</p>
 <dt class="sig sig-object py" id="trak.savers.AbstractSaver.del_grads">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">del_grads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver.del_grads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver.del_grads" title="Permalink to this definition">#</a></dt>
 <dd><p>Delete the intermediate values (gradients) for a given model id</p>
-<dl>
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint
-target (bool): if True, delete the gradients of the target samples,</p>
-<blockquote>
-<div><p>otherwise delete the train set gradients.</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>target (bool):</dt><dd><p>if True, delete the gradients of the target samples, otherwise
+delete the train set gradients.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -950,7 +1184,10 @@ target (bool): if True, delete the gradients of the target samples,</p>
 <dd><p>Populates the self.current_* attributes with data for the
 given model ID (checkpoint).</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -961,8 +1198,12 @@ given model ID (checkpoint).</p>
 <dd><p>Loads/initializes metadata and store arrays for target results and
 features (gradients)</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint
-num_targets (int): number of target samples that will be scored</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>num_targets (int):</dt><dd><p>number of target samples that will be scored</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -972,7 +1213,10 @@ num_targets (int): number of target samples that will be scored</p>
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">register_model_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/savers.html#AbstractSaver.register_model_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.AbstractSaver.register_model_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Create metadata for a new model ID (checkpoint).</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -983,7 +1227,10 @@ num_targets (int): number of target samples that will be scored</p>
 <dd><p>Write to disk / commit any updates to the metadata associated
 to a given model ID</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -992,7 +1239,7 @@ to a given model ID</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.savers.MmapSaver">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">MmapSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.savers.</span></span><span class="sig-name descname"><span class="pre">MmapSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_from_save_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#trak.savers.AbstractSaver" title="trak.savers.AbstractSaver"><code class="xref py py-class docutils literal notranslate"><span class="pre">trak.savers.AbstractSaver</span></code></a></p>
 <p>A saver that uses memory-mapped numpy arrays. This makes small reads and
 writes (e.g.) during featurizing feasible without loading the entire file
@@ -1002,7 +1249,10 @@ into memory.</p>
 <span class="sig-name descname"><span class="pre">clear_target_grad_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver.clear_target_grad_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver.clear_target_grad_count" title="Permalink to this definition">#</a></dt>
 <dd><p>Reset the count for how many targets we are scoring</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1011,12 +1261,14 @@ into memory.</p>
 <dt class="sig sig-object py" id="trak.savers.MmapSaver.del_grads">
 <span class="sig-name descname"><span class="pre">del_grads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver.del_grads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver.del_grads" title="Permalink to this definition">#</a></dt>
 <dd><p>Delete the intermediate values (gradients) for a given model id</p>
-<dl>
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint
-target (bool): if True, delete the gradients of the target samples,</p>
-<blockquote>
-<div><p>otherwise delete the train set gradients.</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>target (bool):</dt><dd><p>if True, delete the gradients of the target samples, otherwise
+delete the train set gradients.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1032,8 +1284,12 @@ target (bool): if True, delete the gradients of the target samples,</p>
 <dd><p>This method uses numpy memmaps for serializing the TRAK results and
 intermediate values.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint
-mode (str, optional): Defaults to ‘r+’.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>mode (str, optional):</dt><dd><p>Defaults to ‘r+’.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1041,10 +1297,15 @@ mode (str, optional): Defaults to ‘r+’.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.savers.MmapSaver.load_target_store">
 <span class="sig-name descname"><span class="pre">load_target_store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r+'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/savers.html#MmapSaver.load_target_store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.savers.MmapSaver.load_target_store" title="Permalink to this definition">#</a></dt>
-<dd><p>_summary_</p>
+<dd><p>This method uses numpy memmaps for serializing the TRAK intermediate
+values for targets.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): _description_
-num_targets (int): _description_</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+<dt>num_targets (int):</dt><dd><p>number of target samples that will be scored</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1057,10 +1318,15 @@ num_targets (int): _description_</p>
 2) if yes, it raises an error since model IDs must be unique
 3) if not, it creates a metadata file for it and initalizes store mmaps</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
 </dd>
-<dt>Raises:</dt><dd><p>ModelIDException: raised if the model ID to be registered already
-exists</p>
+</dl>
+</dd>
+<dt>Raises:</dt><dd><dl class="simple">
+<dt>ModelIDException:</dt><dd><p>raised if the model ID to be registered already exists</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1076,7 +1342,10 @@ exists</p>
 <dd><p>Write to disk / commit any updates to the metadata associated
 to a given model ID</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>model_id (int): a unique ID for a checkpoint</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model_id (int):</dt><dd><p>a unique ID for a checkpoint</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1189,16 +1458,16 @@ instead.</p>
 <dt class="sig sig-object py" id="trak.utils.parameters_to_vector">
 <span class="sig-prename descclassname"><span class="pre">trak.utils.</span></span><span class="sig-name descname"><span class="pre">parameters_to_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/utils.html#parameters_to_vector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.utils.parameters_to_vector" title="Permalink to this definition">#</a></dt>
 <dd><p>Same as <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html">https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html</a>
-but with <cite>reshape</cite> instead of <cite>view</cite> to avoid a pesky error.</p>
+but with <code class="code docutils literal notranslate"><span class="pre">reshape</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">view</span></code> to avoid a pesky error.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="trak.utils.vectorize_and_ignore_buffers">
 <span class="sig-prename descclassname"><span class="pre">trak.utils.</span></span><span class="sig-name descname"><span class="pre">vectorize_and_ignore_buffers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">torch.Tensor</span></span></span><a class="reference internal" href="_modules/trak/utils.html#vectorize_and_ignore_buffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.utils.vectorize_and_ignore_buffers" title="Permalink to this definition">#</a></dt>
-<dd><p>gradients are given as a tuple (grad_w0, grad_w1, … grad_wp)
-where p is the number of weight matrices. each grad_wi has shape
-[batch_size, …]
-this f-n flattens g to have shape [batch_size, num_params]</p>
+<dd><p>gradients are given as a tuple <code class="code docutils literal notranslate"><span class="pre">(grad_w0,</span> <span class="pre">grad_w1,</span> <span class="pre">...</span> <span class="pre">grad_wp)</span></code> where
+<code class="code docutils literal notranslate"><span class="pre">p</span></code> is the number of weight matrices. each <code class="code docutils literal notranslate"><span class="pre">grad_wi</span></code> has shape
+<code class="code docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">...]</span></code> this function flattens <code class="code docutils literal notranslate"><span class="pre">g</span></code> to have shape
+<code class="code docutils literal notranslate"><span class="pre">[batch_size,</span> <span class="pre">num_params]</span></code>.</p>
 </dd></dl>
 
 </section>
@@ -1213,14 +1482,14 @@ this f-n flattens g to have shape [batch_size, num_params]</p>
         
         <div class="related-pages">
           
-          <a class="prev-page" href="slurm.html">
+          <a class="prev-page" href="bert.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></div>
+                <div class="title">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</div>
                 
               </div>
             </a>

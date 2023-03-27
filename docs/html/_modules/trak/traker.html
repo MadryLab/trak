@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>trak.traker - TRAK 0.1.0 documentation</title>
+        <title>trak.traker - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -122,7 +122,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="../../index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -145,7 +145,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -154,10 +154,12 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../trak.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../trak.html">API reference</a></li>
 </ul>
 
 </div>
@@ -211,43 +213,96 @@
 
 
 <div class="viewcode-block" id="TRAKer"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer">[docs]</a><span class="k">class</span> <span class="nc">TRAKer</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; The main front-facing class for TRAK. See the `README</span>
+<span class="sd">    &lt;https://github.com/MadryLab/trak&gt;`_ and `docs</span>
+<span class="sd">    &lt;https://trak.csail.mit.edu/html/index.html&gt;`_ for example usage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (torch.nn.Module):</span>
+<span class="sd">            model to use for TRAK</span>
+<span class="sd">        task (Union[AbstractModelOutput, str]):</span>
+<span class="sd">            Type of model that TRAK will be ran on. Accepts either one of</span>
+<span class="sd">            the following strings:</span>
+<span class="sd">            - :code:`image_classification`</span>
+<span class="sd">            - :code:`clip`</span>
+<span class="sd">            - :code:`bert_...` TODO: @Sam</span>
+
+<span class="sd">            or an implementation of :class:`.AbstractModelOutput`.</span>
+<span class="sd">        train_set_size (int):</span>
+<span class="sd">            Size of the train set that TRAK is featurizing</span>
+<span class="sd">        save_dir (str, optional):</span>
+<span class="sd">            Directory to save final TRAK scores, intermediate results, and</span>
+<span class="sd">            metadata. Defaults to :code:&#39;./trak_results&#39;.</span>
+<span class="sd">        load_from_save_dir (bool, optional):</span>
+<span class="sd">            If True, the :class`.TRAKer` instance will attempt to load</span>
+<span class="sd">            existing metadata from save_dir. May lead to I/O issues if</span>
+<span class="sd">            multiple TRAKer instances ran in parallel have this flag set to</span>
+<span class="sd">            True. See the SLURM tutorial for more details.</span>
+<span class="sd">        device (Union[str, torch.device], optional):</span>
+<span class="sd">            torch device on which to do computations. Defaults to &#39;cuda&#39;.</span>
+<span class="sd">        gradient_computer (AbstractGradientComputer, optional):</span>
+<span class="sd">            Class to use to get per-example gradients. See</span>
+<span class="sd">            :class:`.AbstractGradientComputer` for more details. Defaults to</span>
+<span class="sd">            :class:`.FunctionalGradientComputer`.</span>
+<span class="sd">        projector (Optional[AbstractProjector], optional):</span>
+<span class="sd">            Either set :code:`proj_dim` and a :class:`.CudaProjector`</span>
+<span class="sd">            Rademacher projector will be used or give a custom subclass of</span>
+<span class="sd">            :class:`.AbstractProjector` class and leave :code:`proj_dim` as</span>
+<span class="sd">            None. Defaults to None.</span>
+<span class="sd">        proj_dim (int, optional):</span>
+<span class="sd">            Dimension of the projected TRAK features. See Section 4.3 of</span>
+<span class="sd">            (TODO: link)[our paper] for more details. Defaults to 2048.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
                  <span class="n">task</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AbstractModelOutput</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
                  <span class="n">train_set_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                  <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./trak_results&#39;</span><span class="p">,</span>
+                 <span class="n">load_from_save_dir</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                  <span class="n">device</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span><span class="p">,</span>
                  <span class="n">gradient_computer</span><span class="p">:</span> <span class="n">AbstractGradientComputer</span> <span class="o">=</span> <span class="n">FunctionalGradientComputer</span><span class="p">,</span>
                  <span class="n">projector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AbstractProjector</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">proj_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; The main front-facing class for TRAK. See the README and docs for</span>
-<span class="sd">        example usage.</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model to use for TRAK</span>
-<span class="sd">            task (Union[AbstractModelOutput, str]): Type of model that TRAK will</span>
-<span class="sd">                be ran on. Accepts either one of the following strings:</span>
-<span class="sd">                - :code:`image_classification`</span>
-<span class="sd">                - :code:`clip`</span>
-<span class="sd">                - :code:`bert_...` TODO: @Sam</span>
-<span class="sd">                or an implementation of :func:`AbstractModelOutput`.</span>
-<span class="sd">            train_set_size (int): Size of the train set that TRAK is featurizing</span>
-<span class="sd">            save_dir (str, optional): Directory to save final TRAK scores,</span>
-<span class="sd">                intermediate results, and metadata. Defaults to &#39;./trak_results&#39;.</span>
-<span class="sd">            device (Union[str, torch.device], optional): torch device on which</span>
-<span class="sd">                to do computations. Defaults to &#39;cuda&#39;.</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model to use for TRAK</span>
+<span class="sd">            task (Union[AbstractModelOutput, str]):</span>
+<span class="sd">                Type of model that TRAK will be ran on. Accepts either one of</span>
+<span class="sd">                the following strings:</span>
+<span class="sd">                    - :code:`image_classification`</span>
+<span class="sd">                    - :code:`clip`</span>
+<span class="sd">                    - :code:`bert_...` TODO: @Sam</span>
+<span class="sd">                or an implementation of :class:`.AbstractModelOutput`.</span>
+<span class="sd">            train_set_size (int):</span>
+<span class="sd">                Size of the train set that TRAK is featurizing</span>
+<span class="sd">            save_dir (str, optional):</span>
+<span class="sd">                Directory to save final TRAK scores, intermediate results, and</span>
+<span class="sd">                metadata. Defaults to :code:&#39;./trak_results&#39;.</span>
+<span class="sd">            load_from_save_dir (bool, optional):</span>
+<span class="sd">                If True, the :class`.TRAKer` instance will attempt to load</span>
+<span class="sd">                existing metadata from save_dir. May lead to I/O issues if</span>
+<span class="sd">                multiple TRAKer instances ran in parallel have this flag set to</span>
+<span class="sd">                True. See the SLURM tutorial for more details.</span>
+<span class="sd">            device (Union[str, torch.device], optional):</span>
+<span class="sd">                torch device on which to do computations. Defaults to &#39;cuda&#39;.</span>
 <span class="sd">            gradient_computer (AbstractGradientComputer, optional):</span>
 <span class="sd">                Class to use to get per-example gradients. See</span>
-<span class="sd">                :func:`AbstractGradientComputer` for more details. Defaults to</span>
-<span class="sd">                FunctionalGradientComputer.</span>
-<span class="sd">            projector (Optional[AbstractProjector], optional): Either set</span>
-<span class="sd">                :code:`proj_dim` and a :func:`CudaProjector` Rademacher</span>
-<span class="sd">                projector will be used or give a custom :code:`Projector` class</span>
-<span class="sd">                and leave :code:`proj_dim` to None. Defaults to None.</span>
-<span class="sd">            proj_dim (int, optional): Dimension of the projected TRAK features.</span>
-<span class="sd">                See Section 4.3 of (TODO: link)[our paper] for more details.</span>
-<span class="sd">                Defaults to 2048.</span>
+<span class="sd">                :class:`.AbstractGradientComputer` for more details. Defaults to</span>
+<span class="sd">                :class:`.FunctionalGradientComputer`.</span>
+<span class="sd">            projector (Optional[AbstractProjector], optional):</span>
+<span class="sd">                Either set :code:`proj_dim` and a :class:`.CudaProjector`</span>
+<span class="sd">                Rademacher projector will be used or give a custom subclass of</span>
+<span class="sd">                :class:`.AbstractProjector` class and leave :code:`proj_dim` as</span>
+<span class="sd">                None. Defaults to None.</span>
+<span class="sd">            proj_dim (int, optional):</span>
+<span class="sd">                Dimension of the projected TRAK features. See Section 4.3 of</span>
+<span class="sd">                (TODO: link)[our paper] for more details. Defaults to 2048.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
@@ -259,6 +314,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">init_projector</span><span class="p">(</span><span class="n">projector</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span>  <span class="c1"># inits self.projector</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span> <span class="o">=</span> <span class="n">load_from_save_dir</span>
 
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span> <span class="o">=</span> <span class="n">TASK_TO_MODELOUT</span><span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span> <span class="n">gradient_computer</span><span class="o">.</span><span class="n">is_functional</span><span class="p">)]</span>
@@ -276,13 +332,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">saver</span> <span class="o">=</span> <span class="n">MmapSaver</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span>
                                <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
                                <span class="n">train_set_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span>
-                               <span class="n">proj_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">)</span>
+                               <span class="n">proj_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span><span class="p">,</span>
+                               <span class="n">load_from_save_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TRAKer.init_projector"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer.init_projector">[docs]</a>    <span class="k">def</span> <span class="nf">init_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projector</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Initialize the projector for a traker class</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            projector (AbstractProjector): JL projector</span>
+<span class="sd">            projector (AbstractProjector):</span>
+<span class="sd">                JL projector</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">projector</span> <span class="o">=</span> <span class="n">projector</span>
@@ -304,12 +363,15 @@
 <span class="sd">        to store TRAK features for that checkpoint, tied to the model ID.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            checkpoint (Iterable[Tensor]): state_dict to load</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            _allow_featurizing_already_registered (bool, optional): Only use if</span>
-<span class="sd">                you want to override the default behaviour that</span>
+<span class="sd">            checkpoint (Iterable[Tensor]):</span>
+<span class="sd">                state_dict to load</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            _allow_featurizing_already_registered (bool, optional):</span>
+<span class="sd">                Only use if you want to override the default behaviour that</span>
 <span class="sd">                :code:`featurize` is forbidden on already registered model IDs.</span>
 <span class="sd">                Defaults to None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">register_model_id</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span>
@@ -344,11 +406,13 @@
 <span class="sd">        the :func:`TRAKer`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
-<span class="sd">            inds (Optional[Iterable[int]], optional): Indices of the batch</span>
-<span class="sd">            samples in the train set. Defaults to None.</span>
-<span class="sd">            num_samples (Optional[int], optional): Number of samples in the</span>
-<span class="sd">            batch. Defaults to None.</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
+<span class="sd">            inds (Optional[Iterable[int]], optional):</span>
+<span class="sd">                Indices of the batch samples in the train set. Defaults to None.</span>
+<span class="sd">            num_samples (Optional[int], optional):</span>
+<span class="sd">                Number of samples in the batch. Defaults to None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">inds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">num_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span>\
             <span class="s2">&quot;Exactly one of num_samples and inds should be specified&quot;</span>
@@ -388,8 +452,9 @@
 <span class="sd">        Args:</span>
 <span class="sd">            model_ids (Iterable[int], optional): A list of model IDs for which</span>
 <span class="sd">                features should be finalized. If None, features are finalized</span>
-<span class="sd">                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`</span>
+<span class="sd">                for all model IDs in the :code:`save_dir` of the :class:`.TRAKer`</span>
 <span class="sd">                class. Defaults to None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">model_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -420,13 +485,17 @@
                                  <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                  <span class="n">num_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; This method prepares the internal store of the :func:`TRAKer` class</span>
+        <span class="sd">&quot;&quot;&quot; This method prepares the internal store of the :class:`.TRAKer` class</span>
 <span class="sd">        to start computing scores for a set of targets.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            checkpoint (Iterable[Tensor]): model checkpoint (state dict)</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            num_targets (int): number of targets to score</span>
+<span class="sd">            checkpoint (Iterable[Tensor]):</span>
+<span class="sd">                model checkpoint (state dict)</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            num_targets (int):</span>
+<span class="sd">                number of targets to score</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">load_target_store</span><span class="p">(</span><span class="n">model_id</span><span class="p">,</span> <span class="n">num_targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w+&#39;</span><span class="p">)</span>
 
@@ -442,18 +511,20 @@
               <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; This method computes the (intermediate per-checkpoint) TRAK scores</span>
 <span class="sd">        for a batch of targets and stores them in the internal store of the</span>
-<span class="sd">        :func:`TRAKer` class.</span>
+<span class="sd">        :class:`.TRAKer` class.</span>
 
 <span class="sd">        Either :code:`inds` or :code:`num_samples` must be specified. Using</span>
 <span class="sd">        :code:`num_samples` will write sequentially into the internal store of</span>
-<span class="sd">        the :func:`TRAKer`.</span>
+<span class="sd">        the :class:`.TRAKer`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
-<span class="sd">            inds (Optional[Iterable[int]], optional): Indices of the batch</span>
-<span class="sd">            samples in the train set. Defaults to None.</span>
-<span class="sd">            num_samples (Optional[int], optional): Number of samples in the</span>
-<span class="sd">            batch. Defaults to None.</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
+<span class="sd">            inds (Optional[Iterable[int]], optional):</span>
+<span class="sd">                Indices of the batch samples in the train set. Defaults to None.</span>
+<span class="sd">            num_samples (Optional[int], optional):</span>
+<span class="sd">                Number of samples in the batch. Defaults to None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span><span class="n">inds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">num_samples</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span>\
             <span class="s2">&quot;Exactly one of num_samples and inds should be specified&quot;</span>
@@ -487,20 +558,23 @@
 <span class="sd">        train samples, and model checkpoints (specified by model IDs).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_ids (Iterable[int], optional): A list of model IDs for which</span>
+<span class="sd">            model_ids (Iterable[int], optional):</span>
+<span class="sd">                A list of model IDs for which</span>
 <span class="sd">                scores should be finalized. If None, scores are computed</span>
-<span class="sd">                for all model IDs in the :code:`save_dir` of the :func:`TRAKer`</span>
+<span class="sd">                for all model IDs in the :code:`save_dir` of the :class:`.TRAKer`</span>
 <span class="sd">                class. Defaults to None.</span>
-<span class="sd">            del_grads (bool, optional): If True, the target gradients</span>
-<span class="sd">                (intermediate results) are deleted from the internal store of the</span>
-<span class="sd">                :func:`TRAKer` class.  Defaults to True.</span>
-<span class="sd">            exp_name (str, optional): Used to name the scores :code:`.npy`</span>
-<span class="sd">                array produced by this method in the :code:`save_dir` of the</span>
-<span class="sd">                :func:`TRAKer` class. If None, a random uuid is generated.</span>
-<span class="sd">                Defaults to None.</span>
+<span class="sd">            del_grads (bool, optional):</span>
+<span class="sd">                If True, the target gradients (intermediate results) are deleted</span>
+<span class="sd">                from the internal store of the :class:`.TRAKer` class.  Defaults</span>
+<span class="sd">                to True.</span>
+<span class="sd">            exp_name (str, optional):</span>
+<span class="sd">                Used to name the scores :code:`.npy` array produced by this</span>
+<span class="sd">                method in the :code:`save_dir` of the :class:`.TRAKer` class. If</span>
+<span class="sd">                None, a random uuid is generated.  Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Tensor: TRAK scores</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># reset counter for inds used for scoring</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_ind_target</span> <span class="o">=</span> <span class="mi">0</span>
@@ -509,8 +583,7 @@
             <span class="n">model_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">model_ids</span>
 
         <span class="n">_completed</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_ids</span><span class="p">)</span>
-        <span class="n">_scores</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model_ids</span><span class="p">),</span>
-                           <span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span>
+        <span class="n">_scores</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span>
                            <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">num_targets</span><span class="p">,</span>
                            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">_avg_out_to_losses</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">train_set_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
@@ -528,7 +601,7 @@
             <span class="n">g</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">current_features</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="n">g_target</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">current_target_grads</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
-            <span class="n">_scores</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_computer</span><span class="o">.</span><span class="n">get_scores</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g_target</span><span class="p">)</span>
+            <span class="n">_scores</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_computer</span><span class="o">.</span><span class="n">get_scores</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g_target</span><span class="p">)</span>
             <span class="n">_avg_out_to_losses</span> <span class="o">+=</span> <span class="n">ch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">current_out_to_loss</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="n">_completed</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -537,10 +610,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">clear_target_grad_count</span><span class="p">(</span><span class="n">model_id</span><span class="p">)</span>
 
-        <span class="n">_scores</span> <span class="o">=</span> <span class="n">_scores</span><span class="p">[</span><span class="n">_completed</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
         <span class="n">_num_models_used</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">_completed</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scores</span> <span class="o">=</span> <span class="n">_scores</span> <span class="o">*</span> <span class="p">(</span><span class="n">_avg_out_to_losses</span> <span class="o">/</span> <span class="n">_num_models_used</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scores</span> <span class="o">=</span> <span class="p">(</span><span class="n">_scores</span> <span class="o">/</span> <span class="n">_num_models_used</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">_avg_out_to_losses</span> <span class="o">/</span> <span class="n">_num_models_used</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">saver</span><span class="o">.</span><span class="n">save_scores</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">exp_name</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scores</span></div></div>

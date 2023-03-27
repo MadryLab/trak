@@ -28,6 +28,11 @@
 
     <link href="style.css" rel="stylesheet" />
     <link href="cover.css" rel="stylesheet" />
+    <style>
+      #myTabContent .nav-link:hover {
+        background-color: #fff;
+      }
+    </style>
   </head>
   <div
     class="container-fluid px-0"
@@ -61,10 +66,10 @@
             style="background-color: rgba(0, 0, 0, 0.3)"
           >
             <h1
-              class="display-3 fw-bold lh-1"
+              class="display-3 fw-bold lh-3"
               style="display: inline-block; font-family: Avenir"
             >
-              TRAK: Understand model predictions at scale
+              TRAK: Attributing Model Behavior at Scale
             </h1>
             <p class="lead" style="font-family: Avenir">
               Effective, efficient data attribution for large machine learning
@@ -362,10 +367,14 @@ scores = traker.finalize_scores()</code></pre>
                 and caption should be close in its latent space.
               </p>
 
-              <ul class="nav nav-tabs" id="tab1-subtabs" role="tablist">
+              <ul
+                class="nav nav-tabs border-0 justify-content-center"
+                id="tab1-subtabs"
+                role="tablist"
+              >
                 <li class="nav-item">
                   <a
-                    class="nav-link active"
+                    class="nav-link active rounded shadow border border-secondary"
                     id="tab1-subtab1-tab"
                     data-toggle="tab"
                     href="#tab1-subtab1"
@@ -375,14 +384,14 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/2/target.png"
                       alt="Image 1"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm border border-secondary"
                     id="tab1-subtab2-tab"
                     data-toggle="tab"
                     href="#tab1-subtab2"
@@ -392,14 +401,14 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/6/target.png"
                       alt="Image 2"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm border border-secondary"
                     id="tab1-subtab3-tab"
                     data-toggle="tab"
                     href="#tab1-subtab3"
@@ -409,14 +418,14 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/10/target.png"
                       alt="Image 3"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm border border-secondary"
                     id="tab1-subtab4-tab"
                     data-toggle="tab"
                     href="#tab1-subtab4"
@@ -426,14 +435,14 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/15/target.png"
                       alt="Image 4"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm border border-secondary"
                     id="tab1-subtab5-tab"
                     data-toggle="tab"
                     href="#tab1-subtab5"
@@ -443,14 +452,14 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/28/target.png"
                       alt="Image 5"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
                 <li class="nav-item">
                   <a
-                    class="nav-link"
+                    class="nav-link rounded shadow-sm border border-secondary"
                     id="tab1-subtab6-tab"
                     data-toggle="tab"
                     href="#tab1-subtab6"
@@ -460,21 +469,28 @@ scores = traker.finalize_scores()</code></pre>
                     ><img
                       src="assets/webfigure/42/target.png"
                       alt="Image 6"
-                      width="150px"
+                      width="130px"
                     />
                     <br />
                   </a>
                 </li>
               </ul>
-              <div class="tab-content pt-3" id="tab1-subtabs-content">
+              <!-- <div class="tab-content pt-3" id="tab1-subtabs-content"> -->
+              <div class="tab-content" id="tab1-subtabs-content">
                 <div
                   class="tab-pane fade show active"
                   id="tab1-subtab1"
                   role="tabpanel"
                   aria-labelledby="tab1-subtab1-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
+                  <span>
+                    <strong>Target caption:</strong> a cat is laying on top of a
+                    laptop computer
+                  </span>
+                  <br />
+                  <hr />
+                  <!-- <h3>Target</h3> -->
+                  <!-- <div class="col-6 col-md-4 col-lg-2 mb-4">
                     <figure class="figure">
                       <img
                         src="assets/webfigure/2/target.png"
@@ -485,10 +501,10 @@ scores = traker.finalize_scores()</code></pre>
                         a cat is laying on top of a laptop computer
                       </figcaption>
                     </figure>
-                  </div>
+                  </div> -->
 
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -577,97 +593,6 @@ scores = traker.finalize_scores()</code></pre>
                       </div>
                     </div>
                   </div>
-
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a cat laying on top of a couch next to a laptop
-                            computer
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a small dog is asleep next to a laptop
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a woman is frowning near a laptop computer
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a woman laying down on her stomach using a laptop
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a book is laying next to a laptop
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/2/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a cat laying on top of a blue umbrella
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div
@@ -676,23 +601,14 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab2-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
-                    <figure class="figure">
-                      <img
-                        src="assets/webfigure/6/target.png"
-                        class="figure-img img-fluid rounded"
-                        alt="TRAK top scoring sample"
-                      />
-                      <figcaption class="figure-caption text-white text-center">
-                        a close up of a giraffe and a zebra in a field near
-                        trees
-                      </figcaption>
-                    </figure>
-                  </div>
-
+                  <span>
+                    <strong>Target caption:</strong>
+                    a close up of a giraffe and a zebra in a field near trees
+                  </span>
+                  <br />
+                  <hr />
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -780,99 +696,6 @@ scores = traker.finalize_scores()</code></pre>
                       </div>
                     </div>
                   </div>
-
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            two zebras and a giraffe running while two other
-                            giraffes stand nearby
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a group of giraffe standing on top of a field
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a young person catching a frisbee in a park
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man catching a frisbee while laying on a grass
-                            covered field
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a single giraffe that is walking among some palm
-                            trees
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/6/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a group or men playing frisbee in a park
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div
@@ -881,22 +704,14 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab3-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
-                    <figure class="figure">
-                      <img
-                        src="assets/webfigure/10/target.png"
-                        class="figure-img img-fluid rounded"
-                        alt="TRAK top scoring sample"
-                      />
-                      <figcaption class="figure-caption text-white text-center">
-                        a table full of bananas being sold outside
-                      </figcaption>
-                    </figure>
-                  </div>
-
+                  <span>
+                    <strong>Target caption:</strong>
+                    a table full of bananas being sold outside
+                  </span>
+                  <br />
+                  <hr />
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -985,100 +800,6 @@ scores = traker.finalize_scores()</code></pre>
                       </div>
                     </div>
                   </div>
-
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man standing in front of a table filled with
-                            bananas
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a table at a market full of bunches of bananas
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            the large bunch of unripened bananas hung from the
-                            tall tree
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a black police call box and crowd of people
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            people playing tennis together at the tennis court
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/10/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            the young prima donnas strode across the beach,
-                            muscles rippling with the weight of their surfboard
-                            burdens
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div
@@ -1087,22 +808,14 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab4-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
-                    <figure class="figure">
-                      <img
-                        src="assets/webfigure/15/target.png"
-                        class="figure-img img-fluid rounded"
-                        alt="TRAK top scoring sample"
-                      />
-                      <figcaption class="figure-caption text-white text-center">
-                        a blue and white bus with two bicycles and people by it
-                      </figcaption>
-                    </figure>
-                  </div>
-
+                  <span>
+                    <strong>Target caption:</strong>
+                    a blue and white bus with two bicycles and people by it
+                  </span>
+                  <br />
+                  <hr />
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -1193,98 +906,6 @@ scores = traker.finalize_scores()</code></pre>
                     </div>
                   </div>
 
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a family and a group of people watch a flying kite
-                            in the snow
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a group of people on bicycles next to a bus
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            young man sitting on bus bench on cellphone
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a picture of a scooter and bicycles in front of a
-                            game room
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a blue , white and red train passing by a train
-                            station
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/15/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a number of tennis player standing near one another
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div
@@ -1293,22 +914,15 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab5-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
-                    <figure class="figure">
-                      <img
-                        src="assets/webfigure/28/target.png"
-                        class="figure-img img-fluid rounded"
-                        alt="TRAK top scoring sample"
-                      />
-                      <figcaption class="figure-caption text-white text-center">
+                  <span>
+                    <strong>Target caption:</strong>
                         a man riding a motorcycle with a helmet on
-                      </figcaption>
-                    </figure>
-                  </div>
+                  </span>
+                  <br />
+                  <hr />
 
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -1397,96 +1011,6 @@ scores = traker.finalize_scores()</code></pre>
                     </div>
                   </div>
 
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man sitting on top of a motorcycle
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man sitting on top of a motorcycle holding his
-                            helmet
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a person that is doing a trick on a motorcycle
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man riding a motorcycle with a side car
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a person riding a motorcycle on a city street
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/28/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a couple of people that are on a motorcycle
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div
@@ -1495,22 +1019,15 @@ scores = traker.finalize_scores()</code></pre>
                   role="tabpanel"
                   aria-labelledby="tab1-subtab6-tab"
                 >
-                  <h3>Target</h3>
-                  <div class="col-6 col-md-4 col-lg-2 mb-4">
-                    <figure class="figure">
-                      <img
-                        src="assets/webfigure/42/target.png"
-                        class="figure-img img-fluid rounded"
-                        alt="TRAK top scoring sample"
-                      />
-                      <figcaption class="figure-caption text-white text-center">
+                  <span>
+                    <strong>Target caption:</strong>
                         a person riding a snowboard down a hill
-                      </figcaption>
-                    </figure>
-                  </div>
+                  </span>
+                  <br />
+                  <hr />
 
                   <h3>TRAK top scoring train images</h3>
-                  <div class="container mt-5">
+                  <div class="container mt-2">
                     <div class="row">
                       <div class="col-6 col-md-4 col-lg-2 mb-4">
                         <figure class="figure">
@@ -1600,95 +1117,6 @@ scores = traker.finalize_scores()</code></pre>
                     </div>
                   </div>
 
-                  <h3>TracIn top scoring train images</h3>
-                  <div class="container mt-5">
-                    <div class="row">
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_0.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man riding a snowboard with a backpack down a hill
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_1.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man riding a snowboard down a hill to a ramp
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_2.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man is riding a snowboard down a hill
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_3.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man riding a snowboard down a snow covered hill
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_4.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man in a helmet riding a snowboard
-                          </figcaption>
-                        </figure>
-                      </div>
-                      <div class="col-6 col-md-4 col-lg-2 mb-4">
-                        <figure class="figure">
-                          <img
-                            src="assets/webfigure/42/tracin_5.png"
-                            class="figure-img img-fluid rounded"
-                            alt="TRAK top scoring sample"
-                          />
-                          <figcaption
-                            class="figure-caption text-white text-center"
-                          >
-                            a man that is on a snowboard in the air
-                          </figcaption>
-                        </figure>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -2530,7 +1958,7 @@ scores = traker.finalize_scores()</code></pre>
       <footer class="mt-auto text-white-50">
         Maintained by Kristian Georgiev, Andrew Ilyas, Sung Min Park.
       </footer>
-    <script src="plot.js"></script>
+      <script src="plot.js"></script>
     </body>
   </div>
 </html>

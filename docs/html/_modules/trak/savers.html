@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>trak.savers - TRAK 0.1.0 documentation</title>
+        <title>trak.savers - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -122,7 +122,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="../../index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -145,7 +145,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -154,10 +154,12 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../trak.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../trak.html">API reference</a></li>
 </ul>
 
 </div>
@@ -209,16 +211,17 @@
 <span class="sd">    Implementations of Saver class must implement getters and setters for TRAK</span>
 <span class="sd">    features and scores, as well as intermediate values like gradients and</span>
 <span class="sd">    &quot;out-to-loss-gradient&quot;.</span>
-
+<span class="sd">    </span>
 <span class="sd">    The Saver class also handles the recording of metadata associated with each</span>
 <span class="sd">    TRAK run. For example, hyperparameters like &quot;JL dimension&quot; -- the dimension</span>
-<span class="sd">    used for the dimensionality reduction step of TRAk (Johnson-Lindenstrauss</span>
+<span class="sd">    used for the dimensionality reduction step of TRAK (Johnson-Lindenstrauss</span>
 <span class="sd">    projection).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">save_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
-                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+                 <span class="n">load_from_save_dir</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Creates the save directory if it doesn&#39;t already exist.</span>
 <span class="sd">        If the save directory already exists, it validates that the current</span>
 <span class="sd">        TRAKer class has the same hyperparameters (metadata) as the one</span>
@@ -232,14 +235,19 @@
 <span class="sd">                intermediate values, and metadata</span>
 <span class="sd">            metadata (Iterable): a dictionary containing metadata related to the</span>
 <span class="sd">                TRAKer class</span>
+<span class="sd">            load_from_save_dir (bool): If True, the Saver instance will attempt</span>
+<span class="sd">                to load existing metadata from save_dir. May lead to I/O issues</span>
+<span class="sd">                if multiple Saver instances ran in parallel have this flag set</span>
+<span class="sd">                to True. See the SLURM tutorial for more details.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span> <span class="o">=</span> <span class="n">load_from_save_dir</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># init TRAKer metadata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;metadata.json&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">existsing_metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
             <span class="n">existing_jl_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">existsing_metadata</span><span class="p">[</span><span class="s1">&#39;JL dimension&#39;</span><span class="p">])</span>
@@ -252,20 +260,22 @@
                    <span class="sa">f</span><span class="s2">&quot;In </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="si">}</span><span class="s2"> there are models using a </span><span class="si">{</span><span class="n">existing_matrix_type</span><span class="si">}</span><span class="s2"> JL matrix</span><span class="se">\</span>
 <span class="s2">                   , and this TRAKer instance uses a </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;JL matrix type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> JL matrix.&quot;</span>
 
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="c1"># check if there are existing model ids in the save_dir</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;id_*.json&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">:</span>
+            <span class="c1"># check if there are existing model ids in the save_dir</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;id_*.json&#39;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">existing_model_id_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">existing_model_id_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">existing_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-                <span class="n">existing_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span> <span class="n">metadata</span>
-                               <span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">existing_id</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">existing_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">existing_model_id_file</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_ids_files</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">existing_model_id_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">existing_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">existing_id</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">model_id</span><span class="p">):</span> <span class="n">metadata</span>
+                                   <span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">existing_id</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">existing_id</span><span class="p">)</span>
+
         <span class="c1"># wlog set num_targets to those of a random model_id we could raise an</span>
         <span class="c1"># error here if different model_ids have different num_targets but this</span>
         <span class="c1"># could be a bit too stringent in some cases</span>
@@ -285,7 +295,9 @@
         <span class="sd">&quot;&quot;&quot; Create metadata for a new model ID (checkpoint).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -295,7 +307,9 @@
 <span class="sd">        to a given model ID</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -305,7 +319,9 @@
 <span class="sd">        given model ID (checkpoint).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -318,8 +334,11 @@
 <span class="sd">        features (gradients)</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            num_targets (int): number of target samples that will be scored</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            num_targets (int):</span>
+<span class="sd">                number of target samples that will be scored</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -328,9 +347,12 @@
         <span class="sd">&quot;&quot;&quot; Delete the intermediate values (gradients) for a given model id</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            target (bool): if True, delete the gradients of the target samples,</span>
-<span class="sd">                otherwise delete the train set gradients.</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            target (bool):</span>
+<span class="sd">                if True, delete the gradients of the target samples, otherwise</span>
+<span class="sd">                delete the train set gradients.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -339,7 +361,9 @@
         <span class="sd">&quot;&quot;&quot; Reset the count for how many targets we are scoring</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div></div>
 
@@ -355,8 +379,10 @@
 <span class="sd">    into memory.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">,</span> <span class="n">metadata</span><span class="p">,</span> <span class="n">train_set_size</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">,</span> <span class="n">load_from_save_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span>
+                         <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+                         <span class="n">load_from_save_dir</span><span class="o">=</span><span class="n">load_from_save_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_set_size</span> <span class="o">=</span> <span class="n">train_set_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_dim</span> <span class="o">=</span> <span class="n">proj_dim</span>
 
@@ -369,11 +395,13 @@
 <span class="sd">        3) if not, it creates a metadata file for it and initalizes store mmaps</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            ModelIDException: raised if the model ID to be registered already</span>
-<span class="sd">            exists</span>
+<span class="sd">            ModelIDException:</span>
+<span class="sd">                raised if the model ID to be registered already exists</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>
 
@@ -408,8 +436,11 @@
 <span class="sd">        intermediate values.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): a unique ID for a checkpoint</span>
-<span class="sd">            mode (str, optional): Defaults to &#39;r+&#39;.</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            mode (str, optional):</span>
+<span class="sd">                Defaults to &#39;r+&#39;.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">model_id</span><span class="p">))</span>
@@ -437,11 +468,15 @@
                           <span class="n">num_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                           <span class="n">mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;r+&#39;</span><span class="p">,</span>
                           <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;_summary_</span>
+        <span class="sd">&quot;&quot;&quot; This method uses numpy memmaps for serializing the TRAK intermediate</span>
+<span class="sd">        values for targets.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model_id (int): _description_</span>
-<span class="sd">            num_targets (int): _description_</span>
+<span class="sd">            model_id (int):</span>
+<span class="sd">                a unique ID for a checkpoint</span>
+<span class="sd">            num_targets (int):</span>
+<span class="sd">                number of target samples that will be scored</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">num_targets</span> <span class="o">=</span> <span class="n">num_targets</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_model_id</span> <span class="o">=</span> <span class="n">model_id</span>

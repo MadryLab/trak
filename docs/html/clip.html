@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Add a task to TRAKer (subclassing ModelOutput) — BERT-base" href="bert.html" /><link rel="prev" title="Parallelize TRAK scoring with SLURM" href="slurm.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>Add a task to TRAKer (subclassing ModelOutput) — CLIP - TRAK 0.1.0 documentation</title>
+        <title>Add a task to TRAKer (subclassing ModelOutput) — CLIP - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -155,7 +155,7 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
@@ -189,15 +189,142 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
           <section id="add-a-task-to-traker-subclassing-modeloutput-clip">
-<h1>Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP<a class="headerlink" href="#add-a-task-to-traker-subclassing-modeloutput-clip" title="Permalink to this headline">#</a></h1>
-<p>Coming soon!</p>
+<span id="clip-model-output"></span><h1>Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP<a class="headerlink" href="#add-a-task-to-traker-subclassing-modeloutput-clip" title="Permalink to this headline">#</a></h1>
+<p>In this tutorial, we’ll go through the process of adapting <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new
+custom task - attributing CLIP models. Check out <a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput" title="trak.modelout_functions.CLIPModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CLIPModelOutput</span></code></a> for
+the final result.</p>
+<section id="model-output-funcitons">
+<h2>Model output funcitons<a class="headerlink" href="#model-output-funcitons" title="Permalink to this headline">#</a></h2>
+<p>Computing <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> attribution scores hinges on defining a model output
+function to guide the scoring process. We derive and discuss model output
+functions for multiple tasks (binary and multiclass classification, CLIP loss,
+various NLP tasks, etc) in detail in <a class="reference external" href="link:TODO">our paper</a>.</p>
+<p>In short, given the following:</p>
+<ul class="simple">
+<li><p>a training set of examples <span class="math notranslate nohighlight">\(S = \{z_1, z_2, \ldots, z_n\}\)</span>
+where each <span class="math notranslate nohighlight">\(z_i  = (x_i, y_i)\)</span> is an input-label pair,</p></li>
+<li><p>an example of interest <span class="math notranslate nohighlight">\(z\)</span>,</p></li>
+<li><p>and model parameters <span class="math notranslate nohighlight">\(\theta\)</span>,</p></li>
+</ul>
+<p>we (implicitly) represent machine learning models with <em>some</em> model output
+function <span class="math notranslate nohighlight">\(f(z;\theta)\)</span> — a function which maps an example of interest
+and model parameters to a real number.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>One example model output function is the <em>loss</em> (e.g. cross-entropy loss)
+that the model incurs on <span class="math notranslate nohighlight">\(z\)</span>.</p>
+</div>
+</section>
+<section id="the-modelout-to-loss-gradient-the-q-term">
+<h2>The modelout-to-loss gradient (the <span class="math notranslate nohighlight">\(Q\)</span> term)<a class="headerlink" href="#the-modelout-to-loss-gradient-the-q-term" title="Permalink to this headline">#</a></h2>
+<p>Additionally, the final <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> estimator (see Algorithm 1 in our paper)
+uses a “<span class="math notranslate nohighlight">\(Q\)</span>” term – an <span class="math notranslate nohighlight">\(n\times n\)</span> diagonal matrix of “one minus
+correct-class probability” terms. In classification, this form of <span class="math notranslate nohighlight">\(Q\)</span>
+comes from the fact that, for <span class="math notranslate nohighlight">\(f(z;\theta) = \log\left(\frac{p(z;\theta)}{1 - p(z;\theta)}\right)\)</span>,
+we have that the gradient of the (cross-entropy) loss <span class="math notranslate nohighlight">\(\ell\)</span> wrt <span class="math notranslate nohighlight">\(f\)</span>
+is:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\frac{\partial \ell(z;\theta)}{\partial f} = \frac{\partial}{\partial f}
+\log(1 + \exp(-f)) = -\frac{\exp(-f)}{1 + \exp(-f)}  = -(1 - p(z;\theta))\]</div>
+</div>
+<p>If you are adapting <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> a more exotic task, unrelated to
+classification, you might need to modify this term accordingly (for all of our
+experiments, this was not necessary).</p>
+</section>
+<section id="how-we-implement-model-output-functions-in-trak">
+<h2>How we implement model output functions in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code><a class="headerlink" href="#how-we-implement-model-output-functions-in-trak" title="Permalink to this headline">#</a></h2>
+<p>We provide a dedicated class – <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a> that takes care of
+translating models (<code class="code docutils literal notranslate"><span class="pre">torch.Module</span></code> instances) into model output functions.
+This is achieved via two methods:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output" title="trak.modelout_functions.AbstractModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_output()</span></code></a></p></li>
+<li><p><a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_out_to_loss_grad()</span></code></a></p></li>
+</ul>
+<p>The <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output" title="trak.modelout_functions.AbstractModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_output()</span></code></a> method implements the model output
+function. In particular, given a batch of examples <span class="math notranslate nohighlight">\(b\)</span>, it returns a
+vector containing the model outputs for each example in the batch. This is the
+function that we pass through PyTorch’s <code class="code docutils literal notranslate"><span class="pre">autograd</span></code>.</p>
+<p>The <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_out_to_loss_grad()</span></code></a> implements the <em>gradient</em>
+of the modelout-to-loss term <span class="math notranslate nohighlight">\(Q\)</span>. Since for all applications (so far!) we
+could analytically derive the gradient of the <span class="math notranslate nohighlight">\(Q\)</span> term, we “hardcoded”
+this in the <code class="code docutils literal notranslate"><span class="pre">get_out_to_loss_grad</span></code> method, thus avoiding an additional
+gradient computation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you find yourself in the (we believe unlikely) situation where you can’t
+analytically derive the gradient for <span class="math notranslate nohighlight">\(Q\)</span>, adapt <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_out_to_loss_grad()</span></code></a>
+to follow the structure of <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output" title="trak.modelout_functions.AbstractModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_output()</span></code></a> and pass
+it to <code class="code docutils literal notranslate"><span class="pre">autograd</span></code> as well.</p>
+</div>
+</section>
+<section id="what-you-need-to-do-for-a-new-task">
+<h2>What you need to do for a new task<a class="headerlink" href="#what-you-need-to-do-for-a-new-task" title="Permalink to this headline">#</a></h2>
+<p>When we adapt <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> for a new task, we only need to create a new subclass of
+<a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>. Let’s do this by example.</p>
+<p>We’ll assume that you’re familiar with how CLIP works (having only a rough idea
+will be sufficient). For a given image-caption pair <span class="math notranslate nohighlight">\((x, y)\)</span>, we’ll denote
+image embeddings as <span class="math notranslate nohighlight">\(\phi(x)\)</span> and caption embeddings as <span class="math notranslate nohighlight">\(\psi(y)\)</span>.
+The CLIP training loss computes all all <span class="math notranslate nohighlight">\(n \times n\)</span> pairwise cosine
+similarities between the image and text embeddings
+<span class="math notranslate nohighlight">\(S_{ij}:=\phi(x)\cdot\psi(y)\)</span>; it then aims to maximize <span class="math notranslate nohighlight">\(S_{ii}\)</span>
+terms, and minimize <span class="math notranslate nohighlight">\(S_{ij}\)</span> terms for <span class="math notranslate nohighlight">\(i\neq j\)</span>:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\ell_{CLIP}(x_i, y_i) =
+-\log\left(\frac{\exp(-S_{ii})}{\sum_{j\leq n} \exp(-S_{ij})}\right)
+-\log\left(\frac{\exp(-S_{ii})}{\sum_{j\leq n} \exp(-S_{ji})}\right)\]</div>
+</div>
+<p>We end up choosing the following model output function (check Section 5.1.1 of
+our papers for details on why this is a good model output function):</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{CLIP}(x_i, y_i) =
+-\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ij}))
+-\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ji}))\]</div>
+</div>
+<p>Because our choice of model output function for CLIP requires access to CLIP
+embeddings for multiple examples, we implement an additional utility method
+<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_embeddings" title="trak.modelout_functions.CLIPModelOutput.get_embeddings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_embeddings()</span></code></a>. This is a bit too specific to CLIP, so we’re not going
+to pay too much attention to it in this tutorial; let’s just assume we have
+access to the arrays <code class="code docutils literal notranslate"><span class="pre">all_img_embeddings</span></code> and <code class="code docutils literal notranslate"><span class="pre">all_txt_embeddings</span></code>.</p>
+<p>TODO: &#64;Sam - we need to add a bit more text explaining what’s going on
+(especially functorch stuff)</p>
+<p>Now we are ready to implement <a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_output" title="trak.modelout_functions.CLIPModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_output()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
+               <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+               <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+               <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+               <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">):</span>
+    <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span>
+                                                      <span class="n">image</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                                                      <span class="n">label</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">ii</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">sim_bs</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="o">-</span><span class="n">ch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="o">-</span><span class="n">image_embeddings</span> <span class="o">@</span> <span class="p">(</span><span class="n">text_embeddings</span> <span class="o">-</span> <span class="n">all_txt_embeddings</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span>\
+             <span class="o">-</span><span class="n">ch</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="o">-</span><span class="n">text_embeddings</span> <span class="o">@</span> <span class="p">(</span><span class="n">image_embeddings</span> <span class="o">-</span> <span class="n">all_img_embeddings</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># shape of result should be [1], .sum() just removes the extra dimension</span>
+</pre></div>
+</div>
+<p>TODO: &#64;Sam - add a short snippet about
+<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.CLIPModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_out_to_loss_grad()</span></code></a> and the <span class="math notranslate nohighlight">\(Q\)</span> term.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+    <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="n">temp</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">*</span> <span class="n">image_embeddings</span> <span class="o">@</span> <span class="n">text_embeddings</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">T</span><span class="p">))</span><span class="o">.</span><span class="n">diag</span><span class="p">()</span> <span class="o">/</span> <span class="mf">2.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -243,8 +370,30 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a><ul>
+<li><a class="reference internal" href="#model-output-funcitons">Model output funcitons</a></li>
+<li><a class="reference internal" href="#the-modelout-to-loss-gradient-the-q-term">The modelout-to-loss gradient (the <span class="math notranslate nohighlight">\(Q\)</span> term)</a></li>
+<li><a class="reference internal" href="#how-we-implement-model-output-functions-in-trak">How we implement model output functions in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code></a></li>
+<li><a class="reference internal" href="#what-you-need-to-do-for-a-new-task">What you need to do for a new task</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
@@ -254,5 +403,6 @@
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/scripts/furo.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 --><title>Index - TRAK 0.1.0 documentation</title>
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 --><title>Index - TRAK 0.1.1 documentation</title>
 <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -121,7 +121,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -144,7 +144,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -153,7 +153,7 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
@@ -293,12 +293,16 @@
 </li>
         <li><a href="trak.html#trak.traker.TRAKer.finalize_features">finalize_features() (trak.traker.TRAKer method)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="trak.html#trak.traker.TRAKer.finalize_scores">finalize_scores() (trak.traker.TRAKer method)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="trak.html#trak.modelout_functions.ImageClassificationModelOutput.forward">forward() (trak.modelout_functions.ImageClassificationModelOutput method)</a>
+
+        <ul>
+          <li><a href="trak.html#trak.modelout_functions.TextClassificationModelOutput.forward">(trak.modelout_functions.TextClassificationModelOutput method)</a>
 </li>
+        </ul></li>
         <li><a href="trak.html#trak.gradient_computers.FunctionalGradientComputer">FunctionalGradientComputer (class in trak.gradient_computers)</a>
 </li>
     </ul></td>
@@ -330,6 +334,8 @@
 </li>
           <li><a href="trak.html#trak.modelout_functions.IterImageClassificationModelOutput.get_out_to_loss_grad">(trak.modelout_functions.IterImageClassificationModelOutput method)</a>
 </li>
+          <li><a href="trak.html#trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad">(trak.modelout_functions.TextClassificationModelOutput method)</a>
+</li>
         </ul></li>
         <li><a href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output">get_output() (trak.modelout_functions.AbstractModelOutput method)</a>
 
@@ -339,6 +345,8 @@
           <li><a href="trak.html#trak.modelout_functions.ImageClassificationModelOutput.get_output">(trak.modelout_functions.ImageClassificationModelOutput static method)</a>
 </li>
           <li><a href="trak.html#trak.modelout_functions.IterImageClassificationModelOutput.get_output">(trak.modelout_functions.IterImageClassificationModelOutput method)</a>
+</li>
+          <li><a href="trak.html#trak.modelout_functions.TextClassificationModelOutput.get_output">(trak.modelout_functions.TextClassificationModelOutput static method)</a>
 </li>
         </ul></li>
     </ul></td>
@@ -553,6 +561,8 @@
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="trak.html#trak.modelout_functions.CLIPModelOutput.text_embeddings">text_embeddings (trak.modelout_functions.CLIPModelOutput attribute)</a>
+</li>
+        <li><a href="trak.html#trak.modelout_functions.TextClassificationModelOutput">TextClassificationModelOutput (class in trak.modelout_functions)</a>
 </li>
         <li>
     trak

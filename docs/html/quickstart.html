@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Subclassing ModelOutput — Example with CLIP" href="clip.html" /><link rel="prev" title="Installation FAQs" href="install.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation FAQs" href="install.html" /><link rel="prev" title="TRAK: Attributing Model Behavior at Scale" href="index.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>Quickstart — get TRAK scores for CIFAR-10 - TRAK 0.1.0 documentation</title>
+        <title>Quickstart — get TRAK scores for CIFAR - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -155,11 +155,12 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="trak.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trak.html">API reference</a></li>
 </ul>
 
 </div>
@@ -188,15 +189,393 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="quickstart-get-trak-scores-for-cifar-10">
-<h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar-10" title="Permalink to this headline">#</a></h1>
-<p>Coming soon!</p>
+          <section id="quickstart-get-trak-scores-for-cifar">
+<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this headline">#</a></h1>
+<p>In this tutorial, we’ll show you how to use the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API to compute data
+attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> on
+<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> <a class="footnote-reference brackets" href="#id2" id="id1">1</a>. All computations take roughly fifteen minutes in a total
+on a single A100 GPU.
+Overall, this tutorial will show you how to:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a></p></li>
+<li><p><a class="reference internal" href="#set-up-the-traker-class"><span class="std std-ref">Set up the TRAKer class</span></a></p></li>
+<li><p><a class="reference internal" href="#compute-trak-features-for-train-data"><span class="std std-ref">Compute TRAK features for train data</span></a></p></li>
+<li><p><a class="reference internal" href="#compute-trak-scores-for-targets"><span class="std std-ref">Compute TRAK scores for targets</span></a></p></li>
+<li><p><a class="reference internal" href="#visualize-the-attributions"><span class="std std-ref">Visualize the attributions!</span></a></p></li>
+<li><p><a class="reference internal" href="#extra-evaluate-counterfactuals"><span class="std std-ref">Extra: evaluate counterfactuals</span></a></p></li>
+</ul>
+<p>Here we’ll provide tips and tricks for you to quickly get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> up and
+running; for more details, check the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>A subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/CIFAR-10">CIFAR-10</a> dataset containing only the “cat” and “dog” classes</p>
+</dd>
+</dl>
+<p>Let’s get started!</p>
+<section id="save-model-checkpoints">
+<h2>Save model checkpoints<a class="headerlink" href="#save-model-checkpoints" title="Permalink to this headline">#</a></h2>
+<p>First, we need to have model checkpoints (e.g. <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s) to apply
+<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> on. You can either use the script below to train twenty copies of
+Resnet-9 on <code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> and save the checkpoints, or bring your own
+checkpoint (any architecture/dataset combination within image classification
+will be fine for the following steps).</p>
+<details>
+<summary><a>Check the exact training script we used.</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ffcv.fields.decoders</span> <span class="kn">import</span> <span class="n">IntDecoder</span><span class="p">,</span> <span class="n">SimpleRGBImageDecoder</span>
+<span class="kn">from</span> <span class="nn">ffcv.loader</span> <span class="kn">import</span> <span class="n">Loader</span><span class="p">,</span> <span class="n">OrderOption</span>
+<span class="kn">from</span> <span class="nn">ffcv.pipeline.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">ffcv.transforms</span> <span class="kn">import</span> <span class="n">RandomHorizontalFlip</span><span class="p">,</span> <span class="n">Cutout</span><span class="p">,</span> \
+    <span class="n">RandomTranslate</span><span class="p">,</span> <span class="n">Convert</span><span class="p">,</span> <span class="n">ToDevice</span><span class="p">,</span> <span class="n">ToTensor</span><span class="p">,</span> <span class="n">ToTorchImage</span>
+<span class="kn">from</span> <span class="nn">ffcv.transforms.common</span> <span class="kn">import</span> <span class="n">Squeeze</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">wget</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.cuda.amp</span> <span class="kn">import</span> <span class="n">GradScaler</span><span class="p">,</span> <span class="n">autocast</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">Conv2d</span><span class="p">,</span> <span class="n">BatchNorm2d</span>
+<span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">SGD</span><span class="p">,</span> <span class="n">lr_scheduler</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+
+<span class="n">BETONS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="s2">&quot;https://www.dropbox.com/s/zn7jsp2rl09e0fh/train.beton?dl=1&quot;</span><span class="p">,</span>
+        <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="s2">&quot;https://www.dropbox.com/s/4p73milxxafv4cm/val.beton?dl=1&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">STATS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">125.307</span><span class="p">,</span> <span class="mf">122.961</span><span class="p">,</span> <span class="mf">113.8575</span><span class="p">],</span>
+        <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">51.5865</span><span class="p">,</span> <span class="mf">50.847</span><span class="p">,</span> <span class="mf">51.255</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span>  <span class="c1"># split \in [train, val]</span>
+                <span class="n">aug_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">should_augment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">label_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">IntDecoder</span><span class="p">(),</span>
+                                        <span class="n">ToTensor</span><span class="p">(),</span>
+                                        <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)),</span>
+                                        <span class="n">Squeeze</span><span class="p">()]</span>
+        <span class="n">image_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">SimpleRGBImageDecoder</span><span class="p">()]</span>
+
+        <span class="k">if</span> <span class="n">should_augment</span><span class="p">:</span>
+                <span class="n">image_pipeline</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+                        <span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
+                        <span class="n">RandomTranslate</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]))),</span>
+                        <span class="n">Cutout</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]))),</span>
+                <span class="p">])</span>
+
+        <span class="n">image_pipeline</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="n">ToTensor</span><span class="p">(),</span>
+            <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">ToTorchImage</span><span class="p">(),</span>
+            <span class="n">Convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+            <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]),</span>
+        <span class="p">])</span>
+
+        <span class="n">beton_url</span> <span class="o">=</span> <span class="n">BETONS</span><span class="p">[</span><span class="n">split</span><span class="p">]</span>
+        <span class="n">beton_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s1">.beton&#39;</span>
+        <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">beton_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">beton_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Loader</span><span class="p">(</span><span class="n">beton_path</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">order</span><span class="o">=</span><span class="n">OrderOption</span><span class="o">.</span><span class="n">SEQUENTIAL</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">seed</span><span class="o">=</span><span class="n">aug_seed</span><span class="p">,</span>
+                    <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">,</span>
+                    <span class="n">pipelines</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image_pipeline</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label_pipeline</span><span class="p">})</span>
+
+
+<span class="c1"># Resnet9</span>
+<span class="k">class</span> <span class="nc">Mul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Mul</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span>
+
+
+<span class="k">class</span> <span class="nc">Flatten</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Residual</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">construct_rn9</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">conv_bn</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+                            <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">channels_out</span><span class="p">),</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">conv_bn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">conv_bn</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))),</span>
+        <span class="n">conv_bn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">Residual</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))),</span>
+        <span class="n">conv_bn</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">AdaptiveMaxPool2d</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="n">Flatten</span><span class="p">(),</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">Mul</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span> <span class="n">lr_peak_epoch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
+    <span class="n">iters_per_epoch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+    <span class="c1"># Cyclic LR with single triangle</span>
+    <span class="n">lr_schedule</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">((</span><span class="n">epochs</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">),</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">lr_peak_epoch</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">*</span> <span class="n">iters_per_epoch</span><span class="p">],</span>
+                            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">LambdaLR</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="n">lr_schedule</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span>
+    <span class="n">scaler</span> <span class="o">=</span> <span class="n">GradScaler</span><span class="p">()</span>
+    <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">label_smoothing</span><span class="o">=</span><span class="n">label_smoothing</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="n">model_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="p">(</span><span class="n">ims</span><span class="p">,</span> <span class="n">labs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
+            <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">ims</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">labs</span><span class="p">)</span>
+
+            <span class="n">scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
+            <span class="n">scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;./checkpoints&#39;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training models..&#39;</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+    <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader_train</span><span class="p">)</span>
+
+    <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="sa">f</span><span class="s1">&#39;./checkpoints/sd_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.pt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</details><p>For the remaining steps, we’re going to assume you have <code class="code docutils literal notranslate"><span class="pre">N</span></code> model
+checkpoints in <code class="code docutils literal notranslate"><span class="pre">./checkpoints</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">ckpt_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;./checkpoints&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;*.pt&#39;</span><span class="p">))</span>
+<span class="n">ckpts</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="n">ckpt_files</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="set-up-the-traker-class">
+<h2>Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this headline">#</a></h2>
+<p>First, let’s initlaize our model. Using the methods from the
+section above:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class is the entry point to the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API. The two
+most important arguments for its <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> are:</p>
+<ul class="simple">
+<li><p>a model architecture (a <code class="code docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance)</p></li>
+<li><p>a <code class="code docutils literal notranslate"><span class="pre">task</span></code> (a string or a <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a> instance) — this
+specifies what type of learning task we are attributing with <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>,
+e.g. image classification, language modeling, CLIP-style contrastive learning
+natural language supervision, etc.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">trak</span> <span class="kn">import</span> <span class="n">TRAKer</span>
+
+<span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">task</span><span class="o">=</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span>
+                <span class="n">train_set_size</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>  <span class="c1"># CIFAR-2 has 10,000 train examples</span>
+</pre></div>
+</div>
+<p>We need to specify the size of the train set so that <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> can
+initialize <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.memmap.html">memory-maps</a> of the
+correct size for gradient features and attribution scores.
+By default, all metadata and arrays created by <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> are stored in
+<code class="code docutils literal notranslate"><span class="pre">./trak_results</span></code>. You can override this by specifying a custom
+<code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> to <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>.</p>
+<p>You can initalize multiple <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> objects with the same
+<code class="code docutils literal notranslate"><span class="pre">save_dir</span></code>. In fact, running multiple <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>s in parallel, all
+writing to the same <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code>, is not only supported, but encouraged!
+Check out how to <a class="reference internal" href="slurm.html#slurm-tutorial"><span class="std std-ref">Parallelize TRAK scoring with SLURM</span></a> for more details.</p>
+<p>In addition, we can specify the size of the “out” dimension of the
+dimensionality reduction step in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with the <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code>
+argument, e.g.:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">proj_dim</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See our paper for ablations on the size of the “out” dimension (maybe
+surprisingly, bigger <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> is not always better!)</p>
+</section>
+<section id="compute-trak-features-for-train-data">
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data<a class="headerlink" href="#compute-trak-features-for-train-data" title="Permalink to this headline">#</a></h2>
+<p>Now let’s process the train data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id5" id="id3">2</a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We’re ready to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> the training samples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>  <span class="c1"># for progress tracking</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
+<span class="linenos">4</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
+<span class="linenos">5</span>
+<span class="linenos">6</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
+<span class="linenos">7</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">8</span>
+<span class="linenos">9</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Let’s analyze this step by step. On line 3, we’re iterating over the
+checkpoints, assigning a <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> (just the checkpoint’s index in the
+<code class="code docutils literal notranslate"><span class="pre">ckpt</span></code> array in this case) for each one. Then, on line 4, the
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> method registers the checkpoint in the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>
+class and ties it to the given <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>. <a class="footnote-reference brackets" href="#id6" id="id4">3</a> In lines 6 and 7, we are
+iterating over the train data, getting gradient features for all examples.
+This step involves computing per-example gradients. Finally, in line 9, we
+perform some post-processing of the computed features (in particular, we compute
+the reweighting term, check our paper if you’re curious what that is).</p>
+<p>Note that the loader we are using is <strong>not</strong> shuffled. Because of that, we only
+need to specify how many samples are in batch, and <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> writes
+sequentially in the memory-map for gradient features. Alternatively, we can use
+a shuffled data loader, and pass in <code class="code docutils literal notranslate"><span class="pre">inds</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code>
+to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>. In that case, <code class="code docutils literal notranslate"><span class="pre">inds</span></code> should be an array of the same
+length as the batch, specifying the indices of the examples in the batch within
+the train data.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id5"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Again, we use the methods defined in <a class="reference internal" href="#save-model-checkpoints"><span class="std std-ref">Save model checkpoints</span></a>. Adapt this as you wish.</p>
+</dd>
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id4">3</a></span></dt>
+<dd><p><code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints</p>
+</dd>
+</dl>
+</section>
+<section id="compute-trak-scores-for-targets">
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for targets<a class="headerlink" href="#compute-trak-scores-for-targets" title="Permalink to this headline">#</a></h2>
+<p>Finally, time for scoring! For the purpose of this tutorial, let’s make the
+targets be the entire validation set:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loader_targets</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using a similar interface to the featurizing step:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="k">for</span> <span class="n">model_id</span><span class="p">,</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tqdm</span><span class="p">(</span><span class="n">ckpts</span><span class="p">)):</span>
+<span class="linenos">2</span>    <span class="n">traker</span><span class="o">.</span><span class="n">start_scoring_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span>
+<span class="linenos">3</span>                                    <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
+<span class="linenos">4</span>                                    <span class="n">num_targets</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">loader_targets</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
+<span class="linenos">5</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
+<span class="linenos">6</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">7</span>
+<span class="linenos">8</span><span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Here, <a class="reference internal" href="trak.html#trak.traker.TRAKer.start_scoring_checkpoint" title="trak.traker.TRAKer.start_scoring_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start_scoring_checkpoint()</span></code></a> has a similar function to
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a> used during featurizing; this time, instead of
+registering the checkpoint, it asserts that this <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> has been
+featurized, loads the given model checkpoint, and initializes memmory-maps for
+the target gradient features. The <a class="reference internal" href="trak.html#trak.traker.TRAKer.score" title="trak.traker.TRAKer.score"><code class="xref py py-meth docutils literal notranslate"><span class="pre">score()</span></code></a> method is conceptually close to
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a> - it processes the target batch and computes gradient
+features for each image inside. The <code class="code docutils literal notranslate"><span class="pre">num_samples</span></code> and <code class="code docutils literal notranslate"><span class="pre">inds</span></code>
+arguments work in the same way as in <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" title="trak.traker.TRAKer.featurize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">featurize()</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Be careful that you provide the same <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> for each checkpoint as
+in the featurizing step - <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> will <strong>not</strong> check that you did that.
+If you shuffle the <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s, you’ll not receive an error, but
+you’ll get bad results.</p>
+<p>P.S.: if you know a clean, robust way to hash model parameters, open an
+issue on github and we might add an <code class="code docutils literal notranslate"><span class="pre">assert</span></code> about <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>
+consistency.</p>
+</div>
+<p>After this, we get our <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores as a <code class="code docutils literal notranslate"><span class="pre">torch.Tensor</span></code> from the
+<a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> method. That’s it! Now let’s take a look at what we
+got.</p>
+</section>
+<section id="visualize-the-attributions">
+<h2>Visualize the attributions!<a class="headerlink" href="#visualize-the-attributions" title="Permalink to this headline">#</a></h2>
+<p>TODO: add images below code snipeets once we have them; some text to explain what’s going on</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+
+<span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># let&#39;s look at two validation images</span>
+<span class="n">loader_targets</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
+    <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+    <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Top scorers for target </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">loader_top_scorer</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">scores</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_top_scorer</span><span class="p">:</span>
+        <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">());</span> <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="extra-evaluate-counterfactuals">
+<h2>Extra: evaluate counterfactuals<a class="headerlink" href="#extra-evaluate-counterfactuals" title="Permalink to this headline">#</a></h2>
+<p>TODO: clean up code snippet a bit; add histogram below code snippets once we have it; some text to explain what’s going on</p>
+<p>Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:</p>
+<img alt="_images/main_figure.png" src="_images/main_figure.png" />
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">masks</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">margins</span> <span class="o">=</span> <span class="o">...</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">spearmanr</span>
+
+<span class="k">def</span> <span class="nf">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">masks_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1&#39;</span>
+    <span class="n">margins_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1&#39;</span>
+
+    <span class="n">masks_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;mask.npy&#39;</span><span class="p">)</span>
+    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">masks_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">masks_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># num masks, num train samples</span>
+    <span class="n">masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">masks_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+    <span class="n">margins_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;val_margins.npy&#39;</span><span class="p">)</span>
+    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">margins_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">margins_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="c1"># num , num val samples</span>
+    <span class="n">margins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">margins_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span>
+
+    <span class="n">val_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">masks</span> <span class="o">@</span> <span class="n">scores</span>
+    <span class="n">rs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">val_inds</span><span class="p">)):</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">spearmanr</span><span class="p">(</span><span class="n">preds</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">],</span> <span class="n">margins</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
+        <span class="n">rs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">rs</span><span class="p">,</span> <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Correlation: </span><span class="si">{</span><span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1"> (avg p value </span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
         </article>
@@ -204,23 +583,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="clip.html">
+          <a class="next-page" href="install.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</div>
+                <div class="title">Installation FAQs</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="install.html">
+          <a class="prev-page" href="index.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Installation FAQs</div>
+                <div class="title">Home</div>
                 
               </div>
             </a>
@@ -242,8 +621,32 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a><ul>
+<li><a class="reference internal" href="#save-model-checkpoints">Save model checkpoints</a></li>
+<li><a class="reference internal" href="#set-up-the-traker-class">Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
+<li><a class="reference internal" href="#compute-trak-features-for-train-data">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for train data</a></li>
+<li><a class="reference internal" href="#compute-trak-scores-for-targets">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for targets</a></li>
+<li><a class="reference internal" href="#visualize-the-attributions">Visualize the attributions!</a></li>
+<li><a class="reference internal" href="#extra-evaluate-counterfactuals">Extra: evaluate counterfactuals</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

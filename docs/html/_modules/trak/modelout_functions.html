@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
     <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>trak.modelout_functions - TRAK 0.1.0 documentation</title>
+        <title>trak.modelout_functions - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -122,7 +122,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index.html"><div class="brand">TRAK 0.1.0 documentation</div></a>
+      <a href="../../index.html"><div class="brand">TRAK 0.1.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -145,7 +145,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
   
   
-  <span class="sidebar-brand-text">TRAK 0.1.0 documentation</span>
+  <span class="sidebar-brand-text">TRAK 0.1.1 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -154,10 +154,12 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code> — Example with CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../trak.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../trak.html">API reference</a></li>
 </ul>
 
 </div>
@@ -195,16 +197,19 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Here we provide an abstract &quot;model output&quot; class AbstractModelOutput, together with a number</span>
 <span class="sd">of subclasses for particular applications (vision, language, etc):</span>
-<span class="sd">- :code:`ImageClassificationModelOutput`</span>
-<span class="sd">- :code:`IterImageClassificationModelOutput`</span>
-<span class="sd">- :code:`CLIPModelOutput`</span>
+
+<span class="sd">- :class:`.ImageClassificationModelOutput`</span>
+<span class="sd">- :class:`.IterImageClassificationModelOutput`</span>
+<span class="sd">- :class:`.CLIPModelOutput`</span>
 
 <span class="sd">These classes implement methods that transform input batches to the desired model output</span>
 <span class="sd">(e.g. logits, loss, etc).</span>
 <span class="sd">See Sections 2 &amp; 3 of (TODO: link)[our paper] for more details on what model output functions are</span>
 <span class="sd">in the context of TRAK and how to use &amp; design them.</span>
 
-<span class="sd">See [TODO: docs link] for examples on how to subclass AbstractModelOutput for a task of your choice.</span>
+<span class="sd">See, e.g. `this tutorial &lt;https://trak.csail.mit.edu/html/clip.html&gt;`_ for an</span>
+<span class="sd">example on how to subclass :code:`AbstractModelOutput` for a task of your</span>
+<span class="sd">choice.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span>
@@ -214,19 +219,21 @@
 
 
 <div class="viewcode-block" id="AbstractModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.AbstractModelOutput">[docs]</a><span class="k">class</span> <span class="nc">AbstractModelOutput</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; See [TODO: docs link] for examples on how to subclass</span>
-<span class="sd">    :code:`AbstractModelOutput` for a task of your choice.</span>
+    <span class="sd">&quot;&quot;&quot; See, e.g. `this tutorial &lt;https://trak.csail.mit.edu/html/clip.html&gt;`_</span>
+<span class="sd">    for an example on how to subclass :code:`AbstractModelOutput` for a task of</span>
+<span class="sd">    your choice.</span>
 
 <span class="sd">    Subclasses must implement:</span>
+
 <span class="sd">    - a :code:`get_output` method that takes in a batch of inputs and model</span>
-<span class="sd">    weights to produce outputs that TRAK will be trained to predict. In the</span>
-<span class="sd">    notation of the paper, :code:`get_output` should return :math:`f(z,\\theta)`</span>
+<span class="sd">      weights to produce outputs that TRAK will be trained to predict. In the</span>
+<span class="sd">      notation of the paper, :code:`get_output` should return :math:`f(z,\\theta)`</span>
 
 <span class="sd">    - a :code:`get_out_to_loss_grad` method that takes in a batch of inputs and</span>
-<span class="sd">    model weights to produce the gradient of the function that transforms the</span>
-<span class="sd">    model outputs above into the loss with respect to the batch. In the notation</span>
-<span class="sd">    of the paper, :code:`get_out_to_loss_grad` returns (entries along the</span>
-<span class="sd">    diagonal of) :math:`Q`.</span>
+<span class="sd">      model weights to produce the gradient of the function that transforms the</span>
+<span class="sd">      model outputs above into the loss with respect to the batch. In the</span>
+<span class="sd">      notation of the paper, :code:`get_out_to_loss_grad` returns (entries along</span>
+<span class="sd">      the diagonal of) :math:`Q`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@abstractmethod</span>
@@ -242,11 +249,14 @@
 <span class="sd">        design them.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: model output function</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                model output function</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
@@ -270,8 +280,8 @@
 
 <div class="viewcode-block" id="ImageClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.ImageClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">ImageClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]</span>
-<span class="sd">    for more details.</span>
+<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO:</span>
+<span class="sd">    link)[our paper] for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -293,7 +303,9 @@
         <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
 <span class="sd">        let :math:`p(z, \\theta)` be the softmax probability of the correct class.</span>
 <span class="sd">        This method implements the model output function</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\log(\\frac{p(z, \\theta)}{1 - p(z, \\theta)}).</span>
 
 <span class="sd">        It uses functorch&#39;s functional models to make the per-sample gradient computations faster.</span>
@@ -308,15 +320,21 @@
 <span class="sd">        PR with a fix.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            func_model (func): functorch functional model</span>
-<span class="sd">            weights (Iterable[Tensor]): functorch model weights</span>
-<span class="sd">            buffers (Iterable[Tensor]): functorch model buffers</span>
-<span class="sd">            image (Tensor): input image, should not have batch dimension</span>
-<span class="sd">            label (Tensor): input label, should not have batch dimension</span>
+<span class="sd">            func_model (func):</span>
+<span class="sd">                functorch functional model</span>
+<span class="sd">            weights (Iterable[Tensor]):</span>
+<span class="sd">                functorch model weights</span>
+<span class="sd">            buffers (Iterable[Tensor]):</span>
+<span class="sd">                functorch model buffers</span>
+<span class="sd">            image (Tensor):</span>
+<span class="sd">                input image, should not have batch dimension</span>
+<span class="sd">            label (Tensor):</span>
+<span class="sd">                input label, should not have batch dimension</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: model output for the given image-label pair :math:`z` and</span>
-<span class="sd">            weights &amp; buffers :math:`\\theta`.</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                model output for the given image-label pair :math:`z` and</span>
+<span class="sd">                weights &amp; buffers :math:`\\theta`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="n">bindex</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -338,11 +356,14 @@
 <span class="sd">        that uses different parts of the input batch.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (Module): model</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
+<span class="sd">            model (Module):</span>
+<span class="sd">                model</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: model output (not to be confused with the model output function)</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                model output (not to be confused with the model output function)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">images</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
         <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span></div>
@@ -351,13 +372,18 @@
         <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            func_model (func): functorch functional model</span>
-<span class="sd">            weights (Iterable[Tensor]): functorch model weights</span>
-<span class="sd">            buffers (Iterable[Tensor]): functorch model buffers</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
+<span class="sd">            func_model (func):</span>
+<span class="sd">                functorch functional model</span>
+<span class="sd">            weights (Iterable[Tensor]):</span>
+<span class="sd">                functorch model weights</span>
+<span class="sd">            buffers (Iterable[Tensor]):</span>
+<span class="sd">                functorch model buffers</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: out-to-loss (reweighting term) for the input batch</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                out-to-loss (reweighting term) for the input batch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
@@ -369,15 +395,16 @@
 
 <div class="viewcode-block" id="IterImageClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.IterImageClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">IterImageClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO: link)[our paper]</span>
-<span class="sd">    for more details.</span>
+<span class="sd">    Margin for (multiclass) image classification. See Section 3.3 of (TODO:</span>
+<span class="sd">    link)[our paper] for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            temperature (float, optional): Temperature to use inside the</span>
-<span class="sd">            softmax for the out-to-loss function. Defaults to 1.</span>
+<span class="sd">            temperature (float, optional):</span>
+<span class="sd">                Temperature to use inside the softmax for the out-to-loss</span>
+<span class="sd">                function. Defaults to 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -390,17 +417,23 @@
         <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
 <span class="sd">        let :math:`p(z, \\theta)` be the softmax probability of the correct class.</span>
 <span class="sd">        This method implements the model output function</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \\log(\\frac{p(z, \\theta)}{1 - p(z, \\theta)}).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model</span>
-<span class="sd">            image (Tensor): input images</span>
-<span class="sd">            label (Tensor): input labels</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model</span>
+<span class="sd">            images (Tensor):</span>
+<span class="sd">                input images</span>
+<span class="sd">            labels (Tensor):</span>
+<span class="sd">                input labels</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: model output for the given image-label pair :math:`z` and</span>
-<span class="sd">            model parameters :math:`\theta`.</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                model output for the given image-label pair :math:`z` and model</span>
+<span class="sd">                parameters :math:`\\theta`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
         <span class="n">bindex</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -418,11 +451,14 @@
         <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
+<span class="sd">            model (torch.nn.Module)</span>
+<span class="sd">                model</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: out-to-loss (reweighting term) for the input batch</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                out-to-loss (reweighting term) for the input batch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">images</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span>
         <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
@@ -448,13 +484,17 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">simulated_batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="sd">        Args:</span>
-<span class="sd">            temperature (float, optional): Temperature to use inside the</span>
-<span class="sd">                softmax for the out-to-loss function. If None, CLIP&#39;s</span>
-<span class="sd">                :code:`logit_scale` is used.  Defaults to None</span>
-<span class="sd">            simulated_batch_size (int, optional): Size of the &quot;simulated&quot; batch</span>
-<span class="sd">                size for the model output function. See Section 5.1 of the TRAK</span>
-<span class="sd">                paper for more details. Defaults to 300.</span>
+<span class="sd">            temperature (float, optional):</span>
+<span class="sd">                Temperature to use inside the softmax for the out-to-loss</span>
+<span class="sd">                function. If None, CLIP&#39;s :code:`logit_scale` is used.  Defaults</span>
+<span class="sd">                to None</span>
+<span class="sd">            simulated_batch_size (int, optional):</span>
+<span class="sd">                Size of the &quot;simulated&quot; batch size for the model output</span>
+<span class="sd">                function. See Section 5.1 of the TRAK paper for more details.</span>
+<span class="sd">                Defaults to 300.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -475,15 +515,23 @@
 <span class="sd">        attributes :code:`image_embeddings` and :code:`text_embeddings`.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model</span>
-<span class="sd">            loader (): data loader</span>
-<span class="sd">            batch_size (int): input batch size</span>
-<span class="sd">            size (int, optional): Maximum number of embeddings to compute. Defaults to 50_000.</span>
-<span class="sd">            embedding_dim (int, optional): Dimension of CLIP embedding. Defaults to 1024.</span>
-<span class="sd">            preprocess_fn_img (func, optional): Transforms to apply to images</span>
-<span class="sd">            from the loader before forward pass. Defaults to None.</span>
-<span class="sd">            preprocess_fn_txt (func, optional): Transforms to apply to images</span>
-<span class="sd">            from the loader before forward pass. Defaults to None.</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model</span>
+<span class="sd">            loader ():</span>
+<span class="sd">                data loader</span>
+<span class="sd">            batch_size (int):</span>
+<span class="sd">                input batch size</span>
+<span class="sd">            size (int, optional):</span>
+<span class="sd">                Maximum number of embeddings to compute. Defaults to 50_000.</span>
+<span class="sd">            embedding_dim (int, optional):</span>
+<span class="sd">                Dimension of CLIP embedding. Defaults to 1024.</span>
+<span class="sd">            preprocess_fn_img (func, optional):</span>
+<span class="sd">                Transforms to apply to images from the loader before forward</span>
+<span class="sd">                pass. Defaults to None.</span>
+<span class="sd">            preprocess_fn_txt (func, optional):</span>
+<span class="sd">                Transforms to apply to images from the loader before forward</span>
+<span class="sd">                pass. Defaults to None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">img_embs</span><span class="p">,</span> <span class="n">txt_embs</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">(),</span>\
             <span class="n">ch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
@@ -514,12 +562,14 @@
                    <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                    <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
                    <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,</span>
-<span class="sd">        let :math:`\\phi(x, \\theta)` be the CLIP image embedding and</span>
-<span class="sd">        :math:`\\psi(y, \\theta)` be the CLIP text embedding. Last, let</span>
-<span class="sd">        :math:`B` be a (simulated) batch. This method implements the model</span>
-<span class="sd">        output function</span>
+        <span class="sd">&quot;&quot;&quot; For a given input :math:`z=(x, y)` and model parameters</span>
+<span class="sd">        :math:`\\theta`, let :math:`\\phi(x, \\theta)` be the CLIP image</span>
+<span class="sd">        embedding and :math:`\\psi(y, \\theta)` be the CLIP text embedding.</span>
+<span class="sd">        Last, let :math:`B` be a (simulated) batch. This method implements the</span>
+<span class="sd">        model output function</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            -\\log(\\frac{\\phi(x)\\cdot \\psi(y)}{\\sum_{(x&#39;, y&#39;)\\in B}</span>
 <span class="sd">            \\phi(x)\\cdot \\psi(y&#39;)})</span>
 <span class="sd">            -\\log(\\frac{\\phi(x)\\cdot \\psi(y)}{\\sum_{(x&#39;, y&#39;)\\in B}</span>
@@ -538,15 +588,21 @@
 <span class="sd">        PR with a fix.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            func_model (func): functorch functional model</span>
-<span class="sd">            weights (Iterable[Tensor]): functorch model weights</span>
-<span class="sd">            buffers (Iterable[Tensor]): functorch model buffers</span>
-<span class="sd">            image (Tensor): input image, should not have batch dimension</span>
-<span class="sd">            label (Tensor): input label, should not have batch dimension</span>
+<span class="sd">            func_model (func):</span>
+<span class="sd">                functorch functional model</span>
+<span class="sd">            weights (Iterable[Tensor]):</span>
+<span class="sd">                functorch model weights</span>
+<span class="sd">            buffers (Iterable[Tensor]):</span>
+<span class="sd">                functorch model buffers</span>
+<span class="sd">            image (Tensor):</span>
+<span class="sd">                input image, should not have batch dimension</span>
+<span class="sd">            label (Tensor):</span>
+<span class="sd">                input label, should not have batch dimension</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: model output for the given image-label pair :math:`z` and</span>
-<span class="sd">            weights &amp; buffers :math:`\\theta`.</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                model output for the given image-label pair :math:`z` and</span>
+<span class="sd">                weights &amp; buffers :math:`\\theta`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_im_embs</span> <span class="o">=</span> <span class="n">CLIPModelOutput</span><span class="o">.</span><span class="n">image_embeddings</span>
         <span class="n">all_txt_embs</span> <span class="o">=</span> <span class="n">CLIPModelOutput</span><span class="o">.</span><span class="n">text_embeddings</span>
@@ -573,13 +629,19 @@
         <span class="sd">&quot;&quot;&quot; Computes the (reweighting term Q in the paper)</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            func_model (func): functorch functional model</span>
-<span class="sd">            weights (Iterable[Tensor]): functorch model weights</span>
-<span class="sd">            buffers (Iterable[Tensor]): functorch model buffers</span>
-<span class="sd">            batch (Iterable[Tensor]): input batch</span>
+<span class="sd">            func_model (func):</span>
+<span class="sd">                functorch functional model</span>
+<span class="sd">            weights (Iterable[Tensor]):</span>
+<span class="sd">                functorch model weights</span>
+<span class="sd">            buffers (Iterable[Tensor]):</span>
+<span class="sd">                functorch model buffers</span>
+<span class="sd">            batch (Iterable[Tensor]):</span>
+<span class="sd">                input batch</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Tensor: out-to-loss (reweighting term) for the input batch</span>
+<span class="sd">            Tensor:</span>
+<span class="sd">                out-to-loss (reweighting term) for the input batch</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="o">*</span><span class="n">batch</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -589,9 +651,60 @@
         <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span></div></div>
 
 
+<div class="viewcode-block" id="TextClassificationModelOutput"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput">[docs]</a><span class="k">class</span> <span class="nc">TextClassificationModelOutput</span><span class="p">(</span><span class="n">AbstractModelOutput</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Margin for text classification models. This assumes that the model takes</span>
+<span class="sd">    in input_ids, token_type_ids, and attention_mask.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \\text{logit}[\\text{correct}] - \\log\\left(\\sum_{i \\neq</span>
+<span class="sd">        \\text{correct}} \\exp(\\text{logit}[i])\\right)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span> <span class="o">=</span> <span class="n">temperature</span>
+
+<div class="viewcode-block" id="TextClassificationModelOutput.get_output"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput.get_output">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
+                   <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                   <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+                   <span class="n">input_id</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+                   <span class="n">token_type_id</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+                   <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+                   <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">input_id</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                                <span class="n">token_type_id</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                                <span class="n">attention_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">bindex</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">logits_correct</span> <span class="o">=</span> <span class="n">logits</span><span class="p">[</span><span class="n">bindex</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+
+        <span class="n">cloned_logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">cloned_logits</span><span class="p">[</span><span class="n">bindex</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="n">ch</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="n">margins</span> <span class="o">=</span> <span class="n">logits_correct</span> <span class="o">-</span> <span class="n">cloned_logits</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">margins</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TextClassificationModelOutput.forward"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+            <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">,</span>
+            <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TextClassificationModelOutput.get_out_to_loss_grad"><a class="viewcode-back" href="../../trak.html#trak.modelout_functions.TextClassificationModelOutput.get_out_to_loss_grad">[docs]</a>    <span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span><span class="p">)[</span><span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">labels</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div></div>
+
+
 <span class="n">TASK_TO_MODELOUT</span> <span class="o">=</span> <span class="p">{</span>
     <span class="p">(</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span> <span class="n">ImageClassificationModelOutput</span><span class="p">,</span>
     <span class="p">(</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span> <span class="n">IterImageClassificationModelOutput</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">&#39;text_classification&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span> <span class="n">TextClassificationModelOutput</span><span class="p">,</span>
     <span class="p">(</span><span class="s1">&#39;clip&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span> <span class="n">CLIPModelOutput</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
