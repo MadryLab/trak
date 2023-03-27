@@ -2,21 +2,21 @@
 
 Parallelize :code:`TRAK` scoring with :code:`SLURM`
 ===================================================
- 
+
 Often we would like to compute :code:`TRAK` scores from multiple checkpoints of
-the same model. 
+the same model.
 
 .. note::
 
-    Check `our paper <TODO:link>`_ to see why using multiple checkpoints helps.
+    Check `our paper <https://arxiv.org/abs/2303.14186>`_ to see why using multiple checkpoints helps improve :code:`TRAK`'s performance.
 
 This means that we need to run :meth:`.TRAKer.featurize` for all
-training exmaples *for each checkpoint*. This is a highly parallelizable
+training examples *for each checkpoint*. But fortunately, this is a highly parallelizable
 process!
 
 Below, we sketch a simple way of parallelizing :meth:`.featurize` and
-:meth:`.score` across checkpoints. To that end, we leverage `SLURM
-<https://slurm.schedmd.com/overview.html>`_ --- a powerful job scheduling
+:meth:`.score` across checkpoints. We'll use `SLURM
+<https://slurm.schedmd.com/overview.html>`_ --- a popular job scheduling
 system.
 
 .. note::
@@ -32,12 +32,20 @@ Overall, we'll write three files:
 * :code:`run.sbatch`
 * :code:`gather.py`
 
-We will use :code:`run.sbatch` to run copies of :code:`featurize_and_score.py`
+We will use :code:`run.sbatch` to run different instances of :code:`featurize_and_score.py`
 in parallel, and get the final :code:`TRAK` scores using :code:`gather.py`.
 
-Everything needed for scoring up to :meth:`.finalize_scores` will go in
+.. note::
+
+    In terms of MapReduce, you can of :code:`featurize_and_score` as the map function and :code:`gather` as the reduce function.
+
+
+1. Featurizing each checkpoint
+--------------------------
+
+Everything needed for scoring prior to :meth:`.finalize_scores` will go in
 :code:`featurize_and_score.py`.
-For example, :code:`featurize_and_score.py` may look like:
+For example, :code:`featurize_and_score.py` can be as follows:
 
 .. code-block:: python
     :linenos:
@@ -64,11 +72,18 @@ For example, :code:`featurize_and_score.py` may look like:
         for batch in loader_val:
             traker.score(batch=batch, ...)
 
+        # This will be called from gather.py instead.
+        # scores = traker.finalize_scores()
+
     if __name__ == "__main__":
         parser = ArgumentParser()
         parser.add_argument('--model_id', required=True, type=int)
         args = parser.parse_args()
         main(args.model_id)
+
+2. Run featurize in parallel
+--------------------------
+
 
 Now we can run the above script script in parallel with a :code:`run.sbatch`.
 Here is a minimal example:
@@ -91,13 +106,13 @@ The above script will submit 10 jobs in parallel or us: this is specified by the
 ID for :code:`TRAK`. To learn more about the :code:`SBATCH`, check out
 :code:`SLURM`\ s `docs <https://slurm.schedmd.com/sbatch.html>`_.
 
-Note that on line 14 of the example :code:`featurize_and_score.py` above, we
+Note that on line 15 of the example :code:`featurize_and_score.py` above, we
 call :meth:`.finalize_features` with :code:`model_ids=[model_id]`. This is
 important --- if we don't specify this, :code:`TRAK` by default attempts to
 finalize the features for all :code:`model_id`\ s (checkpoints) in the
 :code:`save_dir` of the current :class:`.TRAKer` instance.
 
-Running 
+Running
 
 .. code:: bash
 
@@ -105,6 +120,9 @@ Running
 
 in the terminal will populate the specified :code:`save_dir` with all
 intermediate results we need to compute the final :code:`TRAK` scores.
+
+3. Gather final scores
+--------------------------
 
 The only thing left to do is call :meth:`.TRAKer.finalize_scores`. This method
 combines the scores across checkpoints (think of it as a :code:`gather`).

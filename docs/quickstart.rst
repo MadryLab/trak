@@ -4,43 +4,46 @@ Quickstart --- get :code:`TRAK` scores for :code:`CIFAR`
 ===========================================================
 
 In this tutorial, we'll show you how to use the :code:`TRAK` API to compute data
-attribution scores for `ResNet-9 <https://github.com/wbaek/torchskeleton>`_ on
-:code:`CIFAR-2` [1]_. All computations take roughly fifteen minutes in a total
-on a single A100 GPU.
+attribution scores for `ResNet-9 <https://github.com/wbaek/torchskeleton>`_ models trained on
+:code:`CIFAR-2`. [1]_ While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.
+
 Overall, this tutorial will show you how to:
 
-* :ref:`Save model checkpoints`
+#. :ref:`Load model checkpoints`
 
-* :ref:`Set up the :class:\`.TRAKer\` class`
+#. :ref:`Set up the :class:\`.TRAKer\` class`
 
-* :ref:`Compute :code:\`TRAK\` features for train data`
+#. :ref:`Compute :code:\`TRAK\` features for training data`
 
-* :ref:`Compute :code:\`TRAK\` scores for targets`
+#. :ref:`Compute :code:\`TRAK\` scores for target examples`
 
-* :ref:`Visualize the attributions!`
+#. :ref:`Visualize the attributions found by TRAK`
 
-* :ref:`Extra: evaluate counterfactuals`
+#. :ref:`Bonus: Evaluate counterfactuals`
 
-Here we'll provide tips and tricks for you to quickly get :code:`TRAK` up and
-running; for more details, check the :ref:`API reference`.
 
-.. [1] A subset of the `CIFAR-10 <https://en.wikipedia.org/wiki/CIFAR-10>`_ dataset containing only the "cat" and "dog" classes
+You can also try this tutorial as a
+`Jupyter notebook <https://github.com/MadryLab/trak/blob/main/examples/cifar2_correlation.ipynb>`_.
+All computations take roughly fifteen minutes in total
+on a single A100 GPU.
 
 Let's get started!
 
-Save model checkpoints
+
+.. [1] A subset of the `CIFAR-10 <https://en.wikipedia.org/wiki/CIFAR-10>`_ dataset containing only the "cat" and "dog" classes
+
+Load model checkpoints
 ----------------------
 
-First, we need to have model checkpoints (e.g. :code:`state_dict()`\ s) to apply
-:code:`TRAK` on. You can either use the script below to train twenty copies of
-Resnet-9 on :code:`CIFAR-2` and save the checkpoints, or bring your own
-checkpoint (any architecture/dataset combination within image classification
-will be fine for the following steps).
+First, you need models to apply
+:code:`TRAK` to. You can either use the script below to train three
+ResNet-9 models on :code:`CIFAR-2` and save the checkpoints (e.g., :code:`state_dict()`\ s), or
+use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + CIFAR-2 with any architecture + classification task of your choice.)
 
 .. raw:: html
 
    <details>
-   <summary><a>Check the exact training script we used.</a></summary>
+   <summary><a>Training code for CIFAR-2</a></summary>
 
 .. code-block:: python
 
@@ -184,14 +187,14 @@ will be fine for the following steps).
         model = construct_rn9().to(memory_format=torch.channels_last).cuda()
         loader_train = get_dataloader(batch_size=512, split='train')
         train(model, loader_train)
-        
+
         torch.save(model.state_dict(), f'./checkpoints/sd_{i}.pt')
 
 .. raw:: html
 
    </details>
 
-For the remaining steps, we're going to assume you have :code:`N` model
+For the remaining steps, we'll assume you have :code:`N` model
 checkpoints in :code:`./checkpoints`:
 
 .. code-block:: python
@@ -205,114 +208,115 @@ checkpoints in :code:`./checkpoints`:
 Set up the :class:`.TRAKer` class
 ---------------------------------
 
-First, let's initlaize our model. Using the methods from the
-section above:
+The :class:`.TRAKer` class is the entry point to the :code:`TRAK` API. Construct it by calling :code:`__init__()` with three arguments:
 
-.. code-block:: python
-
-    model = construct_rn9().to(memory_format=torch.channels_last).cuda().eval()
-
-The :class:`.TRAKer` class is the entry point to the :code:`TRAK` API. The two
-most important arguments for its :code:`__init__()` are:
-
-* a model architecture (a :code:`torch.nn.Module` instance)
+* a :code:`model` (a :code:`torch.nn.Module` instance) --- this is the model architecture/class that you want to compute attributions for. Note that this model you pass in does not need to be initialized (we'll do that separately below).
 
 * a :code:`task` (a string or a :class:`.AbstractModelOutput` instance) --- this
-  specifies what type of learning task we are attributing with :code:`TRAK`,
-  e.g. image classification, language modeling, CLIP-style contrastive learning
-  natural language supervision, etc.
+  specifies the type of learning task you want to attribue with :code:`TRAK`,
+  e.g. image classification, language modeling, CLIP-style contrastive learning, etc.
 
+* a :code:`train_set_size` (an integer) --- the size of the training set you want to keep trak of
 
 
 .. code-block:: python
 
     from trak import TRAKer
 
+    # Replace with your choice of model constructor
+    model = construct_rn9().to(memory_format=torch.channels_last).cuda().eval()
+
     traker = TRAKer(model=model,
                     task='image_classification',
                     train_set_size=10_000)  # CIFAR-2 has 10,000 train examples
 
-We need to specify the size of the train set so that :class:`.TRAKer` can
-initialize `memory-maps
-<https://numpy.org/doc/stable/reference/generated/numpy.memmap.html>`_ of the
-correct size for gradient features and attribution scores.
 By default, all metadata and arrays created by :class:`.TRAKer` are stored in
 :code:`./trak_results`. You can override this by specifying a custom
 :code:`save_dir` to :class:`.TRAKer`.
 
-You can initalize multiple :class:`.TRAKer` objects with the same
-:code:`save_dir`. In fact, running multiple :class:`.TRAKer`\ s in parallel, all
-writing to the same :code:`save_dir`, is not only supported, but encouraged!
-Check out how to :ref:`SLURM tutorial` for more details.
-
-In addition, we can specify the size of the "out" dimension of the
-dimensionality reduction step in :code:`TRAK` with the :code:`proj_dim`
-argument, e.g.:
+In addition, you can specify the dimension of the features used by :code:`TRAK` with the :code:`proj_dim`
+argument, e.g.,
 
 .. code-block:: python
 
-    traker = TRAKer(..., proj_dim=4096)
+    traker = TRAKer(..., proj_dim=2048)  # default dimension is 2048
 
-See our paper for ablations on the size of the "out" dimension (maybe
-surprisingly, bigger :code:`proj_dim` is not always better!)
+(For the curious, this corresponds to the dimension of the output of random projections in our algorithm.
+We recommend :code:`proj_dim` between 1,000 and 40,000.)
 
-Compute :code:`TRAK` features for train data
+For more customizations, check out the :ref:`API reference`.
+
+
+Compute :code:`TRAK` features for training data
 --------------------------------------------
 
-Now let's process the train data. For that, we'll need a data loader:[2]_
+Now that we have constructed a  :class:`.TRAKer` object, let's use it to process the training data. For that, we'll need a data loader:[2]_
 
 .. code-block:: python
 
-    batch_size = 128
-    loader_train = get_dataloader(batch_size=batch_size, split='train')
+    # Replace with your choice of data loader (should be deterministic ordering)
+    loader_train = get_dataloader(batch_size=128, split='train')
 
-We're ready to :meth:`.featurize` the training samples:
+We process the training examples by calling :meth:`.featurize`:
 
 .. code-block:: python
     :linenos:
 
-    from tqdm import tqdm  # for progress tracking
+    from tqdm import tqdm
 
     for model_id, ckpt in enumerate(tqdm(ckpts)):
+        # TRAKer loads the provided checkpoint and also associates
+        # the provided (unique) model_id with the checkpoint.
         traker.load_checkpoint(ckpt, model_id=model_id)
 
         for batch in loader_train:
+            # TRAKer computes features corresponding to the batch of examples,
+            # using the checkpoint loaded above.
             traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 
+    # Tells TRAKer that we've given it all the information, at which point
+    # TRAKer does some post-processing to get ready for the next step
+    # (scoring target examples).
     traker.finalize_features()
 
-Let's analyze this step by step. On line 3, we're iterating over the
-checkpoints, assigning a :code:`model_id` (just the checkpoint's index in the
-:code:`ckpt` array in this case) for each one. Then, on line 4, the
-:meth:`.load_checkpoint` method registers the checkpoint in the :class:`.TRAKer`
-class and ties it to the given :code:`model_id`. [3]_ In lines 6 and 7, we are
-iterating over the train data, getting gradient features for all examples.
-This step involves computing per-example gradients. Finally, in line 9, we
-perform some post-processing of the computed features (in particular, we compute
-the reweighting term, check our paper if you're curious what that is).
+.. note::
 
-Note that the loader we are using is **not** shuffled. Because of that, we only
-need to specify how many samples are in batch, and :class:`TRAKer` writes
-sequentially in the memory-map for gradient features. Alternatively, we can use
-a shuffled data loader, and pass in :code:`inds` instead of :code:`num_samples`
-to :meth:`.featurize`. In that case, :code:`inds` should be an array of the same
-length as the batch, specifying the indices of the examples in the batch within
-the train data.
+    Here we assume that the data loader we are using is **not** shuffled,
+    so we only need to specify how many samples are in batch.
+    Alternatively, we can use
+    a shuffled data loader, and pass in :code:`inds` instead of :code:`num_samples`
+    to :meth:`.featurize`. In that case, :code:`inds` should be an array of the same
+    length as the batch, specifying the indices of the examples in the batch within
+    the training dataset.
 
-.. [2] Again, we use the methods defined in :ref:`Save model checkpoints`. Adapt this as you wish.
-.. [3] :code:`model_id`\ s will be important later when we compute scores and need to match gradient features of the train data and targets across checkpoints
 
-Compute :code:`TRAK` scores for targets
+Above, we sequentially iterate over multiple model checkpoints
+.. note::
+    While you can still compute :code:`TRAK` with a single checkpoint, using multiple checkpoints significantly improves TRAK's performance. See our
+
+But you can also---and we recommend you to---parallelize this step across multiple jobs.
+All you have to do is  initialize a different :class:`.TRAKer` object with the same
+:code:`save_dir` within each job and specify the appropriate :code:`model_id` when calling
+:meth:`.load_checkpoint`.
+For more details, check out how to :ref:`SLURM tutorial`.
+
+
+.. [2] Again, we use the methods defined in :ref:`Save model checkpoints`.
+
+
+Compute :code:`TRAK` scores for target examples
 ---------------------------------------
 
-Finally, time for scoring! For the purpose of this tutorial, let's make the
+Finally, we are ready to compute attribution scores.
+To do this, you need to choose a set of target examples that you want to attribute.
+For the purpose of this tutorial, let's make the
 targets be the entire validation set:
 
 .. code-block:: python
 
     loader_targets = get_dataloader(batch_size=batch_size, split='val')
 
-Using a similar interface to the featurizing step:
+As before, we iterate over checkpoints and batches of data:
 
 .. code-block:: python
     :linenos:
@@ -327,33 +331,34 @@ Using a similar interface to the featurizing step:
     scores = traker.finalize_scores()
 
 Here, :meth:`.start_scoring_checkpoint` has a similar function to
-:meth:`.load_checkpoint` used during featurizing; this time, instead of
-registering the checkpoint, it asserts that this :code:`model_id` has been
-featurized, loads the given model checkpoint, and initializes memmory-maps for
-the target gradient features. The :meth:`.score` method is conceptually close to
-:meth:`.featurize` - it processes the target batch and computes gradient
-features for each image inside. The :code:`num_samples` and :code:`inds`
-arguments work in the same way as in :meth:`.featurize`.
+:meth:`.load_checkpoint` used when featuring the training set; it prepares the
+:class:`.TRAKer` by loading the checkpoint and initializing internal data structures.
+The :meth:`.score` method is analogous to
+:meth:`.featurize`; it processes the target batch and computes
+the corresponding features.
 
 .. note::
 
-    Be careful that you provide the same :code:`model_id` for each checkpoint as
-    in the featurizing step - :code:`TRAK` will **not** check that you did that.
-    If you shuffle the :code:`model_id`\ s, you'll not receive an error, but
-    you'll get bad results.
+    Be careful that you provide the **same** :code:`model_id` for each checkpoint as
+    in the featurizing step---:code:`TRAK` will **not** check that you did that.
+    If you use the wrong :code:`model_id`\ s, :code:`TRAK` will silently fail.
 
-    P.S.: if you know a clean, robust way to hash model parameters, open an
-    issue on github and we might add an :code:`assert` about :code:`model_id`
+    P.S.: If you know of a clean, robust way to hash model parameters to detect a changed checkpoint,
+    open an issue on github and we can add an :code:`assert` to check for :code:`model_id`
     consistency.
 
-After this, we get our :code:`TRAK` scores as a :code:`torch.Tensor` from the
-:meth:`.finalize_scores` method. That's it! Now let's take a look at what we
-got.
+The final line above returns :code:`TRAK` scores as a :code:`numpy.array` from the
+:meth:`.finalize_scores` method.
+
+That's it!
+Once you have your model(s) and your data, just a few API-calls to TRAK
+let's you compute data attribution scores.
 
 
-Visualize the attributions!
+Visualize the attributions found by TRAK
 ---------------------------
 
+Let's take a look at what the attribution scores look like.
 TODO: add images below code snipeets once we have them; some text to explain what's going on
 
 .. code-block:: python
@@ -384,19 +389,17 @@ TODO: add images below code snipeets once we have them; some text to explain wha
                 plt.imshow(image.cpu().permute([1, 2, 0]).numpy()); plt.axis('off'); plt.show()
 
 
-Extra: evaluate counterfactuals
+Bonus: Evaluate counterfactuals
 -------------------------------
 
-TODO: clean up code snippet a bit; add histogram below code snippets once we have it; some text to explain what's going on
-
-Now we can perform an evaluation similar to the one we did to produce Figure 1 in our paper:
+In our paper, we introduce a quantitative way of evaluating data attribution methods using
+what we called the *linear datamodeling score*.
+Intuitively, this score is a number between 0 and 1 indicating how *counterfactually predictive* the computed attribution scores are.
+For example, this is used in our main evaluation (Figure 1 from our paper):
 
 .. image:: assets/main_figure.png
 
-.. code-block:: python
-
-    masks = ...
-    margins = ...
+Computing this score requires having an (independent) set of models trained on random subsets of the training dataset. For our CIFAR-2 example, we provide pre-computed data which can be downloaded as in the code below:
 
 
 .. code-block:: python
@@ -409,12 +412,16 @@ Now we can perform an evaluation similar to the one we did to produce Figure 1 i
 
         masks_path = Path(tmp_path).joinpath('mask.npy')
         wget.download(masks_url, out=str(masks_path), bar=None)
-        # num masks, num train samples
+
+        # Boolean matrix of size [num models] x [num training examples]
+        # indicating the random subset on which the model was trained on
         masks = torch.as_tensor(np.load(masks_path, mmap_mode='r')).float()
 
         margins_path = Path(tmp_path).joinpath('val_margins.npy')
         wget.download(margins_url, out=str(margins_path), bar=None)
-        # num , num val samples
+
+        # Float matrix of size [num models] x [num targets]
+        # indicating the random subset on which the model was trained on
         margins = torch.as_tensor(np.load(margins_path, mmap_mode='r'))
 
         val_inds = np.arange(2000)
@@ -430,3 +437,12 @@ Now we can perform an evaluation similar to the one we did to produce Figure 1 i
     return rs.mean()
 
     eval_correlations(scores.cpu(), '.')
+
+
+For our example, the above code outputs:
+
+.. code-block:: python
+
+    Correlation: 0.0629
+
+(Note: the exact value might flucutate a little bit depending on the particular checkpoints used, but should still concentrate around the above value. Also, the above was based on :code:`TRAK` computed over three checkpoints; the score will increase with more checkpoints used.)

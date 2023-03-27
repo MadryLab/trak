@@ -2,18 +2,18 @@
 <!-- [![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/1234.56789) -->
 
 [[docs & tutorials]](https://trak.csail.mit.edu/html/index.html)
-[[paper]](https://gradientscience.org/trak.pdf)
+[[paper]](https://arxiv.org/abs/2303.14186)
 [[blog post]](https://gradientscience.org/trak/)
 [[website]](https://trak.csail.mit.edu)
 [[PyPI]](https://pypi.org/project/traker/)
 
 # TRAK: Attributing Model Behavior at Scale
 
-In our recent [paper](TODO:link), we introduce `TRAK` (Tracing with the
-Randomly-Projected After Kernel). In short, `TRAK` scores can make accurate
+In our [paper](https://arxiv.org/abs/2303.14186), we introduce a new data attribution method called `TRAK` (Tracing with the
+Randomly-Projected After Kernel). Using `TRAK`, you can make  accurate
 counterfactual predictions (e.g., answers to questions of the form “what would
-happen to this prediction if these images were removed from the training set").
-Furthermore, these scores come at a small fraction of the cost of prior methods
+happen to this prediction if these examples are removed from the training set?").
+Computing TRAK scores comes at a small fraction of the cost of prior data attribution methods
 that are comparably effective (e.g., TRAK is 2-3 orders of magnitude cheaper
 than comparable methods, on CIFAR-10 and QNLI):
 
@@ -25,7 +25,7 @@ Check [our docs](https://trak.csail.mit.edu/html) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
 steps needed to get `TRAK` attribution scores with our API.
 
-### Setting up the `TRAK` scorer
+### Make a `TRAKer` instance
 
 ```python
 from trak import TRAKer
@@ -36,7 +36,7 @@ train_loader = ...
 traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 ```
 
-### Getting `TRAK` features for the train data
+### Compute `TRAK` features on training data
 
 ```python
 for model_id, checkpoint in enumerate(checkpoints):
@@ -46,7 +46,7 @@ for model_id, checkpoint in enumerate(checkpoints):
 traker.finalize_features()
 ```
 
-### Getting `TRAK` scores
+### Compute `TRAK` scores for target examples
 
 ```python
 targets_loader = ...
@@ -73,3 +73,21 @@ compilation, use
 ```bash
 pip install traker
 ```
+
+
+## Citation
+If you use this code in your work, please cite using the following BibTeX entry:
+```
+@inproceedings{park2023trak,
+  title = {TRAK: Attributing Model Behavior at Scale},
+  author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
+  booktitle = {Arxiv preprint arXiv:2303.14186},
+  year = {2023}
+}
+```
+
+## Maintainers:
+[Kristian Georgiev](https://twitter.com/kris_georgiev1)<br>
+[Andrew Ilyas](https://twitter.com/andrew_ilyas)<br>
+[Guillaume Leclerc](https://twitter.com/gpoleclerc)<br>
+[Sung Min Park](https://twitter.com/smsampark)
