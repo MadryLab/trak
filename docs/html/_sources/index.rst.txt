@@ -59,7 +59,7 @@ use
 
 See the :doc:`install` for more details.
 
-.. [1] Check `our paper <https://gradientscience.org/trak.pdf>`_ for more details.
+.. [1] Check `our paper <https://arxiv.org/abs/2303.14186>`_ for more details.
 
 ----
 
