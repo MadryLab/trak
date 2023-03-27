@@ -38,7 +38,17 @@ const table2 = [
     { method: "GAS [HL22]", computationTime: 284.0, correlation: 0.078, error: 0.029 },
 ];
 
-
+const table3 = [
+    { method: "Datamodel [IPE+22]", computationTime: 170000, correlation: 0.052, error: 0.0056},
+    { method: "Datamodel [IPE+22]", computationTime: 510000, correlation: 0.1445, error: 0.0055},
+    { method: "Datamodel [IPE+22]", computationTime: 1700000, correlation: 0.2538, error: 0.005},
+    { method: "TRAK", computationTime: 30, correlation: 0.099, error: 0.0054 },
+    { method: "TRAK", computationTime: 300, correlation: 0.177, error: 0.0057 },
+    { method: "TRAK", computationTime: 3000, correlation: 0.188, error: 0.006 },
+    { method: "IF [KL17]", computationTime: 50000, correlation: 0.017616, error: 0.005659 },
+    { method: "IF [KL17]", computationTime: 500000, correlation: 0.037614, error: 0.005621 },
+    { method: "TracIn [PLS+20]", computationTime: 80, correlation: 0.0084, error: 0.0055 },
+];
 
 const methods = [
     "Datamodel [IPE+22]",
@@ -127,12 +137,39 @@ const singleScatterPlot = (id, data) => {
     return layout;
 };
 
+function updateScatterPlotData(id, newData) {
+    // Update the data in the traces using newData
+    const newTraces = dataToTraces(newData);
+
+    // Use the same number of traces as the original plot
+    const updateData = {
+        x: newTraces.map((trace) => trace.x),
+        y: newTraces.map((trace) => trace.y),
+        error_y: newTraces.map((trace) => trace.error_y),
+    };
+
+    // Update the plot with the new data
+    Plotly.update(id, updateData);
+}
+
 // Update the legend position when the window is resized
 // window.addEventListener('resize', () => updateLegendPosition(layout));
 window.addEventListener('load', () => {
     singleScatterPlot('scatterplot-container1', table1);
 });
 
+document.getElementById('btnradio1').onclick = () => {
+    updateScatterPlotData('scatterplot-container1', table1);
+};
+
+document.getElementById('btnradio2').onclick = () => {
+    updateScatterPlotData('scatterplot-container1', table2);
+};
+
+document.getElementById('btnradio3').onclick = () => {
+    updateScatterPlotData('scatterplot-container1', table3);
+};
+/*
 const carousel = document.getElementById('trak-carousel');
 let isMouseDown = false;
 let startX;
@@ -162,3 +199,4 @@ carousel.addEventListener('mousemove', (e) => {
     const scrollX = (x - startX) * 2;
     carousel.scrollLeft = scrollLeft - scrollX;
 });
+*/
