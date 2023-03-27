@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Parallelize TRAK scoring with SLURM" href="slurm.html" /><link rel="prev" title="Quickstart — get TRAK scores for CIFAR" href="quickstart.html" />
 
-    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>Installation FAQs - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -196,17 +196,17 @@
         </div>
         <article role="main">
           <section id="installation-faqs">
-<span id="install-instructions"></span><h1>Installation FAQs<a class="headerlink" href="#installation-faqs" title="Permalink to this heading">#</a></h1>
+<span id="install-instructions"></span><h1>Installation FAQs<a class="headerlink" href="#installation-faqs" title="Permalink to this headline">#</a></h1>
 <section id="how-to-install-trak">
-<h2>How to install <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>?<a class="headerlink" href="#how-to-install-trak" title="Permalink to this heading">#</a></h2>
+<h2>How to install <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>?<a class="headerlink" href="#how-to-install-trak" title="Permalink to this headline">#</a></h2>
 <p>Our package is hosted on <a class="reference external" href="https://pypi.org/">PyPI</a>. The standard version of
 our package can be installed using</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>traker
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install traker
 </pre></div>
 </div>
 <p>To install the version of our package which contains a fast, custom CUDA kernel
 for the JL projection step, use</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>traker<span class="o">[</span>fast<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install traker<span class="o">[</span>fast<span class="o">]</span>
 </pre></div>
 </div>
 <p><code class="code docutils literal notranslate"><span class="pre">pip</span></code> will compile our CUDA kernel on your machine. For this to happen, you
@@ -214,7 +214,7 @@ need to have compatible versions of <code class="code docutils literal notransla
 the sections below for tips regarding this.</p>
 </section>
 <section id="how-to-install-nvcc-cuda-toolkit">
-<h2>How to install <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> (<code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">toolkit</span></code>)?<a class="headerlink" href="#how-to-install-nvcc-cuda-toolkit" title="Permalink to this heading">#</a></h2>
+<h2>How to install <code class="code docutils literal notranslate"><span class="pre">nvcc</span></code> (<code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">toolkit</span></code>)?<a class="headerlink" href="#how-to-install-nvcc-cuda-toolkit" title="Permalink to this headline">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Version required: <code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">&gt;=</span> <span class="pre">10.0</span></code>.</p>
@@ -223,7 +223,7 @@ the sections below for tips regarding this.</p>
 <ul>
 <li><p>Some machines might already have been setup with the <code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">toolkit</span></code>.
 You can run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nvcc<span class="w"> </span>--version
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nvcc --version
 </pre></div>
 </div>
 <p>in a terminal and check if it already exists. If you have a compatible version
@@ -232,14 +232,14 @@ then you can proceed with the <code class="code docutils literal notranslate"><s
 <li><p>If you are logged in an unversity/company shared cluster, there is most
 of the time a way to enable/load a version of <code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">tookit</span></code> without
 having to install it. On clusters using <code class="code docutils literal notranslate"><span class="pre">modulefile</span></code>, the command</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module<span class="w"> </span>avail
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>module avail
 </pre></div>
 </div>
 <p>will show you what is available to you. When in doubt, plese refer to the
 maintainers/documentation of your cluster.</p>
 </li>
 <li><p>Using <code class="code docutils literal notranslate"><span class="pre">conda</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>cudatoolkit-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install -c conda-forge cudatoolkit-dev
 </pre></div>
 </div>
 <p>Note that the version of <code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">toolkit</span></code> on the <code class="code docutils literal notranslate"><span class="pre">conda</span></code> index may
@@ -251,7 +251,7 @@ installation you can follow Nvidia instructions:
 </ul>
 </section>
 <section id="how-to-install-gcc">
-<h2>How to install <code class="code docutils literal notranslate"><span class="pre">gcc</span></code>?<a class="headerlink" href="#how-to-install-gcc" title="Permalink to this heading">#</a></h2>
+<h2>How to install <code class="code docutils literal notranslate"><span class="pre">gcc</span></code>?<a class="headerlink" href="#how-to-install-gcc" title="Permalink to this headline">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Version required: If you have <code class="code docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">11</span></code>, you will need <code class="code docutils literal notranslate"><span class="pre">gcc</span></code>
@@ -261,7 +261,7 @@ need <code class="code docutils literal notranslate"><span class="pre">gcc</span
 <p>Pick one option:</p>
 <ul>
 <li><p>Most Operating System come with gcc preinstalled. You can run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc<span class="w"> </span>--version
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gcc --version
 </pre></div>
 </div>
 <p>in a terminal to check if it’s the case on your machine and which version you
@@ -272,19 +272,19 @@ installation.</p>
 install other version alongside what comes by default. Here is an example for
 ubuntu and gcc 10:
 1. Add repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>add-apt-repository<span class="w"> </span>ppa:ubuntu-toolchain-r/test
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 </pre></div>
 </div>
 <ol class="arabic simple" start="2">
 <li><p>Update list of packages:</p></li>
 </ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt update
 </pre></div>
 </div>
 <ol class="arabic simple" start="3">
 <li><p>Download/install <code class="code docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">10</span></code>:</p></li>
 </ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>gcc-10<span class="w"> </span>g++-10
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install gcc-10 g++-10
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">
@@ -294,23 +294,23 @@ ubuntu and gcc 10:
 <p class="admonition-title">Note</p>
 <p>This has to be done in the same terminal.</p>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CXX</span><span class="o">=</span>g++10<span class="w"> </span><span class="nv">CC</span><span class="o">=</span>gcc-10
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CXX</span><span class="o">=</span>g++10 <span class="nv">CC</span><span class="o">=</span>gcc-10
 </pre></div>
 </div>
 </li>
 </ul>
 </section>
 <section id="verify-that-the-installation-worked">
-<h2>Verify that the installation worked<a class="headerlink" href="#verify-that-the-installation-worked" title="Permalink to this heading">#</a></h2>
+<h2>Verify that the installation worked<a class="headerlink" href="#verify-that-the-installation-worked" title="Permalink to this headline">#</a></h2>
 <p>You can quickly verify that <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> has been correctly installed by running
 some of our tests, e.g.:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-sv<span class="w"> </span>tests/test_rademacher.py
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m pytest -sv tests/test_rademacher.py
 </pre></div>
 </div>
 <p>Note that you’ll need the optional <code class="code docutils literal notranslate"><span class="pre">[tests]</span></code> dependencies to run the tests.</p>
 </section>
 <section id="misc-q-a">
-<h2>Misc Q&amp;A<a class="headerlink" href="#misc-q-a" title="Permalink to this heading">#</a></h2>
+<h2>Misc Q&amp;A<a class="headerlink" href="#misc-q-a" title="Permalink to this headline">#</a></h2>
 <p><strong>Q: I’m using</strong> <code class="code docutils literal notranslate"><span class="pre">zsh</span></code> <strong>and when running</strong>
 <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">traker[fast]</span></code>,
 <strong>I get</strong></p>
@@ -318,7 +318,7 @@ some of our tests, e.g.:</p>
 </pre></div>
 </div>
 <p>A: Make sure to escape the square brackets, i.e. run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>traker<span class="se">\[</span>fast<span class="se">\]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install traker<span class="se">\[</span>fast<span class="se">\]</span>
 </pre></div>
 </div>
 </section>
@@ -397,8 +397,9 @@ some of our tests, e.g.:</p>
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
 </html>

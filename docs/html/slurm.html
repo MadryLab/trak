@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Add a task to TRAKer (subclassing ModelOutput) — CLIP" href="clip.html" /><link rel="prev" title="Installation FAQs" href="install.html" />
 
-    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>Parallelize TRAK scoring with SLURM - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -196,7 +196,7 @@
         </div>
         <article role="main">
           <section id="parallelize-trak-scoring-with-slurm">
-<span id="slurm-tutorial"></span><h1>Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code><a class="headerlink" href="#parallelize-trak-scoring-with-slurm" title="Permalink to this heading">#</a></h1>
+<span id="slurm-tutorial"></span><h1>Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code><a class="headerlink" href="#parallelize-trak-scoring-with-slurm" title="Permalink to this headline">#</a></h1>
 <p>Often we would like to compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores from multiple checkpoints of
 the same model.</p>
 <div class="admonition note">
@@ -228,7 +228,7 @@ in parallel, and get the final <code class="code docutils literal notranslate"><
 <p>In terms of MapReduce, you can of <code class="code docutils literal notranslate"><span class="pre">featurize_and_score</span></code> as the map function and <code class="code docutils literal notranslate"><span class="pre">gather</span></code> as the reduce function.</p>
 </div>
 <section id="featurizing-each-checkpoint">
-<h2>1. Featurizing each checkpoint<a class="headerlink" href="#featurizing-each-checkpoint" title="Permalink to this heading">#</a></h2>
+<h2>1. Featurizing each checkpoint<a class="headerlink" href="#featurizing-each-checkpoint" title="Permalink to this headline">#</a></h2>
 <p>Everything needed for scoring prior to <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_scores()</span></code></a> will go in
 <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code>.
 For example, <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code> can be as follows:</p>
@@ -245,10 +245,10 @@ For example, <code class="code docutils literal notranslate"><span class="pre">f
 <span class="linenos">11</span>                    <span class="n">train_set_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ds_train</span><span class="p">))</span>
 <span class="linenos">12</span>
 <span class="linenos">13</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
-<span class="hll"><span class="linenos">14</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
-</span><span class="linenos">15</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="linenos">16</span>    <span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">(</span><span class="n">model_ids</span><span class="o">=</span><span class="p">[</span><span class="n">model_id</span><span class="p">])</span>
-<span class="linenos">17</span>
+<span class="linenos">14</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
+<span class="linenos">15</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="hll"><span class="linenos">16</span>    <span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">(</span><span class="n">model_ids</span><span class="o">=</span><span class="p">[</span><span class="n">model_id</span><span class="p">])</span>
+</span><span class="linenos">17</span>
 <span class="linenos">18</span>    <span class="n">traker</span><span class="o">.</span><span class="n">start_scoring_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="linenos">19</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_val</span><span class="p">:</span>
 <span class="linenos">20</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
@@ -265,7 +265,7 @@ For example, <code class="code docutils literal notranslate"><span class="pre">f
 </div>
 </section>
 <section id="run-featurize-in-parallel">
-<h2>2. Run featurize in parallel<a class="headerlink" href="#run-featurize-in-parallel" title="Permalink to this heading">#</a></h2>
+<h2>2. Run featurize in parallel<a class="headerlink" href="#run-featurize-in-parallel" title="Permalink to this headline">#</a></h2>
 <p>Now we can run the above script script in parallel with a <code class="code docutils literal notranslate"><span class="pre">run.sbatch</span></code>.
 Here is a minimal example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -277,27 +277,27 @@ Here is a minimal example:</p>
 
 <span class="nv">MODEL_ID</span><span class="o">=</span><span class="nv">$SLURM_ARRAY_TASK_ID</span>
 
-python<span class="w"> </span>featurize_and_score.py<span class="w"> </span>--model_id<span class="w"> </span><span class="nv">$MODEL_ID</span>
+python featurize_and_score.py --model_id <span class="nv">$MODEL_ID</span>
 </pre></div>
 </div>
 <p>The above script will submit 10 jobs in parallel or us: this is specified by the
 <code class="code docutils literal notranslate"><span class="pre">#SBATCH</span> <span class="pre">array=0-9</span></code> command. Each job will pass in the job ID as a model
 ID for <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>. To learn more about the <code class="code docutils literal notranslate"><span class="pre">SBATCH</span></code>, check out
 <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code>s <a class="reference external" href="https://slurm.schedmd.com/sbatch.html">docs</a>.</p>
-<p>Note that on line 15 of the example <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code> above, we
+<p>Note that on line 16 of the example <code class="code docutils literal notranslate"><span class="pre">featurize_and_score.py</span></code> above, we
 call <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_features" title="trak.traker.TRAKer.finalize_features"><code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize_features()</span></code></a> with <code class="code docutils literal notranslate"><span class="pre">model_ids=[model_id]</span></code>. This is
 important — if we don’t specify this, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> by default attempts to
 finalize the features for all <code class="code docutils literal notranslate"><span class="pre">model_id</span></code>s (checkpoints) in the
 <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> of the current <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> instance.</p>
 <p>Running</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sbatch<span class="w"> </span>run.sbatch
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sbatch run.sbatch
 </pre></div>
 </div>
 <p>in the terminal will populate the specified <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> with all
 intermediate results we need to compute the final <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores.</p>
 </section>
 <section id="gather-final-scores">
-<h2>3. Gather final scores<a class="headerlink" href="#gather-final-scores" title="Permalink to this heading">#</a></h2>
+<h2>3. Gather final scores<a class="headerlink" href="#gather-final-scores" title="Permalink to this headline">#</a></h2>
 <p>The only thing left to do is call <a class="reference internal" href="trak.html#trak.traker.TRAKer.finalize_scores" title="trak.traker.TRAKer.finalize_scores"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TRAKer.finalize_scores()</span></code></a>. This method
 combines the scores across checkpoints (think of it as a <code class="code docutils literal notranslate"><span class="pre">gather</span></code>).
 This is what <code class="code docutils literal notranslate"><span class="pre">gather.py</span></code> will do:</p>
@@ -391,8 +391,9 @@ integrating <code class="code docutils literal notranslate"><span class="pre">TR
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
 </html>

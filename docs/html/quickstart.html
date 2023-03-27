@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation FAQs" href="install.html" /><link rel="prev" title="TRAK: Attributing Model Behavior at Scale" href="index.html" />
 
-    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>Quickstart — get TRAK scores for CIFAR - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -196,45 +196,31 @@
         </div>
         <article role="main">
           <section id="quickstart-get-trak-scores-for-cifar">
-<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this heading">#</a></h1>
+<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this headline">#</a></h1>
 <p>In this tutorial, we’ll show you how to use the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API to compute data
 attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> models trained on
-<code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code>. <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.</p>
+<code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code>. While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.</p>
 <p>Overall, this tutorial will show you how to:</p>
 <ol class="arabic simple">
-<li><p><span class="xref std std-ref">Load model checkpoints</span></p></li>
-<li><p><span class="xref std std-ref">Set up the :class:`.TRAKer` class</span></p></li>
+<li><p><a class="reference internal" href="#load-model-checkpoints"><span class="std std-ref">Load model checkpoints</span></a></p></li>
+<li><p><a class="reference internal" href="#set-up-the-traker-class"><span class="std std-ref">Set up the TRAKer class</span></a></p></li>
 <li><p><a class="reference internal" href="#compute-trak-features-for-training-data"><span class="std std-ref">Compute TRAK features for training data</span></a></p></li>
 <li><p><a class="reference internal" href="#compute-trak-scores-for-target-examples"><span class="std std-ref">Compute TRAK scores for target examples</span></a></p></li>
-<li><p><a class="reference internal" href="#visualize-the-attributions-found-by-trak"><span class="std std-ref">Visualize the attributions found by TRAK</span></a></p></li>
-<li><p><a class="reference internal" href="#bonus-evaluate-counterfactuals"><span class="std std-ref">Bonus: Evaluate counterfactuals</span></a></p></li>
 </ol>
 <p>You can also try this tutorial as a
-<a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/cifar2_correlation.ipynb">Jupyter notebook</a>.
-All computations take roughly fifteen minutes in total
-on a single A100 GPU.</p>
+<a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/cifar_quickstart.ipynb">Jupyter notebook</a>.
+All computations take roughly ten minutes in total on a single A100 GPU.</p>
 <p>Let’s get started!</p>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id2" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>A subset of the <a class="reference external" href="https://en.wikipedia.org/wiki/CIFAR-10">CIFAR-10</a> dataset containing only the “cat” and “dog” classes</p>
-</aside>
-</aside>
 <section id="load-model-checkpoints">
-<h2>0. Load model checkpoints<a class="headerlink" href="#load-model-checkpoints" title="Permalink to this heading">#</a></h2>
-<p>First, you need models to apply
-<code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to. You can either use the script below to train three
-ResNet-9 models on <code class="code docutils literal notranslate"><span class="pre">CIFAR-2</span></code> and save the checkpoints (e.g., <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s), or
-use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + CIFAR-2 with any architecture + classification task of your choice.)</p>
+<h2>Load model checkpoints<a class="headerlink" href="#load-model-checkpoints" title="Permalink to this headline">#</a></h2>
+<p>First, you need models to apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to. You can either use the script
+below to train three ResNet-9 models on <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code> and save the checkpoints
+(e.g., <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s), or use your own checkpoint <a class="footnote-reference brackets" href="#id2" id="id1">1</a>. (In fact, in this
+tutorial you can replace ResNet-9 + CIFAR-10 with any architecture +
+classification task of your choice.)</p>
 <details>
-<summary><a>Training code for CIFAR-2</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ffcv.fields.decoders</span> <span class="kn">import</span> <span class="n">IntDecoder</span><span class="p">,</span> <span class="n">SimpleRGBImageDecoder</span>
-<span class="kn">from</span> <span class="nn">ffcv.loader</span> <span class="kn">import</span> <span class="n">Loader</span><span class="p">,</span> <span class="n">OrderOption</span>
-<span class="kn">from</span> <span class="nn">ffcv.pipeline.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
-<span class="kn">from</span> <span class="nn">ffcv.transforms</span> <span class="kn">import</span> <span class="n">RandomHorizontalFlip</span><span class="p">,</span> <span class="n">Cutout</span><span class="p">,</span> \
-    <span class="n">RandomTranslate</span><span class="p">,</span> <span class="n">Convert</span><span class="p">,</span> <span class="n">ToDevice</span><span class="p">,</span> <span class="n">ToTensor</span><span class="p">,</span> <span class="n">ToTorchImage</span>
-<span class="kn">from</span> <span class="nn">ffcv.transforms.common</span> <span class="kn">import</span> <span class="n">Squeeze</span>
-
-<span class="kn">import</span> <span class="nn">os</span>
+<summary><a>Training code for CIFAR-10</a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">wget</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -243,57 +229,6 @@ use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + C
 <span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">Conv2d</span><span class="p">,</span> <span class="n">BatchNorm2d</span>
 <span class="kn">from</span> <span class="nn">torch.optim</span> <span class="kn">import</span> <span class="n">SGD</span><span class="p">,</span> <span class="n">lr_scheduler</span>
 <span class="kn">import</span> <span class="nn">torchvision</span>
-
-<span class="n">BETONS</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="s2">&quot;https://www.dropbox.com/s/zn7jsp2rl09e0fh/train.beton?dl=1&quot;</span><span class="p">,</span>
-        <span class="s1">&#39;val&#39;</span><span class="p">:</span> <span class="s2">&quot;https://www.dropbox.com/s/4p73milxxafv4cm/val.beton?dl=1&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="n">STATS</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">125.307</span><span class="p">,</span> <span class="mf">122.961</span><span class="p">,</span> <span class="mf">113.8575</span><span class="p">],</span>
-        <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">51.5865</span><span class="p">,</span> <span class="mf">50.847</span><span class="p">,</span> <span class="mf">51.255</span><span class="p">]</span>
-<span class="p">}</span>
-
-<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
-                <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span>  <span class="c1"># split \in [train, val]</span>
-                <span class="n">aug_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">should_augment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">label_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">IntDecoder</span><span class="p">(),</span>
-                                        <span class="n">ToTensor</span><span class="p">(),</span>
-                                        <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">)),</span>
-                                        <span class="n">Squeeze</span><span class="p">()]</span>
-        <span class="n">image_pipeline</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">SimpleRGBImageDecoder</span><span class="p">()]</span>
-
-        <span class="k">if</span> <span class="n">should_augment</span><span class="p">:</span>
-                <span class="n">image_pipeline</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
-                        <span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
-                        <span class="n">RandomTranslate</span><span class="p">(</span><span class="n">padding</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]))),</span>
-                        <span class="n">Cutout</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]))),</span>
-                <span class="p">])</span>
-
-        <span class="n">image_pipeline</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
-            <span class="n">ToTensor</span><span class="p">(),</span>
-            <span class="n">ToDevice</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">),</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">ToTorchImage</span><span class="p">(),</span>
-            <span class="n">Convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-            <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="n">STATS</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]),</span>
-        <span class="p">])</span>
-
-        <span class="n">beton_url</span> <span class="o">=</span> <span class="n">BETONS</span><span class="p">[</span><span class="n">split</span><span class="p">]</span>
-        <span class="n">beton_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;./</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s1">.beton&#39;</span>
-        <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">beton_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">beton_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">Loader</span><span class="p">(</span><span class="n">beton_path</span><span class="p">,</span>
-                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                    <span class="n">order</span><span class="o">=</span><span class="n">OrderOption</span><span class="o">.</span><span class="n">SEQUENTIAL</span><span class="p">,</span>
-                    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">seed</span><span class="o">=</span><span class="n">aug_seed</span><span class="p">,</span>
-                    <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">,</span>
-                    <span class="n">pipelines</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;image&#39;</span><span class="p">:</span> <span class="n">image_pipeline</span><span class="p">,</span> <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">label_pipeline</span><span class="p">})</span>
-
 
 <span class="c1"># Resnet9</span>
 <span class="k">class</span> <span class="nc">Mul</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
@@ -314,7 +249,7 @@ use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + C
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">construct_rn9</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">construct_rn9</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">conv_bn</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">channels_in</span><span class="p">,</span> <span class="n">channels_out</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
@@ -337,7 +272,21 @@ use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + C
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">model</span>
 
-<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span> <span class="n">lr_peak_epoch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">):</span>
+
+    <span class="n">transforms</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">RandomHorizontalFlip</span><span class="p">(),</span>
+                    <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">RandomAffine</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+                    <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.4914</span><span class="p">,</span> <span class="mf">0.4822</span><span class="p">,</span> <span class="mf">0.4465</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.2023</span><span class="p">,</span> <span class="mf">0.1994</span><span class="p">,</span> <span class="mf">0.201</span><span class="p">))])</span>
+
+    <span class="n">is_train</span> <span class="o">=</span> <span class="p">(</span><span class="n">split</span> <span class="o">==</span> <span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;/tmp/cifar/&#39;</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="n">is_train</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transforms</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loader</span>
+
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span> <span class="n">lr_peak_epoch</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
     <span class="n">iters_per_epoch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
     <span class="c1"># Cyclic LR with single triangle</span>
@@ -351,6 +300,8 @@ use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + C
     <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
         <span class="n">model_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">it</span><span class="p">,</span> <span class="p">(</span><span class="n">ims</span><span class="p">,</span> <span class="n">labs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
+            <span class="n">ims</span> <span class="o">=</span> <span class="n">ims</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+            <span class="n">labs</span> <span class="o">=</span> <span class="n">labs</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
             <span class="n">opt</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
                 <span class="n">out</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">ims</span><span class="p">)</span>
@@ -363,7 +314,7 @@ use your own checkpoint. (In fact, in this tutorial you can replace ResNet-9 + C
 
 <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;./checkpoints&#39;</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training models..&#39;</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Training models..&#39;</span><span class="p">):</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">construct_rn9</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">memory_format</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">channels_last</span><span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
     <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
     <span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">loader_train</span><span class="p">)</span>
@@ -380,9 +331,14 @@ checkpoints in <code class="code docutils literal notranslate"><span class="pre"
 <span class="n">ckpts</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="n">ckpt_files</span><span class="p">]</span>
 </pre></div>
 </div>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>For our own experiments, we used <a class="reference external" href="https://ffcv.io/">ffcv</a> to train models faster. Check <cite>this &lt;https://github.com/MadryLab/trak/blob/main/examples/imagenet.py&gt;</cite> training script that trains the same ResNet-9 models using <code class="code docutils literal notranslate"><span class="pre">ffcv</span></code> dataloaders.</p>
+</dd>
+</dl>
 </section>
 <section id="set-up-the-traker-class">
-<h2>1. Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this heading">#</a></h2>
+<h2>Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this headline">#</a></h2>
 <p>The <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class is the entry point to the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API. Construct it by calling <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> with three arguments:</p>
 <ul class="simple">
 <li><p>a <code class="code docutils literal notranslate"><span class="pre">model</span></code> (a <code class="code docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance) — this is the model architecture/class that you want to compute attributions for. Note that this model you pass in does not need to be initialized (we’ll do that separately below).</p></li>
@@ -398,7 +354,7 @@ e.g. image classification, language modeling, CLIP-style contrastive learning, e
 
 <span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
                 <span class="n">task</span><span class="o">=</span><span class="s1">&#39;image_classification&#39;</span><span class="p">,</span>
-                <span class="n">train_set_size</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>  <span class="c1"># CIFAR-2 has 10,000 train examples</span>
+                <span class="n">train_set_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">loader_train</span><span class="o">.</span><span class="n">dataset</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>By default, all metadata and arrays created by <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> are stored in
@@ -409,13 +365,14 @@ argument, e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">proj_dim</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>  <span class="c1"># default dimension is 2048</span>
 </pre></div>
 </div>
-<p>(For the curious, this corresponds to the dimension of the output of random projections in our algorithm.
-We recommend <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> between 1,000 and 40,000.)</p>
+<p>(For the curious, this corresponds to the dimension of the output of random
+projections in our algorithm.  We recommend <code class="code docutils literal notranslate"><span class="pre">proj_dim</span></code> between 1,000 and
+40,000.)</p>
 <p>For more customizations, check out the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
 </section>
 <section id="compute-trak-features-for-training-data">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data<a class="headerlink" href="#compute-trak-features-for-training-data" title="Permalink to this heading">#</a></h2>
-<p>Now that we have constructed a  <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object, let’s use it to process the training data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id4" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p>
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data<a class="headerlink" href="#compute-trak-features-for-training-data" title="Permalink to this headline">#</a></h2>
+<p>Now that we have constructed a  <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object, let’s use it to process the training data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id4" id="id3">2</a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace with your choice of data loader (should be deterministic ordering)</span>
 <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
 </pre></div>
@@ -429,14 +386,15 @@ We recommend <code class="code docutils literal notranslate"><span class="pre">p
 <span class="linenos"> 6</span>    <span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">)</span>
 <span class="linenos"> 7</span>
 <span class="linenos"> 8</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_train</span><span class="p">:</span>
-<span class="linenos"> 9</span>        <span class="c1"># TRAKer computes features corresponding to the batch of examples,</span>
-<span class="linenos">10</span>        <span class="c1"># using the checkpoint loaded above.</span>
-<span class="linenos">11</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="linenos">12</span>
-<span class="linenos">13</span><span class="c1"># Tells TRAKer that we&#39;ve given it all the information, at which point</span>
-<span class="linenos">14</span><span class="c1"># TRAKer does some post-processing to get ready for the next step</span>
-<span class="linenos">15</span><span class="c1"># (scoring target examples).</span>
-<span class="linenos">16</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
+<span class="linenos"> 9</span>        <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
+<span class="linenos">10</span>        <span class="c1"># TRAKer computes features corresponding to the batch of examples,</span>
+<span class="linenos">11</span>        <span class="c1"># using the checkpoint loaded above.</span>
+<span class="linenos">12</span>        <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">13</span>
+<span class="linenos">14</span><span class="c1"># Tells TRAKer that we&#39;ve given it all the information, at which point</span>
+<span class="linenos">15</span><span class="c1"># TRAKer does some post-processing to get ready for the next step</span>
+<span class="linenos">16</span><span class="c1"># (scoring target examples).</span>
+<span class="linenos">17</span><span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -449,25 +407,24 @@ to <a class="reference internal" href="trak.html#trak.traker.TRAKer.featurize" t
 length as the batch, specifying the indices of the examples in the batch within
 the training dataset.</p>
 </div>
-<p>Above, we sequentially iterate over multiple model checkpoints
-.. note:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>While you can still compute :code:`TRAK` with a single checkpoint, using multiple checkpoints significantly improves TRAK&#39;s performance. See our
-</pre></div>
+<p>Above, we sequentially iterate over multiple model checkpoints</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While you can still compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> with a single checkpoint, using multiple checkpoints significantly improves TRAK’s performance. See our</p>
 </div>
 <p>But you can also—and we recommend you to—parallelize this step across multiple jobs.
 All you have to do is  initialize a different <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object with the same
 <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> within each job and specify the appropriate <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> when calling
 <a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a>.
 For more details, check out how to <a class="reference internal" href="slurm.html#slurm-tutorial"><span class="std std-ref">Parallelize TRAK scoring with SLURM</span></a>.</p>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id4" role="note">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
-<p>Again, we use the methods defined in <span class="xref std std-ref">Save model checkpoints</span>.</p>
-</aside>
-</aside>
+<dl class="footnote brackets">
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
+<dd><p>Again, we use the methods defined in <a class="reference internal" href="#load-model-checkpoints"><span class="std std-ref">Load model checkpoints</span></a>.</p>
+</dd>
+</dl>
 </section>
 <section id="compute-trak-scores-for-target-examples">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples<a class="headerlink" href="#compute-trak-scores-for-target-examples" title="Permalink to this heading">#</a></h2>
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples<a class="headerlink" href="#compute-trak-scores-for-target-examples" title="Permalink to this headline">#</a></h2>
 <p>Finally, we are ready to compute attribution scores.
 To do this, you need to choose a set of target examples that you want to attribute.
 For the purpose of this tutorial, let’s make the
@@ -481,9 +438,10 @@ targets be the entire validation set:</p>
 <span class="linenos">3</span>                                    <span class="n">model_id</span><span class="o">=</span><span class="n">model_id</span><span class="p">,</span>
 <span class="linenos">4</span>                                    <span class="n">num_targets</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">loader_targets</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span>
 <span class="linenos">5</span>    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
-<span class="linenos">6</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="linenos">7</span>
-<span class="linenos">8</span><span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
+<span class="linenos">6</span>        <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
+<span class="linenos">7</span>        <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="linenos">8</span>
+<span class="linenos">9</span><span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Here, <a class="reference internal" href="trak.html#trak.traker.TRAKer.start_scoring_checkpoint" title="trak.traker.TRAKer.start_scoring_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start_scoring_checkpoint()</span></code></a> has a similar function to
@@ -506,85 +464,6 @@ consistency.</p>
 <p>That’s it!
 Once you have your model(s) and your data, just a few API-calls to TRAK
 let’s you compute data attribution scores.</p>
-</section>
-<section id="visualize-the-attributions-found-by-trak">
-<h2>Visualize the attributions found by TRAK<a class="headerlink" href="#visualize-the-attributions-found-by-trak" title="Permalink to this heading">#</a></h2>
-<p>Let’s take a look at what the attribution scores look like.
-TODO: add images below code snipeets once we have them; some text to explain what’s going on</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
-
-<span class="n">targets</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># let&#39;s look at two validation images</span>
-<span class="n">loader_targets</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;val&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_targets</span><span class="p">:</span>
-    <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
-    <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
-    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">))</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Top scorers for target </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">loader_top_scorer</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">scores</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">should_augment</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">loader_top_scorer</span><span class="p">:</span>
-        <span class="n">ims</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
-        <span class="n">ims</span> <span class="o">=</span> <span class="p">(</span><span class="n">ims</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">ims</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ims</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
-        <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">ims</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">permute</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">numpy</span><span class="p">());</span> <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
-<section id="bonus-evaluate-counterfactuals">
-<h2>Bonus: Evaluate counterfactuals<a class="headerlink" href="#bonus-evaluate-counterfactuals" title="Permalink to this heading">#</a></h2>
-<p>In our paper, we introduce a quantitative way of evaluating data attribution methods using
-what we called the <em>linear datamodeling score</em>.
-Intuitively, this score is a number between 0 and 1 indicating how <em>counterfactually predictive</em> the computed attribution scores are.
-For example, this is used in our main evaluation (Figure 1 from our paper):</p>
-<img alt="_images/main_figure.png" src="_images/main_figure.png" />
-<p>Computing this score requires having an (independent) set of models trained on random subsets of the training dataset. For our CIFAR-2 example, we provide pre-computed data which can be downloaded as in the code below:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">spearmanr</span>
-
-<span class="k">def</span> <span class="nf">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">):</span>
-    <span class="n">masks_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1&#39;</span>
-    <span class="n">margins_url</span> <span class="o">=</span> <span class="s1">&#39;https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1&#39;</span>
-
-    <span class="n">masks_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;mask.npy&#39;</span><span class="p">)</span>
-    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">masks_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">masks_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-    <span class="c1"># Boolean matrix of size [num models] x [num training examples]</span>
-    <span class="c1"># indicating the random subset on which the model was trained on</span>
-    <span class="n">masks</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">masks_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-
-    <span class="n">margins_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;val_margins.npy&#39;</span><span class="p">)</span>
-    <span class="n">wget</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">margins_url</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">margins_path</span><span class="p">),</span> <span class="n">bar</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-    <span class="c1"># Float matrix of size [num models] x [num targets]</span>
-    <span class="c1"># indicating the random subset on which the model was trained on</span>
-    <span class="n">margins</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">margins_path</span><span class="p">,</span> <span class="n">mmap_mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">))</span>
-
-    <span class="n">val_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
-    <span class="n">preds</span> <span class="o">=</span> <span class="n">masks</span> <span class="o">@</span> <span class="n">scores</span>
-    <span class="n">rs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">val_inds</span><span class="p">)):</span>
-        <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">spearmanr</span><span class="p">(</span><span class="n">preds</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">],</span> <span class="n">margins</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
-        <span class="n">rs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
-    <span class="n">rs</span><span class="p">,</span> <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Correlation: </span><span class="si">{</span><span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1"> (avg p value </span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
-<span class="k">return</span> <span class="n">rs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-
-<span class="n">eval_correlations</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For our example, the above code outputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Correlation</span><span class="p">:</span> <span class="mf">0.0629</span>
-</pre></div>
-</div>
-<p>(Note: the exact value might flucutate a little bit depending on the particular checkpoints used, but should still concentrate around the above value. Also, the above was based on <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> computed over three checkpoints; the score will increase with more checkpoints used.)</p>
 </section>
 </section>
 
@@ -644,12 +523,10 @@ For example, this is used in our main evaluation (Figure 1 from our paper):</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a><ul>
-<li><a class="reference internal" href="#load-model-checkpoints">0. Load model checkpoints</a></li>
-<li><a class="reference internal" href="#set-up-the-traker-class">1. Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
+<li><a class="reference internal" href="#load-model-checkpoints">Load model checkpoints</a></li>
+<li><a class="reference internal" href="#set-up-the-traker-class">Set up the <code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code> class</a></li>
 <li><a class="reference internal" href="#compute-trak-features-for-training-data">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data</a></li>
 <li><a class="reference internal" href="#compute-trak-scores-for-target-examples">Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples</a></li>
-<li><a class="reference internal" href="#visualize-the-attributions-found-by-trak">Visualize the attributions found by TRAK</a></li>
-<li><a class="reference internal" href="#bonus-evaluate-counterfactuals">Bonus: Evaluate counterfactuals</a></li>
 </ul>
 </li>
 </ul>
@@ -662,8 +539,9 @@ For example, this is used in our main evaluation (Figure 1 from our paper):</p>
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
 </html>
