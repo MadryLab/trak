@@ -42,8 +42,8 @@ class TRAKer():
                 Type of model that TRAK will be ran on. Accepts either one of
                 the following strings:
                 - :code:`image_classification`
+                - :code:`text_classification`
                 - :code:`clip`
-                - :code:`bert_...` TODO: @Sam
                 or an implementation of :class:`.AbstractModelOutput`.
             train_set_size (int):
                 Size of the train set that TRAK is featurizing
@@ -68,7 +68,8 @@ class TRAKer():
                 None. Defaults to None.
             proj_dim (int, optional):
                 Dimension of the projected TRAK features. See Section 4.3 of
-                (TODO: link)[our paper] for more details. Defaults to 2048.
+                `our paper <https://arxiv.org/abs/2303.14186>`_ for more
+                details. Defaults to 2048.
 
         """
 

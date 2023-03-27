@@ -5,11 +5,13 @@ of subclasses for particular applications (vision, language, etc):
 - :class:`.ImageClassificationModelOutput`
 - :class:`.IterImageClassificationModelOutput`
 - :class:`.CLIPModelOutput`
+- :class:`.TextClassificationModelOutput`
 
 These classes implement methods that transform input batches to the desired model output
 (e.g. logits, loss, etc).
-See Sections 2 & 3 of (TODO: link)[our paper] for more details on what model output functions are
-in the context of TRAK and how to use & design them.
+See Sections 2 & 3 of `our paper <https://arxiv.org/abs/2303.14186>`_ for more
+details on what model output functions are in the context of TRAK and how to use
+& design them.
 
 See, e.g. `this tutorial <https://trak.csail.mit.edu/html/clip.html>`_ for an
 example on how to subclass :code:`AbstractModelOutput` for a task of your
@@ -48,9 +50,10 @@ class AbstractModelOutput(ABC):
     def get_output(self,
                    model,
                    batch: Iterable[Tensor]) -> Tensor:
-        """ See Sections 2 & 3 of (TODO: link)[our paper] for more details on
-        what model output functions are in the context of TRAK and how to use &
-        design them.
+        """ See Sections 2 & 3 of `our paper
+        <https://arxiv.org/abs/2303.14186>`_ for more details on what model
+        output functions are in the context of TRAK and how to use & design
+        them.
 
         Args:
             model (torch.nn.Module):
@@ -68,9 +71,10 @@ class AbstractModelOutput(ABC):
     def get_out_to_loss_grad(self,
                              model,
                              batch: Iterable[Tensor]) -> Tensor:
-        """ See Sections 2 & 3 of (TODO: link)[our paper] for more details on
-        what the out-to-loss functions (in the notation of the paper, :math:`Q`)
-        are in the context of TRAK and how to use & design them.
+        """ See Sections 2 & 3 of `our paper
+        <https://arxiv.org/abs/2303.14186>`_ for more details on what the
+        out-to-loss functions (in the notation of the paper, :math:`Q`) are in
+        the context of TRAK and how to use & design them.
 
         Args:
             model (torch.nn.Module): model
@@ -83,9 +87,8 @@ class AbstractModelOutput(ABC):
 
 
 class ImageClassificationModelOutput(AbstractModelOutput):
-    """
-    Margin for (multiclass) image classification. See Section 3.3 of (TODO:
-    link)[our paper] for more details.
+    """ Margin for (multiclass) image classification. See Section 3.3 of `our
+    paper <https://arxiv.org/abs/2303.14186>`_ for more details.
     """
 
     def __init__(self, temperature: float = 1.) -> None:
@@ -199,8 +202,8 @@ class ImageClassificationModelOutput(AbstractModelOutput):
 
 class IterImageClassificationModelOutput(AbstractModelOutput):
     """
-    Margin for (multiclass) image classification. See Section 3.3 of (TODO:
-    link)[our paper] for more details.
+    Margin for (multiclass) image classification. See Section 3.3 of `our paper
+    <https://arxiv.org/abs/2303.14186>`_ for more details.
     """
 
     def __init__(self, temperature=1.) -> None:
@@ -274,7 +277,7 @@ class IterImageClassificationModelOutput(AbstractModelOutput):
 
 class CLIPModelOutput(AbstractModelOutput):
     """ Margin for multimodal contrastive learning (CLIP). See Section 5.1 of
-    (TODO: link)[our paper] for more details.
+    `our paper <https://arxiv.org/abs/2303.14186>`_ for more details.
 
     Raises:
         AssertionError: this model output function requires using additional

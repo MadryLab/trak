@@ -1,13 +1,13 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
         <title>trak.utils - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -200,7 +200,7 @@
 
 
 <div class="viewcode-block" id="parameters_to_vector"><a class="viewcode-back" href="../../trak.html#trak.utils.parameters_to_vector">[docs]</a><span class="k">def</span> <span class="nf">parameters_to_vector</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Same as https://pytorch.org/docs/stable/generated/torch.nn.utils.parameters_to_vector.html</span>
 <span class="sd">    but with :code:`reshape` instead of :code:`view` to avoid a pesky error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -226,7 +226,7 @@
 
 
 <div class="viewcode-block" id="vectorize_and_ignore_buffers"><a class="viewcode-back" href="../../trak.html#trak.utils.vectorize_and_ignore_buffers">[docs]</a><span class="k">def</span> <span class="nf">vectorize_and_ignore_buffers</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">params_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    gradients are given as a tuple :code:`(grad_w0, grad_w1, ... grad_wp)` where</span>
 <span class="sd">    :code:`p` is the number of weight matrices. each :code:`grad_wi` has shape</span>
 <span class="sd">    :code:`[batch_size, ...]` this function flattens :code:`g` to have shape</span>
@@ -274,8 +274,9 @@
     </aside>
   </div>
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     </body>
 </html>
