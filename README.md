@@ -1,7 +1,7 @@
 [![Python package](https://github.com/MadryLab/trak/actions/workflows/python-package.yml/badge.svg)](https://github.com/MadryLab/trak/actions/workflows/python-package.yml)
 [![arXiv](https://img.shields.io/badge/arXiv-2303.14186-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
 
-[[docs & tutorials]](https://trak.csail.mit.edu/html/index.html)
+[[docs & tutorials]](https://trak.readthedocs.io/en/latest/)
 [[paper]](https://arxiv.org/abs/2303.14186)
 [[blog post]](https://gradientscience.org/trak/)
 [[website]](https://trak.csail.mit.edu)
@@ -32,9 +32,9 @@ If you use this code in your work, please cite using the following BibTeX entry:
 ## Usage
 
 
-[[quickstart]](https://trak.csail.mit.edu/html/quickstart.html)
+[[quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
 
-Check [our docs](https://trak.csail.mit.edu/html) for more detailed examples and
+Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
 steps needed to get `TRAK` attribution scores with our API.
 
@@ -80,7 +80,7 @@ kernel for the JL projection step, use
 pip install traker[fast]
 ```
 You will need compatible versions of `gcc` and `CUDA toolkit` to install it. See
-the [installation FAQs](https://trak.csail.mit.edu/html/install.html) for tips
+the [installation FAQs](https://trak.readthedocs.io/en/latest/install.html) for tips
 regarding this. To install the basic version of our package that requires no
 compilation, use
 ```bash
