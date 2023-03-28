@@ -203,7 +203,7 @@
 <dt class="sig sig-object py" id="trak.traker.TRAKer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.traker.</span></span><span class="sig-name descname"><span class="pre">TRAKer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">load_from_save_dir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trak/traker.html#TRAKer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The main front-facing class for TRAK. See the <a class="reference external" href="https://github.com/MadryLab/trak">README</a> and <a class="reference external" href="https://trak.csail.mit.edu/html/index.html">docs</a> for example usage.</p>
+<p>The main front-facing class for TRAK. See the <a class="reference external" href="https://github.com/MadryLab/trak">README</a> and <a class="reference external" href="https://trak.readthedocs.io/en/latest/">docs</a> for example usage.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="trak.traker.TRAKer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">model:</span> <span class="pre">torch.nn.modules.module.Module,</span> <span class="pre">task:</span> <span class="pre">typing.Union[trak.modelout_functions.AbstractModelOutput,</span> <span class="pre">str],</span> <span class="pre">train_set_size:</span> <span class="pre">int,</span> <span class="pre">save_dir:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'./trak_results',</span> <span class="pre">load_from_save_dir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">device:</span> <span class="pre">typing.Union[str,</span> <span class="pre">torch.device]</span> <span class="pre">=</span> <span class="pre">'cuda',</span> <span class="pre">gradient_computer:</span> <span class="pre">trak.gradient_computers.AbstractGradientComputer</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'trak.gradient_computers.FunctionalGradientComputer'&gt;,</span> <span class="pre">projector:</span> <span class="pre">typing.Optional[trak.projectors.AbstractProjector]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">proj_dim:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">2048</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/traker.html#TRAKer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.traker.TRAKer.__init__" title="Permalink to this definition">#</a></dt>
@@ -421,13 +421,16 @@ implementation of ModelOutput to use, i.e. whether it should use
 <dt class="sig sig-object py" id="trak.gradient_computers.AbstractGradientComputer.__init__">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelout_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#AbstractGradientComputer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.AbstractGradientComputer.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes attributes, nothing too interesting happening.</p>
-<dl>
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-modelout_fn (AbstractModelOutput): model output function
-grad_dim (int, optional): Size of the gradients (number of model</p>
-<blockquote>
-<div><p>parameters). Defaults to None.</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
+</dd>
+<dt>modelout_fn (AbstractModelOutput):</dt><dd><p>model output function</p>
+</dd>
+<dt>grad_dim (int, optional):</dt><dd><p>Size of the gradients (number of model parameters). Defaults to
+None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -462,13 +465,16 @@ grad_dim (int, optional): Size of the gradients (number of model</p>
 <dt class="sig sig-object py" id="trak.gradient_computers.FunctionalGradientComputer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">torch.nn.modules.module.Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelout_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#FunctionalGradientComputer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.FunctionalGradientComputer.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes attributes, nothing too interesting happening.</p>
-<dl>
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-modelout_fn (AbstractModelOutput): model output function
-grad_dim (int, optional): Size of the gradients (number of model</p>
-<blockquote>
-<div><p>parameters). Defaults to None.</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
+</dd>
+<dt>modelout_fn (AbstractModelOutput):</dt><dd><p>model output function</p>
+</dd>
+<dt>grad_dim (int, optional):</dt><dd><p>Size of the gradients (number of model parameters). Defaults to
+None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -552,13 +558,16 @@ for more details on <cite>functorch</cite>’s functional models.</p>
 <dt class="sig sig-object py" id="trak.gradient_computers.IterativeGradientComputer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelout_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><span class="pre">trak.modelout_functions.AbstractModelOutput</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/trak/gradient_computers.html#IterativeGradientComputer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.gradient_computers.IterativeGradientComputer.__init__" title="Permalink to this definition">#</a></dt>
 <dd><p>Initializes attributes, nothing too interesting happening.</p>
-<dl>
-<dt>Args:</dt><dd><p>model (torch.nn.Module): model
-modelout_fn (AbstractModelOutput): model output function
-grad_dim (int, optional): Size of the gradients (number of model</p>
-<blockquote>
-<div><p>parameters). Defaults to None.</p>
-</div></blockquote>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>model (torch.nn.Module):</dt><dd><p>model</p>
+</dd>
+<dt>modelout_fn (AbstractModelOutput):</dt><dd><p>model output function</p>
+</dd>
+<dt>grad_dim (int, optional):</dt><dd><p>Size of the gradients (number of model parameters). Defaults to
+None.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -645,14 +654,14 @@ of subclasses for particular applications (vision, language, etc):</p>
 See Sections 2 &amp; 3 of <a class="reference external" href="https://arxiv.org/abs/2303.14186">our paper</a> for more
 details on what model output functions are in the context of TRAK and how to use
 &amp; design them.</p>
-<p>See, e.g. <a class="reference external" href="https://trak.csail.mit.edu/html/clip.html">this tutorial</a> for an
+<p>See, e.g. <a class="reference external" href="https://trak.readthedocs.io/en/latest/clip.html">this tutorial</a> for an
 example on how to subclass <code class="code docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code> for a task of your
 choice.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="trak.modelout_functions.AbstractModelOutput">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">trak.modelout_functions.</span></span><span class="sig-name descname"><span class="pre">AbstractModelOutput</span></span><a class="reference internal" href="_modules/trak/modelout_functions.html#AbstractModelOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#trak.modelout_functions.AbstractModelOutput" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
-<p>See, e.g. <a class="reference external" href="https://trak.csail.mit.edu/html/clip.html">this tutorial</a>
+<p>See, e.g. <a class="reference external" href="https://trak.readthedocs.io/en/latest/clip.html">this tutorial</a>
 for an example on how to subclass <code class="code docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code> for a task of
 your choice.</p>
 <p>Subclasses must implement:</p>

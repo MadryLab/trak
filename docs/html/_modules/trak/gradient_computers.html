@@ -236,10 +236,14 @@
         <span class="sd">&quot;&quot;&quot; Initializes attributes, nothing too interesting happening.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            model (torch.nn.Module): model</span>
-<span class="sd">            modelout_fn (AbstractModelOutput): model output function</span>
-<span class="sd">            grad_dim (int, optional): Size of the gradients (number of model</span>
-<span class="sd">                parameters). Defaults to None.</span>
+<span class="sd">            model (torch.nn.Module):</span>
+<span class="sd">                model</span>
+<span class="sd">            modelout_fn (AbstractModelOutput):</span>
+<span class="sd">                model output function</span>
+<span class="sd">            grad_dim (int, optional):</span>
+<span class="sd">                Size of the gradients (number of model parameters). Defaults to</span>
+<span class="sd">                None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">modelout_fn</span> <span class="o">=</span> <span class="n">modelout_fn</span><span class="p">()</span>
