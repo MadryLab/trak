@@ -16,6 +16,13 @@ user-select: none;
 }
 }
 
+@media (max-width: 767px) {
+  .display-3 {
+    font-size: 3rem;
+    text-align: center;
+  }
+}
+
 .b-example-divider {
 height: 3rem;
 background-color: rgba(0, 0, 0, 0.1);

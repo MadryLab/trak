@@ -65,7 +65,7 @@
             class="row p-5 align-items-center rounded-3 border shadow-lg"
             style="background-color: rgba(0, 0, 0, 0.3)"
           >
-            <h1 class="display-3 fw-bold lh-3" style="display: inline-block; font-family: Avenir">
+            <h1 class="main-title display-3 fw-bold lh-3" style="display: inline-block; font-family: Avenir">
               TRAK: Attributing Model Behavior at Scale
             </h1>
             <p class="lead" style="font-family: Avenir">
@@ -1854,4 +1854,14 @@ scores = traker.finalize_scores()</code></pre>
       <script src="plot.js"></script>
     </body>
   </div>
+<script>
+  // use jQuery to detect screen width and update main title text
+  $(window).resize(function() {
+    if ($(window).width() <= 767) {
+      $(".main-title").text("TRAK");
+    } else {
+      $(".main-title").text("TRAK: Attributing Model Behavior at Scale");
+    }
+  });
+</script>
 </html>
