@@ -19,7 +19,7 @@ ch = torch
 class TRAKer():
     """ The main front-facing class for TRAK. See the `README
     <https://github.com/MadryLab/trak>`_ and `docs
-    <https://trak.csail.mit.edu/html/index.html>`_ for example usage.
+    <https://trak.readthedocs.io/en/latest/>`_ for example usage.
 
     """
     def __init__(self,

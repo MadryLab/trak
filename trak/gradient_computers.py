@@ -40,10 +40,14 @@ class AbstractGradientComputer(ABC):
         """ Initializes attributes, nothing too interesting happening.
 
         Args:
-            model (torch.nn.Module): model
-            modelout_fn (AbstractModelOutput): model output function
-            grad_dim (int, optional): Size of the gradients (number of model
-                parameters). Defaults to None.
+            model (torch.nn.Module):
+                model
+            modelout_fn (AbstractModelOutput):
+                model output function
+            grad_dim (int, optional):
+                Size of the gradients (number of model parameters). Defaults to
+                None.
+
         """
         self.model = model
         self.modelout_fn = modelout_fn()

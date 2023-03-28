@@ -13,7 +13,7 @@ See Sections 2 & 3 of `our paper <https://arxiv.org/abs/2303.14186>`_ for more
 details on what model output functions are in the context of TRAK and how to use
 & design them.
 
-See, e.g. `this tutorial <https://trak.csail.mit.edu/html/clip.html>`_ for an
+See, e.g. `this tutorial <https://trak.readthedocs.io/en/latest/clip.html>`_ for an
 example on how to subclass :code:`AbstractModelOutput` for a task of your
 choice.
 """
@@ -25,7 +25,7 @@ import torch as ch
 
 
 class AbstractModelOutput(ABC):
-    """ See, e.g. `this tutorial <https://trak.csail.mit.edu/html/clip.html>`_
+    """ See, e.g. `this tutorial <https://trak.readthedocs.io/en/latest/clip.html>`_
     for an example on how to subclass :code:`AbstractModelOutput` for a task of
     your choice.
 
