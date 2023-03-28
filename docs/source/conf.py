@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -23,6 +23,7 @@ author = 'Kristian Georgiev'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.1'
+version = '0.1.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,20 +39,23 @@ extensions = [
     'sphinx.ext.autosectionlabel'
 ]
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+def skip(app, what, name, obj, would_skip, options):
+    if name == "__init__":
+        return False
+    return would_skip
 
-# -- Options for HTML output -------------------------------------------------
+def setup(app):
+    app.connect("autodoc-skip-member", skip)
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
+
+templates_path = ['_templates']
+
 html_theme = 'furo'
 
 # Add any paths that contain custom static files (such as style sheets) here,
