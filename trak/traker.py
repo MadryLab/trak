@@ -320,7 +320,7 @@ class TRAKer():
 
     def finalize_scores(self,
                         model_ids: Iterable[int] = None,
-                        del_grads: bool = True,
+                        del_grads: bool = False,
                         exp_name: str = None) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
