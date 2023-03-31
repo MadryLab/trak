@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation FAQs" href="install.html" /><link rel="prev" title="TRAK: Attributing Model Behavior at Scale" href="index.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
         <title>Quickstart — get TRAK scores for CIFAR - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bert.html#add-a-task-to-traker-subclassing-modeloutput-clip">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trak.html">API reference</a></li>
 </ul>
 
@@ -196,7 +197,7 @@
         </div>
         <article role="main">
           <section id="quickstart-get-trak-scores-for-cifar">
-<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this headline">#</a></h1>
+<span id="quickstart-user-guide"></span><h1>Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code><a class="headerlink" href="#quickstart-get-trak-scores-for-cifar" title="Permalink to this heading">#</a></h1>
 <p>In this tutorial, we’ll show you how to use the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API to compute data
 attribution scores for <a class="reference external" href="https://github.com/wbaek/torchskeleton">ResNet-9</a> models trained on
 <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code>. While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.</p>
@@ -212,10 +213,10 @@ attribution scores for <a class="reference external" href="https://github.com/wb
 All computations take roughly ten minutes in total on a single A100 GPU.</p>
 <p>Let’s get started!</p>
 <section id="load-model-checkpoints">
-<h2>Load model checkpoints<a class="headerlink" href="#load-model-checkpoints" title="Permalink to this headline">#</a></h2>
+<h2>Load model checkpoints<a class="headerlink" href="#load-model-checkpoints" title="Permalink to this heading">#</a></h2>
 <p>First, you need models to apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to. You can either use the script
 below to train three ResNet-9 models on <code class="code docutils literal notranslate"><span class="pre">CIFAR-10</span></code> and save the checkpoints
-(e.g., <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s), or use your own checkpoint <a class="footnote-reference brackets" href="#id2" id="id1">1</a>. (In fact, in this
+(e.g., <code class="code docutils literal notranslate"><span class="pre">state_dict()</span></code>s), or use your own checkpoint <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. (In fact, in this
 tutorial you can replace ResNet-9 + CIFAR-10 with any architecture +
 classification task of your choice.)</p>
 <details>
@@ -331,20 +332,22 @@ checkpoints in <code class="code docutils literal notranslate"><span class="pre"
 <span class="n">ckpts</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">ckpt</span> <span class="ow">in</span> <span class="n">ckpt_files</span><span class="p">]</span>
 </pre></div>
 </div>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>For our own experiments, we used <a class="reference external" href="https://ffcv.io/">ffcv</a> to train models faster. Check <a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/imagenet.py">this</a> training script that trains the same ResNet-9 models using <code class="code docutils literal notranslate"><span class="pre">ffcv</span></code> dataloaders.</p>
-</dd>
-</dl>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>For our own experiments, we used <a class="reference external" href="https://ffcv.io/">ffcv</a> to train models faster. Check <a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/imagenet.py">this</a> training script that trains the same ResNet-9 models using <code class="code docutils literal notranslate"><span class="pre">ffcv</span></code> dataloaders.</p>
+</aside>
+</aside>
 </section>
 <section id="set-up-the-traker-class">
-<h2>Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this headline">#</a></h2>
+<h2>Set up the <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class<a class="headerlink" href="#set-up-the-traker-class" title="Permalink to this heading">#</a></h2>
 <p>The <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> class is the entry point to the <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> API. Construct it by calling <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> with three arguments:</p>
 <ul class="simple">
 <li><p>a <code class="code docutils literal notranslate"><span class="pre">model</span></code> (a <code class="code docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance) — this is the model architecture/class that you want to compute attributions for. Note that this model you pass in does not need to be initialized (we’ll do that separately below).</p></li>
 <li><p>a <code class="code docutils literal notranslate"><span class="pre">task</span></code> (a string or a <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a> instance) — this
 specifies the type of learning task you want to attribue with <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>,
-e.g. image classification, language modeling, CLIP-style contrastive learning, etc.</p></li>
+e.g. image classification, language modeling, CLIP-style contrastive learning, etc.
+Internally, the task tells <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> how to evaluate a given batch of data.</p></li>
 <li><p>a <code class="code docutils literal notranslate"><span class="pre">train_set_size</span></code> (an integer) — the size of the training set you want to keep trak of</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">trak</span> <span class="kn">import</span> <span class="n">TRAKer</span>
@@ -371,8 +374,8 @@ projections in our algorithm.  We recommend <code class="code docutils literal n
 <p>For more customizations, check out the <a class="reference internal" href="trak.html#api-reference"><span class="std std-ref">API reference</span></a>.</p>
 </section>
 <section id="compute-trak-features-for-training-data">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data<a class="headerlink" href="#compute-trak-features-for-training-data" title="Permalink to this headline">#</a></h2>
-<p>Now that we have constructed a  <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object, let’s use it to process the training data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id4" id="id3">2</a></p>
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> features for training data<a class="headerlink" href="#compute-trak-features-for-training-data" title="Permalink to this heading">#</a></h2>
+<p>Now that we have constructed a  <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> object, let’s use it to process the training data. For that, we’ll need a data loader:<a class="footnote-reference brackets" href="#id4" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Replace with your choice of data loader (should be deterministic ordering)</span>
 <span class="n">loader_train</span> <span class="o">=</span> <span class="n">get_dataloader</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
 </pre></div>
@@ -417,14 +420,15 @@ All you have to do is  initialize a different <a class="reference internal" href
 <code class="code docutils literal notranslate"><span class="pre">save_dir</span></code> within each job and specify the appropriate <code class="code docutils literal notranslate"><span class="pre">model_id</span></code> when calling
 <a class="reference internal" href="trak.html#trak.traker.TRAKer.load_checkpoint" title="trak.traker.TRAKer.load_checkpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_checkpoint()</span></code></a>.
 For more details, check out how to <a class="reference internal" href="slurm.html#slurm-tutorial"><span class="std std-ref">Parallelize TRAK scoring with SLURM</span></a>.</p>
-<dl class="footnote brackets">
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id3">2</a></span></dt>
-<dd><p>Again, we use the methods defined in <a class="reference internal" href="#load-model-checkpoints"><span class="std std-ref">Load model checkpoints</span></a>.</p>
-</dd>
-</dl>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id4" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
+<p>Again, we use the methods defined in <a class="reference internal" href="#load-model-checkpoints"><span class="std std-ref">Load model checkpoints</span></a>.</p>
+</aside>
+</aside>
 </section>
 <section id="compute-trak-scores-for-target-examples">
-<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples<a class="headerlink" href="#compute-trak-scores-for-target-examples" title="Permalink to this headline">#</a></h2>
+<h2>Compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for target examples<a class="headerlink" href="#compute-trak-scores-for-target-examples" title="Permalink to this heading">#</a></h2>
 <p>Finally, we are ready to compute attribution scores.
 To do this, you need to choose a set of target examples that you want to attribute.
 For the purpose of this tutorial, let’s make the
@@ -539,9 +543,8 @@ let’s you compute data attribution scores.</p>
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     </body>
 </html>

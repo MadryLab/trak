@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="API reference" href="trak.html" /><link rel="prev" title="Add a task to TRAKer (subclassing ModelOutput) — CLIP" href="clip.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Applying TRAK to a custom task #3: CLIP" href="clip.html" /><link rel="prev" title="Applying TRAK to a custom task #1: Classification" href="modeloutput.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
-        <title>Add a task to TRAKer (subclassing ModelOutput) — BERT-base - TRAK 0.1.1 documentation</title>
+    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
+        <title>Applying TRAK to a custom task #2: Text Classification using BERT - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -134,7 +134,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -158,8 +158,9 @@
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modeloutput.html">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #1: Classification</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #2: Text Classification using BERT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clip.html">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #3: CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="trak.html">API reference</a></li>
 </ul>
 
@@ -189,15 +190,244 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main">
-          <section id="add-a-task-to-traker-subclassing-modeloutput-bert-base">
-<span id="bert-tutorial"></span><h1>Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base<a class="headerlink" href="#add-a-task-to-traker-subclassing-modeloutput-bert-base" title="Permalink to this headline">#</a></h1>
-<p>Coming soon!</p>
+          <section id="applying-trak-to-a-custom-task-2-text-classification-using-bert">
+<span id="bert-tutorial"></span><h1>Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #2: Text Classification using BERT<a class="headerlink" href="#applying-trak-to-a-custom-task-2-text-classification-using-bert" title="Permalink to this heading">#</a></h1>
+<p>In this tutorial, we’ll show another example of applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new
+custom task, text classification. If you haven’t,
+you should first check out <a class="reference internal" href="modeloutput.html#modeloutput-tutorial"><span class="std std-ref">Applying TRAK to a custom task #1: Classification</span></a> to familiarize yourself with the notion of
+a model output function and how we implement it inside <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>.</p>
+<p>We will use a pre-trained langauge model (<a class="reference external" href="https://huggingface.co/bert-base-cased">bert-base-cased</a>) from HuggingFace and finetune it on
+the <a class="reference external" href="https://huggingface.co/datasets/SetFit/qnli">QNLI (Question-answering NLI) task</a>, which is a binary classification task.
+You can find the end-to-end example <a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/qnli.py">here</a>.</p>
+<section id="model-and-data">
+<h2>Model and Data<a class="headerlink" href="#model-and-data" title="Permalink to this heading">#</a></h2>
+<p>For the model architecture, we adapt <code class="code docutils literal notranslate"><span class="pre">transformers.AutoModelForSequenceClassification</span></code>
+to fit our API signatures.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AutoConfig</span><span class="p">,</span>
+    <span class="n">AutoModelForSequenceClassification</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">SequenceClassificationModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for HuggingFace sequence classification models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">AutoConfig</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+            <span class="s1">&#39;bert-base-cased&#39;</span><span class="p">,</span>
+            <span class="n">num_labels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">finetuning_task</span><span class="o">=</span><span class="s1">&#39;qnli&#39;</span><span class="p">,</span>
+            <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">revision</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">,</span>
+            <span class="n">use_auth_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">AutoModelForSequenceClassification</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+            <span class="s1">&#39;bert-base-cased&#39;</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">revision</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">,</span>
+            <span class="n">use_auth_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">ignore_mismatched_sizes</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+            <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">,</span>
+            <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)</span><span class="o">.</span><span class="n">logits</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SequenceClassificationModel</span><span class="p">()</span>
+<span class="n">sd</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">CKPT_PATH</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We slightly redefine the <code class="code docutils literal notranslate"><span class="pre">forward</span></code> function so that we can pass in the inputs (<code class="code docutils literal notranslate"><span class="pre">input_ids</span></code>, etc.) as positional arguments instead of as keyword arguments.</p>
+<p>For data loading, we adapt the code from Hugging Face example:</p>
+<details>
+<summary><a>Data loading code for QNLI </a></summary><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_dataset</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">inds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">raw_datasets</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span>
+            <span class="s2">&quot;glue&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;qnli&#39;</span><span class="p">,</span>
+            <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_auth_token</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">label_list</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+    <span class="n">num_labels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_list</span><span class="p">)</span>
+    <span class="n">sentence1_key</span><span class="p">,</span> <span class="n">sentence2_key</span> <span class="o">=</span> <span class="n">GLUE_TASK_TO_KEYS</span><span class="p">[</span><span class="s1">&#39;qnli&#39;</span><span class="p">]</span>
+
+    <span class="n">label_to_id</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1">#{v: i for i, v in enumerate(label_list)}</span>
+
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+        <span class="s1">&#39;bert-base-cased&#39;</span><span class="p">,</span>
+        <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">revision</span><span class="o">=</span><span class="s1">&#39;main&#39;</span><span class="p">,</span>
+        <span class="n">use_auth_token</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">padding</span> <span class="o">=</span> <span class="s2">&quot;max_length&quot;</span>
+    <span class="n">max_seq_length</span><span class="o">=</span><span class="mi">128</span>
+
+    <span class="k">def</span> <span class="nf">preprocess_function</span><span class="p">(</span><span class="n">examples</span><span class="p">):</span>
+        <span class="c1"># Tokenize the texts</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">sentence1_key</span><span class="p">],)</span> <span class="k">if</span> <span class="n">sentence2_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">sentence1_key</span><span class="p">],</span> <span class="n">examples</span><span class="p">[</span><span class="n">sentence2_key</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="n">max_seq_length</span><span class="p">,</span> <span class="n">truncation</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Map labels to IDs (not necessary for GLUE tasks)</span>
+        <span class="k">if</span> <span class="n">label_to_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;label&quot;</span> <span class="ow">in</span> <span class="n">examples</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">label_to_id</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">examples</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">raw_datasets</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+        <span class="n">preprocess_function</span><span class="p">,</span>
+        <span class="n">batched</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">load_from_cache_file</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Running tokenizer on dataset&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s1">&#39;train&#39;</span><span class="p">:</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">train_dataset</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">raw_datasets</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">]</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">eval_dataset</span>
+    <span class="k">return</span> <span class="n">ds</span>
+
+
+<span class="k">def</span> <span class="nf">init_model</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceClassificationModel</span><span class="p">()</span>
+    <span class="n">sd</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">sd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+<span class="c1"># NOTE: CHANGE THIS IF YOU WANT TO RUN ON FULL DATASET</span>
+<span class="n">TRAIN_SET_SIZE</span> <span class="o">=</span> <span class="mi">5_000</span>
+<span class="n">VAL_SET_SIZE</span> <span class="o">=</span> <span class="mi">1_00</span>
+
+<span class="k">def</span> <span class="nf">init_loaders</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">):</span>
+    <span class="n">ds_train</span> <span class="o">=</span> <span class="n">get_dataset</span><span class="p">(</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+    <span class="n">ds_train</span> <span class="o">=</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">TRAIN_SET_SIZE</span><span class="p">))</span>
+    <span class="n">ds_val</span> <span class="o">=</span> <span class="n">get_dataset</span><span class="p">(</span><span class="s1">&#39;val&#39;</span><span class="p">)</span>
+    <span class="n">ds_val</span> <span class="o">=</span> <span class="n">ds_val</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">VAL_SET_SIZE</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">default_data_collator</span><span class="p">),</span> \
+        <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds_val</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">default_data_collator</span><span class="p">)</span>
+
+<span class="n">loader_train</span><span class="p">,</span> <span class="n">loader_val</span> <span class="o">=</span> <span class="n">init_loaders</span><span class="p">()</span>
+</pre></div>
+</div>
+</details></section>
+<section id="text-classification">
+<h2>Text Classification<a class="headerlink" href="#text-classification" title="Permalink to this heading">#</a></h2>
+<p>QNLI is a binary classifciation task. Hence, we can use the same model output function we used in
+<a class="reference internal" href="modeloutput.html#modeloutput-tutorial"><span class="std std-ref">Applying TRAK to a custom task #1: Classification</span></a>:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f(z;\theta) = \log\left(\frac{p(z;\theta)}{1 - p(z;\theta)}\right)\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(p(z;\theta)\)</span> is the soft-max probability associated for the correct class for example <span class="math notranslate nohighlight">\(z\)</span>. (See our paper for an explanation of why this is an appropriate choice.)</p>
+<p>The corresponding gradient of the loss w.r.t. the model output is, again, given by:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\frac{\partial \ell(z;\theta)}{\partial f} = \frac{\partial}{\partial f}
+\log(1 + \exp(-f)) = -\frac{\exp(-f)}{1 + \exp(-f)}  = -(1 - p(z;\theta))\]</div>
+</div>
+</section>
+<section id="implementing-the-model-output-function">
+<h2>Implementing the model output function<a class="headerlink" href="#implementing-the-model-output-function" title="Permalink to this heading">#</a></h2>
+<p>For text classification tasks, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> provides a default implementation of model output function
+as <a class="reference internal" href="trak.html#trak.modelout_functions.TextClassificationModelOutput" title="trak.modelout_functions.TextClassificationModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextClassificationModelOutput</span></code></a>.
+Below, we reproduce the implementation so that you can see how it’s implemented.
+The model output function is implemented as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
+               <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+               <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+               <span class="n">input_id</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+               <span class="n">token_type_id</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+               <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+               <span class="n">label</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+               <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">input_id</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                            <span class="n">token_type_id</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+                            <span class="n">attention_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">bindex</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">logits_correct</span> <span class="o">=</span> <span class="n">logits</span><span class="p">[</span><span class="n">bindex</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>
+
+    <span class="n">cloned_logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+    <span class="n">cloned_logits</span><span class="p">[</span><span class="n">bindex</span><span class="p">,</span> <span class="n">label</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="o">-</span><span class="n">ch</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">margins</span> <span class="o">=</span> <span class="n">logits_correct</span> <span class="o">-</span> <span class="n">cloned_logits</span><span class="o">.</span><span class="n">logsumexp</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">margins</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The implementation is identical to the standard classification example in <a class="reference internal" href="modeloutput.html#modeloutput-tutorial"><span class="std std-ref">Applying TRAK to a custom task #1: Classification</span></a>,
+except here the signature of the method and the <code class="code docutils literal notranslate"><span class="pre">func_model</span></code> is slightly different
+as the language model takes in three inputs instead of just one.</p>
+<p>Similarly, the gradient function is implemented as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_out_to_loss_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_model</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">batch</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">buffers</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_temperature</span><span class="p">)[</span><span class="n">ch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">labels</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Lastly, you need to implement a forward function, which simply passes in the elements in the batch excluding the label.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+    <span class="n">input_ids</span><span class="p">,</span> <span class="n">token_type_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">batch</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+        <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">,</span>
+        <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="putting-it-together">
+<h2>Putting it together<a class="headerlink" href="#putting-it-together" title="Permalink to this heading">#</a></h2>
+<p>Using the above <code class="code docutils literal notranslate"><span class="pre">TextClassificationModelOutput</span></code> implementation, we can compute <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">task</span><span class="o">=</span><span class="n">TextClassificationModelOutput</span><span class="p">,</span> <span class="c1"># you can also just pass in &quot;text_classification&quot;</span>
+                <span class="n">train_set_size</span><span class="o">=</span><span class="n">TRAIN_SET_SIZE</span><span class="p">,</span>
+                <span class="n">save_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">proj_dim</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;input_ids&#39;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;token_type_ids&#39;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;attention_mask&#39;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+
+<span class="n">traker</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">model_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">loader_train</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Featurizing..&#39;</span><span class="p">):</span>
+    <span class="c1"># process batch into compatible form for TRAKer TextClassificationModelOutput</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
+    <span class="n">traker</span><span class="o">.</span><span class="n">featurize</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">traker</span><span class="o">.</span><span class="n">finalize_features</span><span class="p">()</span>
+
+<span class="n">traker</span><span class="o">.</span><span class="n">start_scoring_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">model_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_targets</span><span class="o">=</span><span class="n">VAL_SET_SIZE</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">loader_val</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Scoring..&#39;</span><span class="p">):</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="n">process_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]</span>
+    <span class="n">traker</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">traker</span><span class="o">.</span><span class="n">finalize_scores</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We use <code class="code docutils literal notranslate"><span class="pre">process_batch</span></code> to transform the batch from dictionary (which is the form used by Hugging Face dataloaders) to a tuple.</p>
+<p>That’s all! You can find this tutorial as a complete script in <a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/qnli.py">here</a>.</p>
+</section>
+<section id="extending-to-other-tasks">
+<h2>Extending to other tasks<a class="headerlink" href="#extending-to-other-tasks" title="Permalink to this heading">#</a></h2>
+<p>As you saw, adapting to this case was pretty simple the task was still a classifcation task.
+For a more involved example that is <em>not</em> classification, see <a class="reference internal" href="clip.html#clip-tutorial"><span class="std std-ref">Applying TRAK to a custom task #3: CLIP</span></a>.</p>
+</section>
 </section>
 
         </article>
@@ -205,23 +435,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="trak.html">
+          <a class="next-page" href="clip.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">API reference</div>
+                <div class="title">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #3: CLIP</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="clip.html">
+          <a class="prev-page" href="modeloutput.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</div>
+                <div class="title">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #1: Classification</div>
                 
               </div>
             </a>
@@ -243,16 +473,39 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #2: Text Classification using BERT</a><ul>
+<li><a class="reference internal" href="#model-and-data">Model and Data</a></li>
+<li><a class="reference internal" href="#text-classification">Text Classification</a></li>
+<li><a class="reference internal" href="#implementing-the-model-output-function">Implementing the model output function</a></li>
+<li><a class="reference internal" href="#putting-it-together">Putting it together</a></li>
+<li><a class="reference internal" href="#extending-to-other-tasks">Extending to other tasks</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </body>
 </html>

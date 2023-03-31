@@ -93,7 +93,7 @@ classification task of your choice.)
         return model
 
     def get_dataloader(batch_size=256, num_workers=8, split='train'):
-        
+
         transforms = torchvision.transforms.Compose(
                         [torchvision.transforms.RandomHorizontalFlip(),
                         torchvision.transforms.RandomAffine(0),
@@ -103,7 +103,7 @@ classification task of your choice.)
         is_train = (split == 'train')
         dataset = torchvision.datasets.CIFAR10(root='/tmp/cifar/', download=True, train=is_train, transform=transforms)
         loader = torch.utils.data.DataLoader(dataset=dataset, shuffle=False, batch_size=batch_size, num_workers=num_workers)
-        
+
         return loader
 
     def train(model, loader, lr=0.4, epochs=24, momentum=0.9, weight_decay=5e-4, lr_peak_epoch=5, label_smoothing=0.0):
@@ -138,7 +138,7 @@ classification task of your choice.)
         model = construct_rn9().to(memory_format=torch.channels_last).cuda()
         loader_train = get_dataloader(batch_size=512, split='train')
         train(model, loader_train)
-        
+
         torch.save(model.state_dict(), f'./checkpoints/sd_{i}.pt')
 
 .. raw:: html
@@ -168,6 +168,7 @@ The :class:`.TRAKer` class is the entry point to the :code:`TRAK` API. Construct
 * a :code:`task` (a string or a :class:`.AbstractModelOutput` instance) --- this
   specifies the type of learning task you want to attribue with :code:`TRAK`,
   e.g. image classification, language modeling, CLIP-style contrastive learning, etc.
+  Internally, the task tells :class:`.TRAKer` how to evaluate a given batch of data.
 
 * a :code:`train_set_size` (an integer) --- the size of the training set you want to keep trak of
 

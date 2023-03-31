@@ -1,118 +1,55 @@
-.. _CLIP model output:
+.. _CLIP tutorial:
 
-Add  a :code:`task` to :code:`TRAKer` (subclassing :code:`ModelOutput`\ ) --- CLIP
+Applying :code:`TRAK` to a custom task #3: CLIP
 ==================================================================================
 
-In this tutorial, we'll go through the process of applying :code:`TRAK` to a new
-custom task, using CLIP as an example. Check out :class:`.CLIPModelOutput` for
-the final result.
-
-Model output functions
-----------------------
-
-Computing :code:`TRAK` attribution scores requires defining an appropriate ``model output
-function`` to guide the scoring process. Intuitively, you can just think of it as a
-loss function. We derive and discuss model output
-functions for multiple tasks (binary and multiclass classification, CLIP loss,
-and various NLP tasks, etc) in detail in `our paper <https://arxiv.org/abs/2303.14186>`_.
-
-In short, given the following:
-
-* a training set of examples :math:`S = \{z_1, z_2, \ldots, z_n\}`
-  where each :math:`z_i  = (x_i, y_i)` is an input-label pair,
-* an example of interest :math:`z`,
-* and model parameters :math:`\theta`,
-
-we (implicitly) represent machine learning models with *some* model output
-function :math:`f(z;\theta)` --- a function which maps an example of interest
-and model parameters to a real number.
-
-.. note::
-
-    One example model output function is the *loss* (e.g. cross-entropy loss)
-    that the model incurs on :math:`z`.
-
-The modelout-to-loss gradient (the :math:`Q` term)
---------------------------------------------------
-
-Additionally, the final :code:`TRAK` estimator (see Algorithm 1 in our paper)
-uses a ":math:`Q`" term -- an :math:`n\times n` diagonal matrix of “one minus
-correct-class probability” terms. In classification, this form of :math:`Q`
-comes from the fact that, for :math:`f(z;\theta) = \log\left(\frac{p(z;\theta)}{1 - p(z;\theta)}\right)`,
-we have that the gradient of the (cross-entropy) loss :math:`\ell` wrt :math:`f`
-is:
-
-.. math::
-
-    \frac{\partial \ell(z;\theta)}{\partial f} = \frac{\partial}{\partial f}
-    \log(1 + \exp(-f)) = -\frac{\exp(-f)}{1 + \exp(-f)}  = -(1 - p(z;\theta))
-
-If you are adapting :code:`TRAK` a more exotic task, unrelated to
-classification, you might need to modify this term accordingly (for all of our
-experiments, this was not necessary).
+In this tutorial, we'll show another example of applying :code:`TRAK` to a new
+custom task, `CLIP <https://openai.com/research/clip>`_. If you haven't,
+you should first check out :ref:`MODELOUTPUT tutorial` to familiarize yourself with the notion of
+a model output function and how we implement it inside :code:`TRAK`.
 
 
-How we implement model output functions in :code:`TRAK`
--------------------------------------------------------
-
-We provide a dedicated class -- :class:`.AbstractModelOutput` that takes care of
-translating models (:code:`torch.Module` instances) into model output functions.
-This is achieved via two methods:
-
-* :meth:`.AbstractModelOutput.get_output`
-* :meth:`.AbstractModelOutput.get_out_to_loss_grad`
-
-The :meth:`.AbstractModelOutput.get_output` method implements the model output
-function. In particular, given a batch of examples :math:`b`, it returns a
-vector containing the model outputs for each example in the batch. This is the
-function that we pass through PyTorch's :code:`autograd`.
-
-The :meth:`.AbstractModelOutput.get_out_to_loss_grad` implements the *gradient*
-of the modelout-to-loss term :math:`Q`. Since for all applications (so far!) we
-could analytically derive the gradient of the :math:`Q` term, we "hardcoded"
-this in the :code:`get_out_to_loss_grad` method, thus avoiding an additional
-gradient computation.
-
-.. note::
-
-    If you find yourself in the (we believe unlikely) situation where you can't
-    analytically derive the gradient for :math:`Q`, adapt :meth:`.AbstractModelOutput.get_out_to_loss_grad`
-    to follow the structure of :meth:`.AbstractModelOutput.get_output` and pass
-    it to :code:`autograd` as well.
-
-What you need to do for a new task
-----------------------------------
-
-When we adapt :code:`TRAK` for a new task, we only need to create a new subclass of
-:class:`.AbstractModelOutput`. Let's do this by example.
+CLIP overview
+--------------------------
 
 We'll assume that you're familiar with how CLIP works (having only a rough idea
-will be sufficient). For a given image-caption pair :math:`(x, y)`, we'll denote
-image embeddings as :math:`\phi(x)` and caption embeddings as :math:`\psi(y)`.
-The CLIP training loss computes all all :math:`n \times n` pairwise cosine
+will be sufficient). For a given image-caption pair :math:`(x, y)`, CLIP outputs an
+image embedding :math:`\phi(x)` and a caption embedding :math:`\psi(y)`.
+
+The CLIP training loss tries to align the image embeddings with their corresponding
+caption embeddings. In particular, given a batch of :math:`n` examples :math:`\{(x_1,y_1),...,(x_n,y_n)\}`, it computes all :math:`n \times n` pairwise cosine
 similarities between the image and text embeddings
-:math:`S_{ij}:=\phi(x)\cdot\psi(y)`; it then aims to maximize :math:`S_{ii}`
-terms, and minimize :math:`S_{ij}` terms for :math:`i\neq j`:
+:math:`S_{ij}:=\phi(x)\cdot\psi(y)`, and then aims to maximize the :math:`S_{ii}`
+terms while minimizing the :math:`S_{ij}` terms for :math:`i\neq j`:
 
 .. math::
 
-    \ell_{CLIP}(x_i, y_i) =
+    L_\text{CLIP}(x_i, y_i) =
     -\log\left(\frac{\exp(-S_{ii})}{\sum_{j\leq n} \exp(-S_{ij})}\right)
     -\log\left(\frac{\exp(-S_{ii})}{\sum_{j\leq n} \exp(-S_{ji})}\right)
 
-We end up choosing the following model output function (check Section 5.1.1 of
-our papers for details on why this is a good model output function):
+
+Implementing the model output function
+-------------------------------------------------
+
+As in our earlier examples, to apply :code:`TRAK` to this setting, we just need to define
+an appropriate model output function.
+
+In our paper, we choose the following model output function:
 
 .. math::
 
-    f_{CLIP}(x_i, y_i) =
+    f_\text{CLIP}(x_i, y_i) =
     -\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ij}))
     -\log\sum_{j\leq n}(\exp(-S_{ii}) - \exp(-S_{ji}))
 
-Because our choice of model output function for CLIP requires access to CLIP
-embeddings for multiple examples, we implement an additional utility method
-:meth:`.get_embeddings`. This is a bit too specific to CLIP, so we're not going
-to pay too much attention to it in this tutorial; let's just assume we have
+.. note::
+    Intuitively, this choice is motivated by viewing the CLIP loss as a sum of two classification problems (one matching images to their correct captions, and vice versa). Check Section 5.1.1 of our papers for details.
+
+Note that unlike in the classification, this model output evaluated at an example now depends on *other* examples in the batch.
+To get the CLIP
+embeddings for all the image-caption pairs in the batch, we implement an additional utility method
+:meth:`.get_embeddings`. Here, let's just assume we have
 access to the arrays :code:`all_img_embeddings` and :code:`all_txt_embeddings`.
 
 Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
@@ -133,16 +70,7 @@ Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
                  -ch.logsumexp(-text_embeddings @ (image_embeddings - all_img_embeddings[ii]).T, dim=1)
         return result.sum()  # shape of result should be [1], .sum() just removes the extra dimension
 
-We are using `code`:functorch`\ s :code:`vmap` to make the per-sample gradient
-computations faster (more parallel). Check out, e.g., `this functorch tutorial
-<https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html>`_ to
-learn more about how to use :code:`functorch` (e.g. learn what
-:code:`func_model`, :code:`weights` and :code:`buffers` are). The rest of
-:meth:`.CLIPModelOutput.get_output` is simply implementing in code the equation
-we derived earlier.
-
-Finally, we need to make a simple adaptation to the :math:`Q` term in the
-:meth:`.CLIPModelOutput.get_out_to_loss_grad`:
+Finally, to compute the output-to-loss gradient term, we observe in our paper that we can reduce to the classification case and compute the corresponding probabilities:
 
 .. code-block:: python
 
@@ -154,7 +82,40 @@ Finally, we need to make a simple adaptation to the :math:`Q` term in the
         ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.
         return (1 - ps).clone().detach()
 
-Note, again, that we are directly implementing the *gradient* (which we
-analytically derive) of the out-to-loss function here.
+Note, again, that we are directly implementing the gradient, instead of using
+automatic differentiation.
+
+
+Putting it together
+------------------------
+
+Using the above :code:`CLIPModelOutput` implementation, we can compute :code:`TRAK` scores as follows:
+
+.. code-block:: python
+
+    model = ...
+    loader_train, loader_val = ...
+
+    traker = TRAKer(model=model,
+                    task=CLIPModelOutput, # you can also just pass in "clip"
+                    train_set_size=TRAIN_SET_SIZE,
+                    save_dir=args.out,
+                    device=device,
+                    proj_dim=1024)
+
+    traker.load_checkpoint(model.state_dict(), model_id=0)
+    for batch in tqdm(loader_train, desc='Featurizing..'):
+        batch = [x.cuda() for x in batch]
+        traker.featurize(batch=batch, num_samples=batch[0].shape[0])
+
+    traker.finalize_features()
+
+    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=VAL_SET_SIZE)
+    for batch in tqdm(loader_val, desc='Scoring..'):
+        batch = [x.cuda() for x in batch]
+        traker.score(batch=batch, num_samples=batch[0].shape[0])
+
+    scores = traker.finalize_scores()
+
 
 That's all, now you're ready to adapt :code:`TRAK` to your custom tasks!
