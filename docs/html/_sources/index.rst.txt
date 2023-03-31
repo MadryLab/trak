@@ -72,8 +72,9 @@ Contents
    quickstart
    install
    slurm
-   clip
+   modeloutput
    bert
+   clip
    trak
 
 Indices and tables

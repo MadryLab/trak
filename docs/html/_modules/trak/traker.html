@@ -1,13 +1,13 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 4.4.0 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 6.1.3 and Furo 2023.03.23 -->
         <title>trak.traker - TRAK 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=fad236701ea90a88636c2a8c73b44ae642ed2a53" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
     
@@ -159,6 +159,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bert.html#add-a-task-to-traker-subclassing-modeloutput-clip">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../trak.html">API reference</a></li>
 </ul>
 
@@ -213,7 +214,7 @@
 
 
 <div class="viewcode-block" id="TRAKer"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer">[docs]</a><span class="k">class</span> <span class="nc">TRAKer</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; The main front-facing class for TRAK. See the `README</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The main front-facing class for TRAK. See the `README</span>
 <span class="sd">    &lt;https://github.com/MadryLab/trak&gt;`_ and `docs</span>
 <span class="sd">    &lt;https://trak.readthedocs.io/en/latest/&gt;`_ for example usage.</span>
 
@@ -229,7 +230,7 @@
                  <span class="n">projector</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AbstractProjector</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">proj_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            model (torch.nn.Module):</span>
@@ -300,7 +301,7 @@
                                <span class="n">load_from_save_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">load_from_save_dir</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TRAKer.init_projector"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer.init_projector">[docs]</a>    <span class="k">def</span> <span class="nf">init_projector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projector</span><span class="p">,</span> <span class="n">proj_dim</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Initialize the projector for a traker class</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Initialize the projector for a traker class</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            projector (AbstractProjector):</span>
@@ -323,7 +324,7 @@
                         <span class="n">checkpoint</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                         <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                         <span class="n">_allow_featurizing_already_registered</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Loads state dictionary for the given checkpoint; initializes arrays</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Loads state dictionary for the given checkpoint; initializes arrays</span>
 <span class="sd">        to store TRAK features for that checkpoint, tied to the model ID.</span>
 
 <span class="sd">        Args:</span>
@@ -356,7 +357,7 @@
                   <span class="n">inds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                   <span class="n">num_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Creates TRAK features for the given batch by computing the gradient</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Creates TRAK features for the given batch by computing the gradient</span>
 <span class="sd">        of the model output function and projecting it. In the notation of the</span>
 <span class="sd">        paper, for an input pair :math:`z=(x,y)`, model parameters</span>
 <span class="sd">        :math:`\\theta`, and JL projection matrix :math:`P`, this method</span>
@@ -407,7 +408,7 @@
 <div class="viewcode-block" id="TRAKer.finalize_features"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer.finalize_features">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                           <span class="n">model_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                           <span class="n">del_grads</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; For a set of checkpoints :math:`C` (specified by model IDs), and</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; For a set of checkpoints :math:`C` (specified by model IDs), and</span>
 <span class="sd">        gradients :math:`\\{ \\Phi_c \\}_{c\\in C}`, this method computes</span>
 <span class="sd">        :math:`\\Phi_c (\\Phi_c^\\top\\Phi_c)^{-1}` for all :math:`c\\in C`</span>
 <span class="sd">        and stores the results in the internal store of the :func:`TRAKer`</span>
@@ -449,7 +450,7 @@
                                  <span class="n">model_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                  <span class="n">num_targets</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; This method prepares the internal store of the :class:`.TRAKer` class</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This method prepares the internal store of the :class:`.TRAKer` class</span>
 <span class="sd">        to start computing scores for a set of targets.</span>
 
 <span class="sd">        Args:</span>
@@ -473,7 +474,7 @@
               <span class="n">inds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="n">num_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
               <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; This method computes the (intermediate per-checkpoint) TRAK scores</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This method computes the (intermediate per-checkpoint) TRAK scores</span>
 <span class="sd">        for a batch of targets and stores them in the internal store of the</span>
 <span class="sd">        :class:`.TRAKer` class.</span>
 
@@ -518,7 +519,7 @@
                         <span class="n">model_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                         <span class="n">del_grads</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
                         <span class="n">exp_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; This method computes the final TRAK scores for the given targets,</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; This method computes the final TRAK scores for the given targets,</span>
 <span class="sd">        train samples, and model checkpoints (specified by model IDs).</span>
 
 <span class="sd">        Args:</span>
@@ -612,9 +613,8 @@
     </aside>
   </div>
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     </body>
 </html>
