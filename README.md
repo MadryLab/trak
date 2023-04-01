@@ -31,7 +31,7 @@ If you use this code in your work, please cite using the following BibTeX entry:
 ## Usage
 
 
-See [[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html) for a complete example.
+[[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
 
 Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of using `TRAK`'s API to compute attribution scores.
