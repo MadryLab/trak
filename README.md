@@ -89,6 +89,10 @@ compilation, use
 pip install traker
 ```
 
+## Questions?
+
+Please send an email to trak@mit.edu
+
 ## Maintainers:
 
 [Kristian Georgiev](https://twitter.com/kris_georgiev1)<br>
