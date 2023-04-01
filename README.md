@@ -31,11 +31,10 @@ If you use this code in your work, please cite using the following BibTeX entry:
 ## Usage
 
 
-[[quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
+See [[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html) for a complete example.
 
 Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
-tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of the
-steps needed to get `TRAK` attribution scores with our API.
+tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of using `TRAK`'s API to compute attribution scores.
 
 ### Make a `TRAKer` instance
 
@@ -54,6 +53,7 @@ traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 for model_id, checkpoint in enumerate(checkpoints):
   traker.load_checkpoint(ckeckpoint, model_id=model_id)
   for batch in loader_train:
+      # batch should be a tuple of inputs and labels
       traker.featurize(batch=batch, ...)
 traker.finalize_features()
 ```
@@ -70,6 +70,9 @@ for model_id, checkpoint in enumerate(checkpoints):
 
 scores = traker.finalize_scores()
 ```
+
+## Examples
+You can find several end-to-end examples in the `examples/` directory.
 
 ## Installation
 
