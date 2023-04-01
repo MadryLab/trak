@@ -7,11 +7,11 @@ In this tutorial, we'll show another example of applying :code:`TRAK` to a new
 custom task, text classification. If you haven't,
 you should first check out :ref:`MODELOUTPUT tutorial` to familiarize yourself with the notion of
 a model output function and how we implement it inside :code:`TRAK`.
+Adapting to text classification is pretty simple as the task at hand is still classification.
 
 We will use a pre-trained langauge model (`bert-base-cased <https://huggingface.co/bert-base-cased>`_) from HuggingFace and finetune it on
 the `QNLI (Question-answering NLI) task <https://huggingface.co/datasets/SetFit/qnli>`_, which is a binary classification task.
 You can find the end-to-end example `here <https://github.com/MadryLab/trak/blob/main/examples/qnli.py>`_.
-
 
 
 Model and Data
@@ -266,5 +266,4 @@ That's all! You can find this tutorial as a complete script in `here <https://gi
 Extending to other tasks
 ----------------------------------
 
-As you saw, adapting to this case was pretty simple the task was still a classifcation task.
 For a more involved example that is *not* classification, see :ref:`CLIP tutorial`.

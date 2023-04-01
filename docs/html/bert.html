@@ -201,7 +201,8 @@
 <p>In this tutorial, we’ll show another example of applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new
 custom task, text classification. If you haven’t,
 you should first check out <a class="reference internal" href="modeloutput.html#modeloutput-tutorial"><span class="std std-ref">Applying TRAK to a custom task #1: Classification</span></a> to familiarize yourself with the notion of
-a model output function and how we implement it inside <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>.</p>
+a model output function and how we implement it inside <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>.
+Adapting to text classification is pretty simple as the task at hand is still classification.</p>
 <p>We will use a pre-trained langauge model (<a class="reference external" href="https://huggingface.co/bert-base-cased">bert-base-cased</a>) from HuggingFace and finetune it on
 the <a class="reference external" href="https://huggingface.co/datasets/SetFit/qnli">QNLI (Question-answering NLI) task</a>, which is a binary classification task.
 You can find the end-to-end example <a class="reference external" href="https://github.com/MadryLab/trak/blob/main/examples/qnli.py">here</a>.</p>
@@ -425,8 +426,7 @@ as the language model takes in three inputs instead of just one.</p>
 </section>
 <section id="extending-to-other-tasks">
 <h2>Extending to other tasks<a class="headerlink" href="#extending-to-other-tasks" title="Permalink to this heading">#</a></h2>
-<p>As you saw, adapting to this case was pretty simple the task was still a classifcation task.
-For a more involved example that is <em>not</em> classification, see <a class="reference internal" href="clip.html#clip-tutorial"><span class="std std-ref">Applying TRAK to a custom task #3: CLIP</span></a>.</p>
+<p>For a more involved example that is <em>not</em> classification, see <a class="reference internal" href="clip.html#clip-tutorial"><span class="std std-ref">Applying TRAK to a custom task #3: CLIP</span></a>.</p>
 </section>
 </section>
 

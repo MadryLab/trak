@@ -3,12 +3,8 @@
 Applying :code:`TRAK` to a custom task #1: Classification
 =======================================================================================
 
-In this tutorial, we'll demonstrate how to apply :code:`TRAK` to a new
+In this tutorial, we'll demonstrate how to apply :code:`TRAK` to a
 custom task, using classification as an example.
-
-.. note::
-
-    This is not a new task as it is the most basic example, but we use it to illustrate how things work in general.
 
 Applying :code:`TRAK` to a new task requires defining an appropriate **model output function**,
 which is implemented by extending :class:`.AbstractModelOutput`.
@@ -23,7 +19,7 @@ you simply specify the task as follows:
     traker = TRAKer(..., task="image_classification")
 
 
-Prelude: Model output functions
+Prelim: Model output functions
 --------------------------------
 
 Computing :code:`TRAK` scores requires specifying a  **model output function** that you want to attribute. Intuitively, you can just think of it as a some kind of loss or scoring function evaluated on an example.
@@ -42,7 +38,7 @@ We motivate and derive appropriate model output
 functions for several standard tasks (binary and multiclass classification, CLIP loss,
 and some NLP tasks) in detail in `our paper <https://arxiv.org/abs/2303.14186>`_.
 
-Give a model output function :math:`f(\cdot;\theta)` and a target example :math:`z` of interest, :code:`TRAK` computes the *attribution score* of each training example :math:`z_i` for :math:`f(z;\theta)`.
+Give a model output function :math:`f(\cdot;\theta)` and a target example :math:`z` of interest, :code:`TRAK` computes the *attribution score* of each training example :math:`z_i` indicating its importance to :math:`f(z;\theta)`.
 
 Implementing model output functions in :code:`TRAK`
 -------------------------------------------------------
@@ -50,7 +46,7 @@ Implementing model output functions in :code:`TRAK`
 In order for :class:`.TRAKer` to compute attribution scores, it needs access to the following two functions:
 
 * The model output function itself, i.e., :math:`f(z;\theta)`
-* The gradient of the (training) loss w.r.t. to the model output function, i.e., :math:`\frac{\partial L(z;\theta)}{\partial f}`. We refer to this simply as *output-to-loss gradient.*
+* The gradient of the (training) loss w.r.t. to the model output function, i.e., :math:`\frac{\partial L(z;\theta)}{\partial f}`. We refer to this function simply as *output-to-loss gradient.*
 
 We provide a dedicated class, :class:`.AbstractModelOutput`, that computes the above two functions from a model (a :code:`torch.Module` instance) using the following two functions:
 
@@ -72,7 +68,7 @@ gradient computation.
 
     If you find yourself in the (likely rare) situation where you can't
     analytically derive the output-to-loss gradient, you can implement :meth:`.AbstractModelOutput.get_out_to_loss_grad` by
-    first computing the model output as in :meth:`.AbstractModelOutput.get_output` and using :code:`autograd`.
+    first computing the model output as in :meth:`.AbstractModelOutput.get_output` and using :code:`autograd` to compute the output-to-loss gradient.
 
 So to apply :code:`TRAK` to a new task, all you have to do is extend :class:`.AbstractModelOutput`
 and implement the above two functions, then pass in the new model output object as
@@ -94,11 +90,16 @@ the :code:`task` when instantiating :class:`.TRAKer`:
                     task=CustomModelOutput,
                     ...)
 
+.. note::
+
+    If you implement a :class:`.AbstractModelOutput` for a common task or objective that you think may be useful to others, please make a pull request
+    and we can include it as a default (so that you can just specify the :code:`task` as a string).
+
 
 Example: Classification
 --------------------------------------------------
 
-We consider standard classification, where the model is optimized to minimize
+To illustrate how to implement :class:`.AbstractModelOutput`,  we'll look at the example of standard classification, where the model is optimized to minimize
 the cross-entropy loss:
 
 .. math::
@@ -185,7 +186,7 @@ Finally, we need to implement a forward function, which simply passes in the ele
         return model(images)
 
 That's all!
-Though we showed how its implemented inside, to use the above :class:`.ImageClassificationModelOutput`, you just need to specify
+Though we showed how :class:`.ImageClassificationModelOutput` is implemented inside, to use it you just need to specify
 :code:`task=image_classification` when instantiating :class:`.TRAKer`.
 
 Extending to other tasks

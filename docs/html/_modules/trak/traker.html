@@ -157,9 +157,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart — get <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores for <code class="code docutils literal notranslate"><span class="pre">CIFAR</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../slurm.html">Parallelize <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scoring with <code class="code docutils literal notranslate"><span class="pre">SLURM</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../bert.html">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — BERT-base</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../bert.html#add-a-task-to-traker-subclassing-modeloutput-clip">Add  a <code class="code docutils literal notranslate"><span class="pre">task</span></code> to <code class="code docutils literal notranslate"><span class="pre">TRAKer</span></code> (subclassing <code class="code docutils literal notranslate"><span class="pre">ModelOutput</span></code>) — CLIP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modeloutput.html">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #1: Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bert.html">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #2: Text Classification using BERT</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../clip.html">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #3: CLIP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../trak.html">API reference</a></li>
 </ul>
 
@@ -517,7 +517,7 @@
 
 <div class="viewcode-block" id="TRAKer.finalize_scores"><a class="viewcode-back" href="../../trak.html#trak.traker.TRAKer.finalize_scores">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                         <span class="n">model_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                        <span class="n">del_grads</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="n">del_grads</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                         <span class="n">exp_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; This method computes the final TRAK scores for the given targets,</span>
 <span class="sd">        train samples, and model checkpoints (specified by model IDs).</span>

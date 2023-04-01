@@ -237,9 +237,9 @@ an appropriate model output function.</p>
 <p>Note that unlike in the classification, this model output evaluated at an example now depends on <em>other</em> examples in the batch.
 To get the CLIP
 embeddings for all the image-caption pairs in the batch, we implement an additional utility method
-<a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_embeddings" title="trak.modelout_functions.CLIPModelOutput.get_embeddings"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_embeddings()</span></code></a>. Here, let’s just assume we have
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">get_embeddings()</span></code>. Here, let’s just assume we have
 access to the arrays <code class="code docutils literal notranslate"><span class="pre">all_img_embeddings</span></code> and <code class="code docutils literal notranslate"><span class="pre">all_txt_embeddings</span></code>.</p>
-<p>Now we are ready to implement <a class="reference internal" href="trak.html#trak.modelout_functions.CLIPModelOutput.get_output" title="trak.modelout_functions.CLIPModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_output()</span></code></a>:</p>
+<p>Now we are ready to implement <code class="xref py py-meth docutils literal notranslate"><span class="pre">CLIPModelOutput.get_output()</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_output</span><span class="p">(</span><span class="n">func_model</span><span class="p">,</span>
                <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
                <span class="n">buffers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>

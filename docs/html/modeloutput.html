@@ -198,12 +198,8 @@
         <article role="main">
           <section id="applying-trak-to-a-custom-task-1-classification">
 <span id="modeloutput-tutorial"></span><h1>Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #1: Classification<a class="headerlink" href="#applying-trak-to-a-custom-task-1-classification" title="Permalink to this heading">#</a></h1>
-<p>In this tutorial, we’ll demonstrate how to apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new
+<p>In this tutorial, we’ll demonstrate how to apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a
 custom task, using classification as an example.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This is not a new task as it is the most basic example, but we use it to illustrate how things work in general.</p>
-</div>
 <p>Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new task requires defining an appropriate <strong>model output function</strong>,
 which is implemented by extending <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>.
 First, we’ll conceptually go over what a model output function is. Then, we will see how it is implemented inside <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code>
@@ -213,8 +209,8 @@ you simply specify the task as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traker</span> <span class="o">=</span> <span class="n">TRAKer</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;image_classification&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<section id="prelude-model-output-functions">
-<h2>Prelude: Model output functions<a class="headerlink" href="#prelude-model-output-functions" title="Permalink to this heading">#</a></h2>
+<section id="prelim-model-output-functions">
+<h2>Prelim: Model output functions<a class="headerlink" href="#prelim-model-output-functions" title="Permalink to this heading">#</a></h2>
 <p>Computing <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> scores requires specifying a  <strong>model output function</strong> that you want to attribute. Intuitively, you can just think of it as a some kind of loss or scoring function evaluated on an example.</p>
 <p>More formally, given:</p>
 <ul class="simple">
@@ -228,14 +224,14 @@ that the model incurs on example <span class="math notranslate nohighlight">\(z\
 We motivate and derive appropriate model output
 functions for several standard tasks (binary and multiclass classification, CLIP loss,
 and some NLP tasks) in detail in <a class="reference external" href="https://arxiv.org/abs/2303.14186">our paper</a>.</p>
-<p>Give a model output function <span class="math notranslate nohighlight">\(f(\cdot;\theta)\)</span> and a target example <span class="math notranslate nohighlight">\(z\)</span> of interest, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> computes the <em>attribution score</em> of each training example <span class="math notranslate nohighlight">\(z_i\)</span> for <span class="math notranslate nohighlight">\(f(z;\theta)\)</span>.</p>
+<p>Give a model output function <span class="math notranslate nohighlight">\(f(\cdot;\theta)\)</span> and a target example <span class="math notranslate nohighlight">\(z\)</span> of interest, <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> computes the <em>attribution score</em> of each training example <span class="math notranslate nohighlight">\(z_i\)</span> indicating its importance to <span class="math notranslate nohighlight">\(f(z;\theta)\)</span>.</p>
 </section>
 <section id="implementing-model-output-functions-in-trak">
 <h2>Implementing model output functions in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code><a class="headerlink" href="#implementing-model-output-functions-in-trak" title="Permalink to this heading">#</a></h2>
 <p>In order for <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a> to compute attribution scores, it needs access to the following two functions:</p>
 <ul class="simple">
 <li><p>The model output function itself, i.e., <span class="math notranslate nohighlight">\(f(z;\theta)\)</span></p></li>
-<li><p>The gradient of the (training) loss w.r.t. to the model output function, i.e., <span class="math notranslate nohighlight">\(\frac{\partial L(z;\theta)}{\partial f}\)</span>. We refer to this simply as <em>output-to-loss gradient.</em></p></li>
+<li><p>The gradient of the (training) loss w.r.t. to the model output function, i.e., <span class="math notranslate nohighlight">\(\frac{\partial L(z;\theta)}{\partial f}\)</span>. We refer to this function simply as <em>output-to-loss gradient.</em></p></li>
 </ul>
 <p>We provide a dedicated class, <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>, that computes the above two functions from a model (a <code class="code docutils literal notranslate"><span class="pre">torch.Module</span></code> instance) using the following two functions:</p>
 <ul class="simple">
@@ -255,7 +251,7 @@ gradient computation.</p>
 <p class="admonition-title">Note</p>
 <p>If you find yourself in the (likely rare) situation where you can’t
 analytically derive the output-to-loss gradient, you can implement <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad" title="trak.modelout_functions.AbstractModelOutput.get_out_to_loss_grad"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_out_to_loss_grad()</span></code></a> by
-first computing the model output as in <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output" title="trak.modelout_functions.AbstractModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_output()</span></code></a> and using <code class="code docutils literal notranslate"><span class="pre">autograd</span></code>.</p>
+first computing the model output as in <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput.get_output" title="trak.modelout_functions.AbstractModelOutput.get_output"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AbstractModelOutput.get_output()</span></code></a> and using <code class="code docutils literal notranslate"><span class="pre">autograd</span></code> to compute the output-to-loss gradient.</p>
 </div>
 <p>So to apply <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a new task, all you have to do is extend <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>
 and implement the above two functions, then pass in the new model output object as
@@ -275,10 +271,15 @@ the <code class="code docutils literal notranslate"><span class="pre">task</span
                 <span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you implement a <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a> for a common task or objective that you think may be useful to others, please make a pull request
+and we can include it as a default (so that you can just specify the <code class="code docutils literal notranslate"><span class="pre">task</span></code> as a string).</p>
+</div>
 </section>
 <section id="example-classification">
 <h2>Example: Classification<a class="headerlink" href="#example-classification" title="Permalink to this heading">#</a></h2>
-<p>We consider standard classification, where the model is optimized to minimize
+<p>To illustrate how to implement <a class="reference internal" href="trak.html#trak.modelout_functions.AbstractModelOutput" title="trak.modelout_functions.AbstractModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractModelOutput</span></code></a>,  we’ll look at the example of standard classification, where the model is optimized to minimize
 the cross-entropy loss:</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -350,7 +351,7 @@ learn more about how to use <code class="code docutils literal notranslate"><spa
 </pre></div>
 </div>
 <p>That’s all!
-Though we showed how its implemented inside, to use the above <a class="reference internal" href="trak.html#trak.modelout_functions.ImageClassificationModelOutput" title="trak.modelout_functions.ImageClassificationModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageClassificationModelOutput</span></code></a>, you just need to specify
+Though we showed how <a class="reference internal" href="trak.html#trak.modelout_functions.ImageClassificationModelOutput" title="trak.modelout_functions.ImageClassificationModelOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageClassificationModelOutput</span></code></a> is implemented inside, to use it you just need to specify
 <code class="code docutils literal notranslate"><span class="pre">task=image_classification</span></code> when instantiating <a class="reference internal" href="trak.html#trak.traker.TRAKer" title="trak.traker.TRAKer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TRAKer</span></code></a>.</p>
 </section>
 </section>
@@ -416,7 +417,7 @@ Though we showed how its implemented inside, to use the above <a class="referenc
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Applying <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code> to a custom task #1: Classification</a><ul>
-<li><a class="reference internal" href="#prelude-model-output-functions">Prelude: Model output functions</a></li>
+<li><a class="reference internal" href="#prelim-model-output-functions">Prelim: Model output functions</a></li>
 <li><a class="reference internal" href="#implementing-model-output-functions-in-trak">Implementing model output functions in <code class="code docutils literal notranslate"><span class="pre">TRAK</span></code></a></li>
 <li><a class="reference internal" href="#example-classification">Example: Classification</a><ul>
 <li><a class="reference internal" href="#implementation">Implementation</a></li>
