@@ -13,7 +13,7 @@ Randomly-Projected After Kernel). Using `TRAK`, you can make  accurate
 counterfactual predictions (e.g., answers to questions of the form “what would
 happen to this prediction if these examples are removed from the training set?").
 Computing  data attribution with  TRAK is 2-3 orders of magnitude cheaper than
-comaprably effective methods, e.g., see our evaluation on:
+comparably effective methods, e.g., see our evaluation on:
 
 ![Main figure](/docs/assets/main_figure.png)
 
