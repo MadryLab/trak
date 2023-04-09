@@ -3,6 +3,7 @@ from torchvision.models import resnet18
 import pytest
 import torch as ch
 from trak.projectors import BasicProjector
+from trak.modelout_functions import ImageClassificationModelOutput
 
 
 @pytest.fixture
@@ -117,3 +118,13 @@ def test_score_finalize(tmp_path):
     traker.start_scoring_checkpoint(ckpt, 0, num_targets=N)
     traker.score(batch, num_samples=N)
     traker.finalize_scores()
+
+
+def test_custom_model_output(tmp_path, cpu_proj):
+    model = resnet18()
+    TRAKer(model=model,
+           task=ImageClassificationModelOutput,
+           save_dir=tmp_path,
+           projector=cpu_proj,
+           train_set_size=20,
+           device='cuda:0')
