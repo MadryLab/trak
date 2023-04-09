@@ -85,10 +85,10 @@ class TRAKer():
         self.load_from_save_dir = load_from_save_dir
 
         if type(self.task) is str:
-            self.modelout_fn = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
+            self.task = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
 
         self.gradient_computer = gradient_computer(model=self.model,
-                                                   modelout_fn=self.modelout_fn,
+                                                   modelout_fn=self.task,
                                                    grad_dim=self.num_params)
 
         self.score_computer = BasicScoreComputer(device=self.device)
