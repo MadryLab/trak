@@ -322,6 +322,7 @@ class TRAKer():
     def finalize_scores(self,
                         model_ids: Iterable[int] = None,
                         del_grads: bool = False,
+                        allow_skip: bool = False,
                         exp_name: str = None) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
@@ -335,7 +336,11 @@ class TRAKer():
             del_grads (bool, optional):
                 If True, the target gradients (intermediate results) are deleted
                 from the internal store of the :class:`.TRAKer` class.  Defaults
-                to True.
+                to False.
+            allow_skip (bool, optional):
+                If True, raises only a warning, instead of an error, when target
+                gradients are not computed for a given model ID. Defaults to
+                False.
             exp_name (str, optional):
                 Used to name the scores :code:`.npy` array produced by this
                 method in the :code:`save_dir` of the :class:`.TRAKer` class. If
@@ -359,7 +364,14 @@ class TRAKer():
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
-            self.saver.load_target_store(model_id, self.saver.num_targets)
+            try:
+                self.saver.load_target_store(model_id, self.saver.num_targets)
+            except OSError as e:
+                if allow_skip:
+                    print(f'Could not read target gradients for model ID {model_id}. Skipping.')
+                    continue
+                else:
+                    raise e
 
             # TODO: currently this is breaking abstraction -- either define dict
             # items in abstract __init__, or don't access them here
