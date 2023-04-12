@@ -15,6 +15,7 @@ setup(
     description="Fast JL: Compute JL projection fast on a GPU",
     author="MadryLab",
     author_email='trak@mit.edu',
+    install_requires=["torch>=2.0.0"],
     long_description=long_description,
     ext_modules=[
         CUDAExtension('fast_jl', [
@@ -24,4 +25,4 @@ setup(
     cmdclass={
         'build_ext': BuildExtension
     },
-    setup_requires=["torch>=1.13"])
+    setup_requires=["torch>=2.0.0"])
