@@ -484,8 +484,8 @@ class TextClassificationModelOutput(AbstractModelOutput):
                    label: Tensor,
                    ) -> Tensor:
         logits = func_model(weights, buffers, input_id.unsqueeze(0),
-                                token_type_id.unsqueeze(0),
-                                attention_mask.unsqueeze(0))
+                            token_type_id.unsqueeze(0),
+                            attention_mask.unsqueeze(0))
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
@@ -498,8 +498,8 @@ class TextClassificationModelOutput(AbstractModelOutput):
     def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
         input_ids, token_type_ids, attention_mask, _ = batch
         return model(input_ids=input_ids,
-            token_type_ids=token_type_ids,
-            attention_mask=attention_mask)
+                     token_type_ids=token_type_ids,
+                     attention_mask=attention_mask)
 
     def get_out_to_loss_grad(self, func_model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
         input_ids, token_type_ids, attention_mask, labels = batch

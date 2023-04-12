@@ -110,7 +110,7 @@ class BasicSingleBlockProjector(AbstractProjector):
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         if model_id != self.model_id:
             self.model_id = model_id
-            self.generator = self.generator.manual_seed(self.seed + 10e4 * self.model_id)
+            self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
             self.generate_sketch_matrix()  # updates self.proj_matrix
 
         return grads @ self.proj_matrix
@@ -198,8 +198,35 @@ class CudaProjector(AbstractProjector):
     capability >= 7.0.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, *args, **kwargs) -> None:
+                 ProjectionType, device, max_batch_size: int = 32, *args, **kwargs) -> None:
+        """
+
+        Args:
+            grad_dim (int):
+                Number of parameters
+            proj_dim (int):
+                Dimension we project *to* during the projection step
+            seed (int):
+                Random seed
+            proj_type (ProjectionType):
+                Type of randomness to use for projection matrix (rademacher or normal)
+            device:
+                CUDA device
+            max_batch_size (int):
+                Explicitly constraints the batch size the CudaProjector is going
+                to use for projection. Set this if you get a 'The batch size of
+                the CudaProjector is too large for your GPU' error. Must be
+                either 8, 16, or 32.
+
+        Raises:
+            ValueError:
+                When attempting to use this on a non-CUDA device
+            ModuleNotFoundError:
+                When fast_jl is not installed
+
+        """
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
+        self.max_batch_size = max_batch_size
 
         if isinstance(device, str):
             device = ch.device(device)
@@ -221,13 +248,26 @@ class CudaProjector(AbstractProjector):
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         batch_size = grads.shape[0]
+
         effective_batch_size = 32
         if batch_size <= 8:
             effective_batch_size = 8
         elif batch_size <= 16:
             effective_batch_size = 16
 
+        effective_batch_size = min(self.max_batch_size, effective_batch_size)
+
         function_name = f"project_{self.proj_type.value}_{effective_batch_size}"
         import fast_jl
         fn = getattr(fast_jl, function_name)
-        return fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+
+        try:
+            result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+        except RuntimeError as e:
+            if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':
+                # provide a more helpful error message
+                raise RuntimeError(f'The batch size of the CudaProjector is too large for your GPU. Reduce it by using the max_batch_size argument of the CudaProjector.\nOriginal error: {str(e)}')
+            else:
+                raise e
+
+        return result
