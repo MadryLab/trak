@@ -110,7 +110,7 @@ class BasicSingleBlockProjector(AbstractProjector):
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         if model_id != self.model_id:
             self.model_id = model_id
-            self.generator = self.generator.manual_seed(self.seed + 10e4 * self.model_id)
+            self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
             self.generate_sketch_matrix()  # updates self.proj_matrix
 
         return grads @ self.proj_matrix

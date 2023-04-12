@@ -269,6 +269,7 @@ class TRAKer():
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
+        self.gradient_computer.load_model_params(self.model)
 
         self._last_ind_target = 0
 
