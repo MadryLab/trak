@@ -2,8 +2,8 @@ from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
-from .score_computers import BasicScoreComputer
-from .savers import MmapSaver, ModelIDException
+from .score_computers import AbstractScoreComputer, BasicScoreComputer
+from .savers import AbstractSaver, MmapSaver, ModelIDException
 from .utils import get_num_params
 
 from typing import Iterable, Optional, Union
@@ -31,6 +31,8 @@ class TRAKer():
                  device: Union[str, torch.device] = 'cuda',
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
                  projector: Optional[AbstractProjector] = None,
+                 saver: Optional[AbstractSaver] = None,
+                 score_computer: Optional[AbstractScoreComputer] = None,
                  proj_dim: int = 2048,
                  ) -> None:
         """
@@ -66,6 +68,13 @@ class TRAKer():
                 Rademacher projector will be used or give a custom subclass of
                 :class:`.AbstractProjector` class and leave :code:`proj_dim` as
                 None. Defaults to None.
+            saver (Optional[AbstractSaver], optional):
+                Class to use for saving intermediate results and final TRAK
+                scores to RAM/disk. If None, the :class:`.MmapSaver` will
+                be used. Defaults to None.
+            score_computer (Optional[AbstractScoreComputer], optional):
+                Class to use for computing the final TRAK scores. If None, the
+                :class:`.BasicScoreComputer` will be used. Defaults to None.
             proj_dim (int, optional):
                 Dimension of the projected TRAK features. See Section 4.3 of
                 `our paper <https://arxiv.org/abs/2303.14186>`_ for more
@@ -91,17 +100,22 @@ class TRAKer():
                                                    modelout_fn=self.task,
                                                    grad_dim=self.num_params)
 
-        self.score_computer = BasicScoreComputer(device=self.device)
+        if score_computer is None:
+            score_computer = BasicScoreComputer
+        self.score_computer = score_computer(device=self.device)
 
         metadata = {
             'JL dimension': self.projector.proj_dim,
             'JL matrix type': self.projector.proj_type,
         }
-        self.saver = MmapSaver(save_dir=self.save_dir,
-                               metadata=metadata,
-                               train_set_size=self.train_set_size,
-                               proj_dim=self.proj_dim,
-                               load_from_save_dir=self.load_from_save_dir)
+
+        if saver is None:
+            saver = MmapSaver
+        self.saver = saver(save_dir=self.save_dir,
+                           metadata=metadata,
+                           train_set_size=self.train_set_size,
+                           proj_dim=self.proj_dim,
+                           load_from_save_dir=self.load_from_save_dir)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
