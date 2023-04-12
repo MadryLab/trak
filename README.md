@@ -1,12 +1,12 @@
-[![PyPI version](https://badge.fury.io/py/traker.svg)](https://badge.fury.io/py/traker)
 [![arXiv](https://img.shields.io/badge/arXiv-2303.14186-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
+[![PyPI version](https://badge.fury.io/py/traker.svg)](https://badge.fury.io/py/traker)
 
-[[docs & tutorials]](https://trak.readthedocs.io/en/latest/)
-[[paper]](https://arxiv.org/abs/2303.14186)
-[[blog post]](https://gradientscience.org/trak/)
-[[website]](https://trak.csail.mit.edu)
 
 # TRAK: Attributing Model Behavior at Scale
+
+[[docs & tutorials]](https://trak.readthedocs.io/en/latest/)
+[[blog post]](https://gradientscience.org/trak/)
+[[website]](https://trak.csail.mit.edu)
 
 In our [paper](https://arxiv.org/abs/2303.14186), we introduce a new data attribution method called `TRAK` (Tracing with the
 Randomly-Projected After Kernel). Using `TRAK`, you can make  accurate
