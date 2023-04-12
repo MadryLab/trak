@@ -1,5 +1,5 @@
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
-from .projectors import ProjectionType, AbstractProjector, CudaProjector
+from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
 from .score_computers import AbstractScoreComputer, BasicScoreComputer
@@ -131,11 +131,23 @@ class TRAKer():
             self.proj_dim = self.projector.proj_dim
         else:
             self.proj_dim = proj_dim
-            self.projector = CudaProjector(grad_dim=self.num_params,
-                                           proj_dim=self.proj_dim,
-                                           seed=0,
-                                           proj_type=ProjectionType.rademacher,
-                                           device=self.device)
+            try:
+                import fast_jl
+                test_gradient = ch.ones(1, self.num_params).cuda()
+                num_sms = ch.cuda.get_device_properties('cuda').multi_processor_count
+                fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
+                projector = CudaProjector
+
+            except (ImportError, RuntimeError) as e:
+                print(f'Could not use CudaProjector.\nReason: {str(e)}')
+                print('Defaulting to BasicProjector.')
+                projector = BasicProjector
+
+            self.projector = projector(grad_dim=self.num_params,
+                                       proj_dim=self.proj_dim,
+                                       seed=0,
+                                       proj_type=ProjectionType.rademacher,
+                                       device=self.device)
 
     def load_checkpoint(self,
                         checkpoint: Iterable[Tensor],
