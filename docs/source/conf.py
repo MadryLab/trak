@@ -22,8 +22,8 @@ copyright = '2023, Kristian Georgiev'
 author = 'Kristian Georgiev'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.1'
-version = '0.1.1'
+release = '0.1.2'
+version = '0.1.2'
 
 
 # -- General configuration ---------------------------------------------------
