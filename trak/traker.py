@@ -138,7 +138,7 @@ class TRAKer():
                 fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
                 projector = CudaProjector
 
-            except (ImportError, RuntimeError) as e:
+            except (ImportError, RuntimeError, AttributeError) as e:
                 print(f'Could not use CudaProjector.\nReason: {str(e)}')
                 print('Defaulting to BasicProjector.')
                 projector = BasicProjector
