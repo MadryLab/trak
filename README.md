@@ -16,17 +16,6 @@ comparably effective methods, e.g., see our evaluation on:
 
 ![Main figure](/docs/assets/main_figure.png)
 
-## Citation
-If you use this code in your work, please cite using the following BibTeX entry:
-```
-@inproceedings{park2023trak,
-  title = {TRAK: Attributing Model Behavior at Scale},
-  author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
-  booktitle = {Arxiv preprint arXiv:2303.14186},
-  year = {2023}
-}
-```
-
 ## Usage
 
 [[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
@@ -73,6 +62,17 @@ scores = traker.finalize_scores()
 ## Examples
 You can find several end-to-end examples in the `examples/` directory.
 
+## Citation
+If you use this code in your work, please cite using the following BibTeX entry:
+```
+@inproceedings{park2023trak,
+  title = {TRAK: Attributing Model Behavior at Scale},
+  author = {Sung Min Park and Kristian Georgiev and Andrew Ilyas and Guillaume Leclerc and Aleksander Madry},
+  booktitle = {Arxiv preprint arXiv:2303.14186},
+  year = {2023}
+}
+```
+
 ## Installation
 
 To install the version of our package which contains a fast, custom `CUDA`
@@ -92,9 +92,8 @@ pip install traker
 
 Please send an email to trak@mit.edu
 
-## Maintainers:
+## Maintainers
 
 [Kristian Georgiev](https://twitter.com/kris_georgiev1)<br>
 [Andrew Ilyas](https://twitter.com/andrew_ilyas)<br>
-[Guillaume Leclerc](https://twitter.com/gpoleclerc)<br>
 [Sung Min Park](https://twitter.com/smsampark)
