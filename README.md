@@ -1,7 +1,6 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2303.14186-b31b1b.svg?style=flat-square)](https://arxiv.org/abs/2303.14186)
 [![PyPI version](https://badge.fury.io/py/traker.svg)](https://badge.fury.io/py/traker)
 
-
 # TRAK: Attributing Model Behavior at Scale
 
 [[docs & tutorials]](https://trak.readthedocs.io/en/latest/)
@@ -30,8 +29,8 @@ If you use this code in your work, please cite using the following BibTeX entry:
 
 ## Usage
 
-
 [[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
+[[pre-computed TRAK scores for CIFAR-10]](https://colab.research.google.com/drive/1Mlpzno97qpI3UC1jpOATXEHPD-lzn9Wg?usp=sharing)
 
 Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
 tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of using `TRAK`'s API to compute attribution scores.
