@@ -1,9 +1,9 @@
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
-from .projectors import ProjectionType, AbstractProjector, CudaProjector
+from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
-from .score_computers import BasicScoreComputer
-from .savers import MmapSaver, ModelIDException
+from .score_computers import AbstractScoreComputer, BasicScoreComputer
+from .savers import AbstractSaver, MmapSaver, ModelIDException
 from .utils import get_num_params
 
 from typing import Iterable, Optional, Union
@@ -31,6 +31,8 @@ class TRAKer():
                  device: Union[str, torch.device] = 'cuda',
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
                  projector: Optional[AbstractProjector] = None,
+                 saver: Optional[AbstractSaver] = None,
+                 score_computer: Optional[AbstractScoreComputer] = None,
                  proj_dim: int = 2048,
                  ) -> None:
         """
@@ -66,6 +68,13 @@ class TRAKer():
                 Rademacher projector will be used or give a custom subclass of
                 :class:`.AbstractProjector` class and leave :code:`proj_dim` as
                 None. Defaults to None.
+            saver (Optional[AbstractSaver], optional):
+                Class to use for saving intermediate results and final TRAK
+                scores to RAM/disk. If None, the :class:`.MmapSaver` will
+                be used. Defaults to None.
+            score_computer (Optional[AbstractScoreComputer], optional):
+                Class to use for computing the final TRAK scores. If None, the
+                :class:`.BasicScoreComputer` will be used. Defaults to None.
             proj_dim (int, optional):
                 Dimension of the projected TRAK features. See Section 4.3 of
                 `our paper <https://arxiv.org/abs/2303.14186>`_ for more
@@ -91,17 +100,22 @@ class TRAKer():
                                                    modelout_fn=self.task,
                                                    grad_dim=self.num_params)
 
-        self.score_computer = BasicScoreComputer(device=self.device)
+        if score_computer is None:
+            score_computer = BasicScoreComputer
+        self.score_computer = score_computer(device=self.device)
 
         metadata = {
             'JL dimension': self.projector.proj_dim,
             'JL matrix type': self.projector.proj_type,
         }
-        self.saver = MmapSaver(save_dir=self.save_dir,
-                               metadata=metadata,
-                               train_set_size=self.train_set_size,
-                               proj_dim=self.proj_dim,
-                               load_from_save_dir=self.load_from_save_dir)
+
+        if saver is None:
+            saver = MmapSaver
+        self.saver = saver(save_dir=self.save_dir,
+                           metadata=metadata,
+                           train_set_size=self.train_set_size,
+                           proj_dim=self.proj_dim,
+                           load_from_save_dir=self.load_from_save_dir)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
@@ -117,11 +131,23 @@ class TRAKer():
             self.proj_dim = self.projector.proj_dim
         else:
             self.proj_dim = proj_dim
-            self.projector = CudaProjector(grad_dim=self.num_params,
-                                           proj_dim=self.proj_dim,
-                                           seed=0,
-                                           proj_type=ProjectionType.rademacher,
-                                           device=self.device)
+            try:
+                import fast_jl
+                test_gradient = ch.ones(1, self.num_params).cuda()
+                num_sms = ch.cuda.get_device_properties('cuda').multi_processor_count
+                fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
+                projector = CudaProjector
+
+            except (ImportError, RuntimeError, AttributeError) as e:
+                print(f'Could not use CudaProjector.\nReason: {str(e)}')
+                print('Defaulting to BasicProjector.')
+                projector = BasicProjector
+
+            self.projector = projector(grad_dim=self.num_params,
+                                       proj_dim=self.proj_dim,
+                                       seed=0,
+                                       proj_type=ProjectionType.rademacher,
+                                       device=self.device)
 
     def load_checkpoint(self,
                         checkpoint: Iterable[Tensor],
@@ -322,6 +348,7 @@ class TRAKer():
     def finalize_scores(self,
                         model_ids: Iterable[int] = None,
                         del_grads: bool = False,
+                        allow_skip: bool = False,
                         exp_name: str = None) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
@@ -335,7 +362,11 @@ class TRAKer():
             del_grads (bool, optional):
                 If True, the target gradients (intermediate results) are deleted
                 from the internal store of the :class:`.TRAKer` class.  Defaults
-                to True.
+                to False.
+            allow_skip (bool, optional):
+                If True, raises only a warning, instead of an error, when target
+                gradients are not computed for a given model ID. Defaults to
+                False.
             exp_name (str, optional):
                 Used to name the scores :code:`.npy` array produced by this
                 method in the :code:`save_dir` of the :class:`.TRAKer` class. If
@@ -359,7 +390,14 @@ class TRAKer():
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_store(model_id)
-            self.saver.load_target_store(model_id, self.saver.num_targets)
+            try:
+                self.saver.load_target_store(model_id, self.saver.num_targets)
+            except OSError as e:
+                if allow_skip:
+                    print(f'Could not read target gradients for model ID {model_id}. Skipping.')
+                    continue
+                else:
+                    raise e
 
             # TODO: currently this is breaking abstraction -- either define dict
             # items in abstract __init__, or don't access them here

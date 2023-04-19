@@ -92,21 +92,36 @@ classification task of your choice.)
         )
         return model
 
-    def get_dataloader(batch_size=256, num_workers=8, split='train'):
-
-        transforms = torchvision.transforms.Compose(
-                        [torchvision.transforms.RandomHorizontalFlip(),
-                        torchvision.transforms.RandomAffine(0),
-                        torchvision.transforms.ToTensor(),
-                        torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.201))])
-
+    def get_dataloader(batch_size=256, num_workers=8, split='train', shuffle=False, augment=True):
+        if augment:
+            transforms = torchvision.transforms.Compose(
+                            [torchvision.transforms.RandomHorizontalFlip(),
+                             torchvision.transforms.RandomAffine(0),
+                             torchvision.transforms.ToTensor(),
+                             torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                              (0.2023, 0.1994, 0.201))])
+        else:
+            transforms = torchvision.transforms.Compose([
+                             torchvision.transforms.ToTensor(),
+                             torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                              (0.2023, 0.1994, 0.201))])
+            
         is_train = (split == 'train')
-        dataset = torchvision.datasets.CIFAR10(root='/tmp/cifar/', download=True, train=is_train, transform=transforms)
-        loader = torch.utils.data.DataLoader(dataset=dataset, shuffle=False, batch_size=batch_size, num_workers=num_workers)
+        dataset = torchvision.datasets.CIFAR10(root='/tmp/cifar/',
+                                               download=True,
+                                               train=is_train,
+                                               transform=transforms)
 
+        loader = torch.utils.data.DataLoader(dataset=dataset,
+                                             shuffle=shuffle,
+                                             batch_size=batch_size,
+                                             num_workers=num_workers)
+        
         return loader
 
-    def train(model, loader, lr=0.4, epochs=24, momentum=0.9, weight_decay=5e-4, lr_peak_epoch=5, label_smoothing=0.0):
+    def train(model, loader, lr=0.4, epochs=24, momentum=0.9,
+              weight_decay=5e-4, lr_peak_epoch=5, label_smoothing=0.0, model_id=0):
+        
         opt = SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
         iters_per_epoch = len(loader)
         # Cyclic LR with single triangle
@@ -118,9 +133,8 @@ classification task of your choice.)
         loss_fn = CrossEntropyLoss(label_smoothing=label_smoothing)
 
         for ep in range(epochs):
-            model_count = 0
             for it, (ims, labs) in enumerate(loader):
-                ims = ims.float().cuda()
+                ims = ims.cuda()
                 labs = labs.cuda()
                 opt.zero_grad(set_to_none=True)
                 with autocast():
@@ -131,15 +145,19 @@ classification task of your choice.)
                 scaler.step(opt)
                 scaler.update()
                 scheduler.step()
+            if ep in [12, 15, 18, 21, 23]:
+                torch.save(model.state_dict(), f'./checkpoints/sd_{model_id}_epoch_{ep}.pt')
+            
+        return model
 
     os.makedirs('./checkpoints', exist_ok=True)
+    loader_for_training = get_dataloader(batch_size=512, split='train', shuffle=True)
 
-    for i in tqdm(range(3), desc='Training models..'):
+    # you can modify the for loop below to train more models
+    for i in tqdm(range(1), desc='Training models..'):
         model = construct_rn9().to(memory_format=torch.channels_last).cuda()
-        loader_train = get_dataloader(batch_size=512, split='train')
-        train(model, loader_train)
+        model = train(model, loader_for_training, model_id=i)
 
-        torch.save(model.state_dict(), f'./checkpoints/sd_{i}.pt')
 
 .. raw:: html
 
