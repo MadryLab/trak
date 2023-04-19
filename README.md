@@ -18,7 +18,7 @@ comparably effective methods, e.g., see our evaluation on:
 
 ## Usage
 
-[[Quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
+[[quickstart]](https://trak.readthedocs.io/en/latest/quickstart.html)
 [[pre-computed TRAK scores for CIFAR-10]](https://colab.research.google.com/drive/1Mlpzno97qpI3UC1jpOATXEHPD-lzn9Wg?usp=sharing)
 
 Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
