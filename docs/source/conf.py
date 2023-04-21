@@ -58,6 +58,11 @@ def setup(app):
 templates_path = ['_templates']
 
 html_theme = 'furo'
+html_theme_options = {
+    "source_repository": "https://github.com/MadryLab/trak",
+    "source_branch": "main",
+    "source_directory": "docs/",
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

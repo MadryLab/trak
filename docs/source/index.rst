@@ -6,20 +6,18 @@
 TRAK: Attributing Model Behavior at Scale
 =========================================
 
-.. note::
+.. seealso::
 
-   :code:`TRAK` is under active development. We are still in a :code:`0.x.x`
-   version and lots of things *may* change.
-
+    Check out our `paper <https://arxiv.org/abs/2303.14186>`_ and `blog post
+    <http://gradientscience.org/trak/>`_!
 
 Overview
 --------
 
 This is a `PyTorch <https://pytorch.org/>`_-based API for our method :code:`TRAK`: an
 effective, efficient data attribution method for gradient-based learning
-algorithms. [1]_ We designed :code:`TRAK`'s API around the following guiding
+algorithms. We designed :code:`TRAK`'s API around the following guiding
 principles:
-
 
 
 Ease of use
@@ -41,6 +39,10 @@ Flexibility
    Applying :code:`TRAK` to a custom task/modality is easy (check, e.g.,
    :doc:`how to adapt TRAK to CLIP<clip>`).
 
+.. admonition:: See the code
+
+    `github.com/MadryLab/trak <https://github.com/MadryLab/trak>`_    
+
 Install
 -------
 
@@ -59,7 +61,10 @@ use
 
 See the :doc:`install` for more details.
 
-.. [1] Check `our paper <https://arxiv.org/abs/2303.14186>`_ for more details.
+.. warning::
+
+   :code:`TRAK` is under active development. We are still in a :code:`0.x.x`
+   version and lots of things *may* change.
 
 ----
 
