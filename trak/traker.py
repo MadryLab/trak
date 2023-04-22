@@ -105,7 +105,7 @@ class TRAKer():
         self.score_computer = score_computer(device=self.device)
 
         metadata = {
-            'JL dimension': self.projector.proj_dim,
+            'JL dimension': self.proj_dim,
             'JL matrix type': self.projector.proj_type,
         }
 
@@ -129,6 +129,9 @@ class TRAKer():
         self.projector = projector
         if projector is not None:
             self.proj_dim = self.projector.proj_dim
+            if self.proj_dim == 0:  # using NoOpProjector
+                self.proj_dim = self.num_params
+
         else:
             self.proj_dim = proj_dim
             try:

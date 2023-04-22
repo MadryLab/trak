@@ -67,6 +67,32 @@ class AbstractProjector(ABC):
         ...
 
 
+class NoOpProjector(AbstractProjector):
+    """
+    A projector that returns the gradients as they are, i.e., implements
+    :code:`projector.project(grad) = grad`.
+    """
+    def __init__(self,
+                 grad_dim: int = 0,
+                 proj_dim: int = 0,
+                 seed: int = 0,
+                 proj_type: Union[str, ProjectionType] = 'na',
+                 device: Union[str, torch.device] = 'na') -> None:
+        super().__init__(grad_dim, proj_dim, seed, proj_type, device)
+
+    def project(self, grads: Tensor, model_id: int) -> Tensor:
+        """ A no-op method.
+
+        Args:
+            grads (Tensor): a batch of gradients to be projected
+            model_id (int): a unique ID for a checkpoint
+
+        Returns:
+            Tensor: the (non-)projected gradients
+        """
+        return grads
+
+
 class BasicSingleBlockProjector(AbstractProjector):
     """
     A bare-bones, inefficient implementation of the projection, which simply
