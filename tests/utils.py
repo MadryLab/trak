@@ -25,6 +25,7 @@ STATS = {
         'std': [51.5865, 50.847, 51.255]
 }
 
+
 def get_dataloader(BETONS,
                    batch_size=256,
                    num_workers=8,
@@ -109,6 +110,7 @@ def construct_rn9(num_classes=2):
     )
     return model
 
+
 def download_cifar_betons(BETON_PATH):
     url_train = 'https://www.dropbox.com/s/0llwyuja7u0s9an/train.beton?dl=1'
     url_val = 'https://www.dropbox.com/s/63ef3g8dsq32484/val.beton?dl=1'
@@ -124,6 +126,7 @@ def download_cifar_betons(BETON_PATH):
     return {'train': train_path,
             'val': val_path}
 
+
 def download_cifar_checkpoints(CKPT_PATH):
     urls = ['https://www.dropbox.com/s/n2p96rbvdy5xruy/model_sd_97.pt?dl=1',
             'https://www.dropbox.com/s/vljde3qwadaqwbt/model_sd_98.pt?dl=1',
@@ -135,6 +138,7 @@ def download_cifar_checkpoints(CKPT_PATH):
         wget.download(url, out=str(ckpt_path), bar=None)
 
     return list(Path(CKPT_PATH).rglob("*.pt"))
+
 
 def eval_correlations(infls, tmp_path):
     masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
