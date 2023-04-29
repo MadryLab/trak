@@ -10,7 +10,7 @@ setup(name="traker",
       license_files=('LICENSE.txt', ),
       packages=['trak'],
       install_requires=[
-       "torch>=1.13",
+       "torch>=2.0.0",
        "numpy",
        "tqdm",
        ],
