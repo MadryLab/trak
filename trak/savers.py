@@ -49,6 +49,7 @@ class AbstractSaver(ABC):
         self.save_dir = Path(save_dir).resolve()
         self.load_from_save_dir = load_from_save_dir
         os.makedirs(self.save_dir, exist_ok=True)
+        os.makedirs(self.save_dir.joinpath('scores'), exist_ok=True)
 
         self.logger = logging.getLogger('STORE')
         self.logger.setLevel(logging_level)
@@ -109,7 +110,8 @@ class AbstractSaver(ABC):
         if len(list(self.experiments.keys())) > 0:
             self.logger.info('Existing TRAK scores:')
             for exp_name, values in self.expers.items():
-                self.logger.info(f"{exp_name}: {values['scores_path']} ({values['num_targets']} targets)")
+                self.logger.info(f"{exp_name}: {values['scores_path']}")
+                self.logger.info(f"{values['num_targets']} targets, finalized: {values['scores_finalized']})")
         else:
             self.logger.info(f'No existing TRAK scores in {self.save_dir}.')
 
@@ -169,6 +171,17 @@ class AbstractSaver(ABC):
         Args:
             model_id (int):
                 a unique ID for a checkpoint
+
+        """
+        ...
+
+    @abstractmethod
+    def save_scores(self, exp_name: str) -> None:
+        """ Saves scores for a given experiment name
+
+        Args:
+            exp_name (str):
+                experiment name
 
         """
         ...
@@ -267,7 +280,8 @@ class MmapSaver(AbstractSaver):
             raise ModelIDException(f'model ID folder {prefix} does not exist,\n\
             cannot start scoring')
         self.experiments[exp_name] = {'num_targets': num_targets,
-                                      'scores_path': self.save_dir.joinpath(f'scores/{exp_name}_scores.npy')
+                                      'scores_path': self.save_dir.joinpath(f'scores/{exp_name}_scores.npy'),
+                                      'scores_finalized': False,
                                       }
         if os.path.exists(prefix.joinpath(f'{exp_name}_grads.mmap')):
             mode = 'r+'
@@ -319,18 +333,19 @@ class MmapSaver(AbstractSaver):
             to_load = {
                 f'{exp_name}_grads': (prefix.joinpath(f'{exp_name}_grads.mmap'),
                                                      (exp_num_targets, self.proj_dim)),
+                f'{exp_name}_scores': (self.save_dir.joinpath(f'scores/{exp_name}.mmap'),
+                                                             (self.train_set_size, exp_num_targets)),
             }
 
         for name, (path, shape) in to_load.items():
             self.current_store[name] = self._load(path, shape, mode)
 
-    def save_scores(self, scores, exp_name):
+    def save_scores(self, exp_name):
+        assert self.current_experiment_name == exp_name
         prefix = self.save_dir.joinpath('scores')
-        self.logger.info(f'Saving scores in {prefix}/scores_{exp_name}.npy')
-        filename = 'scores_' + exp_name + '.npy'
-        if not os.path.isdir(prefix):
-            os.makedirs(prefix)
-        np.save(prefix.joinpath(filename), scores)
+        self.logger.info(f'Saving scores in {prefix}/scores/{exp_name}.mmap')
+        self.current_store[f'{exp_name}_scores'].flush()
+        self.experiments[exp_name]['scores_finalized'] = True
 
     def del_grads(self, model_id):
         grads_file = self.save_dir.joinpath(str(model_id)).joinpath('grads.mmap')

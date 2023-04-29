@@ -109,7 +109,7 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
 
     print(traker.saver.experiments)
 
-    scores = traker.finalize_scores(exp_name='test_experiment').cpu()
+    scores = traker.finalize_scores(exp_name='test_experiment')
     print(scores)
     print(scores.shape)
 

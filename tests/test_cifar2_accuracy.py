@@ -76,7 +76,7 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores(exp_name).cpu()
+    scores = traker.finalize_scores(exp_name)
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'

@@ -54,7 +54,7 @@ def test_featurize_and_score_in_parallel(tmp_path):
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores(exp_name='test_experiment').cpu()
+    scores = traker.finalize_scores(exp_name='test_experiment')
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
@@ -105,7 +105,7 @@ def test_score_multiple(tmp_path):
             for batch in tqdm(loader_val, desc='Scoring...'):
                 traker.score(batch=batch, num_samples=len(batch[0]))
 
-        scores = traker.finalize_scores('test_experiment').cpu()
+        scores = traker.finalize_scores('test_experiment')
 
         avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
         assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
@@ -160,7 +160,7 @@ def test_score_in_shards(tmp_path):
                 batch_inds = scoring_inds[batch_idx * batch_size: (batch_idx + 1) * batch_size]
                 traker.score(batch=batch, inds=batch_inds)
 
-    scores = traker.finalize_scores('test_experiment').cpu()
+    scores = traker.finalize_scores('test_experiment')
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
@@ -217,7 +217,7 @@ def test_featurize_in_shards(tmp_path):
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores('test_experiment').cpu()
+    scores = traker.finalize_scores('test_experiment')
 
     avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'

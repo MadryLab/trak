@@ -11,7 +11,6 @@ from pathlib import Path
 from tqdm import tqdm
 from torch import Tensor
 
-import os
 import logging
 import numpy as np
 import torch
@@ -407,16 +406,14 @@ class TRAKer():
         if self.saver.experiments.get(exp_name) is None:
             raise ValueError(f'Experiment {exp_name} does not exist. Create it\n\
                               and compute scores first before finalizing.')
-        elif os.path.exists(self.saver.save_dir.joinpath(f'scores/{exp_name}.mmap')):
-            self.logger.warning(f'Scores for {exp_name} already exist. Returning existing scores.')
-            return np.load(self.saver.save_dir.joinpath(f'scores/{exp_name}.mmap'))
 
         num_targets = self.saver.experiments[exp_name]['num_targets']
         _completed = [False] * len(model_ids)
-        _scores = ch.zeros(self.train_set_size,
-                           num_targets,
-                           device=self.device)
-        _avg_out_to_losses = ch.zeros(self.saver.train_set_size, 1, device=self.device)
+
+        _scores = self.saver.current_store[f'{exp_name}_scores']
+        _scores[:] = 0.
+
+        _avg_out_to_losses = np.zeros((self.saver.train_set_size, 1))
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_current_store(model_id)
@@ -437,13 +434,13 @@ class TRAKer():
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
                                     device=self.device)
 
-            _scores += self.score_computer.get_scores(g, g_target)
-            _avg_out_to_losses += ch.as_tensor(self.saver.current_store['out_to_loss'],
-                                               device=self.device)
+            _scores += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
+
+            _avg_out_to_losses += self.saver.current_store['out_to_loss']
             _completed[j] = True
 
         _num_models_used = float(sum(_completed))
-        self.scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
-        self.saver.save_scores(self.scores.cpu().numpy(), exp_name)
-
+        _scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
+        self.saver.save_scores(exp_name)
+        self.scores = _scores
         return self.scores
