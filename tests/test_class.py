@@ -16,6 +16,16 @@ def cpu_proj():
     return projector
 
 
+def test_class_init_cpu(tmp_path, cpu_proj):
+    model = resnet18()
+    TRAKer(model=model,
+           task='image_classification',
+           save_dir=tmp_path,
+           projector=cpu_proj,
+           train_set_size=20,
+           device='cpu')
+
+
 def test_class_init(tmp_path, cpu_proj):
     model = resnet18()
     TRAKer(model=model,
@@ -96,7 +106,7 @@ def test_score(tmp_path):
     traker.load_checkpoint(ckpt, model_id=0)
     traker.featurize(batch, num_samples=N)
     traker.finalize_features()
-    traker.start_scoring_checkpoint(ckpt, 0, num_targets=N)
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 0, num_targets=N)
     traker.score(batch, num_samples=N)
 
 
@@ -115,9 +125,9 @@ def test_score_finalize(tmp_path):
     traker.featurize(batch, num_samples=N)
     traker.finalize_features()
 
-    traker.start_scoring_checkpoint(ckpt, 0, num_targets=N)
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 0, num_targets=N)
     traker.score(batch, num_samples=N)
-    traker.finalize_scores()
+    traker.finalize_scores(exp_name='test_experiment')
 
 
 def test_custom_model_output(tmp_path, cpu_proj):
@@ -127,4 +137,4 @@ def test_custom_model_output(tmp_path, cpu_proj):
            save_dir=tmp_path,
            projector=cpu_proj,
            train_set_size=20,
-           device='cuda:0')
+           device='cpu')

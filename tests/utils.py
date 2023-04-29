@@ -127,11 +127,18 @@ def download_cifar_betons(BETON_PATH):
             'val': val_path}
 
 
-def download_cifar_checkpoints(CKPT_PATH):
-    urls = ['https://www.dropbox.com/s/n2p96rbvdy5xruy/model_sd_97.pt?dl=1',
-            'https://www.dropbox.com/s/vljde3qwadaqwbt/model_sd_98.pt?dl=1',
-            'https://www.dropbox.com/s/ehwx0u131214uak/model_sd_99.pt?dl=1'
-            ]
+def download_cifar_checkpoints(CKPT_PATH, ds='cifar10'):
+    if ds == 'cifar10':
+        urls = ['https://www.dropbox.com/s/g2f6mlit151bapk/ckpt_0.pt?dl=1',
+                'https://www.dropbox.com/s/0avlz649tmwr7fv/ckpt_1.pt?dl=1',
+                'https://www.dropbox.com/s/qafphepxnav2igr/ckpt_2.pt?dl=1'
+                ]
+    else:
+        urls = ['https://www.dropbox.com/s/n2p96rbvdy5xruy/model_sd_97.pt?dl=1',
+                'https://www.dropbox.com/s/vljde3qwadaqwbt/model_sd_98.pt?dl=1',
+                'https://www.dropbox.com/s/ehwx0u131214uak/model_sd_99.pt?dl=1'
+                ]
+
     os.makedirs(CKPT_PATH, exist_ok=True)
     for ind, url in enumerate(urls):
         ckpt_path = Path(CKPT_PATH).joinpath(f'sd_{ind}.pt')
@@ -140,9 +147,13 @@ def download_cifar_checkpoints(CKPT_PATH):
     return list(Path(CKPT_PATH).rglob("*.pt"))
 
 
-def eval_correlations(infls, tmp_path):
-    masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
-    margins_url = 'https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1'
+def eval_correlations(infls, tmp_path, ds='cifar10'):
+    if ds == 'cifar10':
+        masks_url = 'https://www.dropbox.com/s/x76uyen8ffkjfke/mask.npy?dl=1'
+        margins_url = 'https://www.dropbox.com/s/q1dxoxw78ct7c27/val_margins.npy?dl=1'
+    else:
+        masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
+        margins_url = 'https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1'
 
     masks_path = Path(tmp_path).joinpath('mask.npy')
     wget.download(masks_url, out=str(masks_path), bar=None)

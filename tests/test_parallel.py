@@ -24,7 +24,7 @@ def test_featurize_and_score_in_parallel(tmp_path):
     loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
 
     CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
-    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH, ds='cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     # this should be essentially equivalent to running each
@@ -47,13 +47,13 @@ def test_featurize_and_score_in_parallel(tmp_path):
                         save_dir=tmp_path,
                         device=device)
 
-        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2_000)
+        traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores().cpu()
+    scores = traker.finalize_scores(exp_name='test_experiment').cpu()
 
-    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
 
 
@@ -72,7 +72,7 @@ def test_score_multiple(tmp_path):
     loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
 
     CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
-    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH, ds='cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     traker = TRAKer(model=model,
@@ -96,13 +96,13 @@ def test_score_multiple(tmp_path):
                             save_dir=tmp_path,
                             device=device)
 
-            traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2_000)
+            traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
             for batch in tqdm(loader_val, desc='Scoring...'):
                 traker.score(batch=batch, num_samples=len(batch[0]))
 
-        scores = traker.finalize_scores().cpu()
+        scores = traker.finalize_scores('test_experiment').cpu()
 
-        avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+        avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
         assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
 
 
@@ -120,7 +120,7 @@ def test_score_in_shards(tmp_path):
     loader_train = get_dataloader(BETONS, batch_size=batch_size, split='train')
 
     CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
-    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH, ds='cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     traker = TRAKer(model=model,
@@ -148,14 +148,14 @@ def test_score_in_shards(tmp_path):
                             save_dir=tmp_path,
                             device=device)
 
-            traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2000)
+            traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2000)
             for batch_idx, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
                 batch_inds = scoring_inds[batch_idx * batch_size: (batch_idx + 1) * batch_size]
                 traker.score(batch=batch, inds=batch_inds)
 
-    scores = traker.finalize_scores().cpu()
+    scores = traker.finalize_scores('test_experiment').cpu()
 
-    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'
 
 
@@ -173,7 +173,7 @@ def test_featurize_in_shards(tmp_path):
     loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
 
     CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
-    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH, ds='cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
     # this should be essentially equivalent to featurizing each
@@ -204,11 +204,11 @@ def test_featurize_in_shards(tmp_path):
 
     for model_id, ckpt in enumerate(ckpts):
 
-        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2000)
+        traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores().cpu()
+    scores = traker.finalize_scores('test_experiment').cpu()
 
-    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'

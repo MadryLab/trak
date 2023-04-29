@@ -11,6 +11,7 @@ from pathlib import Path
 from tqdm import tqdm
 from torch import Tensor
 
+import logging
 import numpy as np
 import torch
 ch = torch
@@ -87,6 +88,12 @@ class TRAKer():
         self.train_set_size = train_set_size
         self.device = device
 
+        logging.basicConfig()
+        self.logger = logging.getLogger('TRAK')
+        self.logger.setLevel(logging.INFO)
+        self.logger.warning('TRAK is still in an early 0.x.x version.\n\
+                             Report any issues at https://github.com/MadryLab/trak/issues')
+
         self.num_params = get_num_params(self.model)
         self.init_projector(projector, proj_dim)  # inits self.projector
 
@@ -107,6 +114,7 @@ class TRAKer():
         metadata = {
             'JL dimension': self.proj_dim,
             'JL matrix type': self.projector.proj_type,
+            'train set size': self.train_set_size,
         }
 
         if saver is None:
@@ -174,7 +182,7 @@ class TRAKer():
             self.saver.register_model_id(model_id,
                                          _allow_featurizing_already_registered)
         else:
-            self.saver.load_store(model_id)
+            self.saver.load_current_store(model_id)
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
@@ -226,15 +234,13 @@ class TRAKer():
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
                                                                batch_size=num_samples)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
-        self.saver.current_grads[inds] = grads.cpu().clone().detach()
+        self.saver.current_store['grads'][inds] = grads.cpu().clone().detach()
 
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
-        self.saver.current_out_to_loss[inds] = loss_grads.cpu().clone().detach()
+        self.saver.current_store['out_to_loss'][inds] = loss_grads.cpu().clone().detach()
 
         if self._num_featurized == self.train_set_size:
-            # TODO: currently this is breaking abstraction -- either define dict
-            # items in abstract __init__, or don't access them here
-            self.saver.model_ids[self.saver.current_model_id]['featurized'] = 1
+            self.saver.model_ids[self.saver.current_model_id]['is_featurized'] = 1
             self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
     def finalize_features(self,
@@ -261,23 +267,26 @@ class TRAKer():
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
-            elif self.saver.model_ids[model_id]['finalized'] == 1:
+            elif self.saver.model_ids[model_id]['is_featurized'] == 0:
+                raise ModelIDException(f'Model ID {model_id} not featurized, not ready for finalizing.')
+            elif self.saver.model_ids[model_id]['is_finalized'] == 1:
                 print(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
                 continue
 
-            self.saver.load_store(model_id)
+            self.saver.load_current_store(model_id)
 
-            g = ch.as_tensor(self.saver.current_grads)
+            g = ch.as_tensor(self.saver.current_store['grads'])
             xtx = self.score_computer.get_xtx(g)
 
-            self.saver.current_features[:] = self.score_computer.get_x_xtx_inv(g, xtx).cpu()
+            self.saver.current_store['features'][:] = self.score_computer.get_x_xtx_inv(g, xtx).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
 
-            self.saver.model_ids[self.saver.current_model_id]['finalized'] = 1
+            self.saver.model_ids[self.saver.current_model_id]['is_finalized'] = 1
             self.saver.serialize_model_id_metadata(self.saver.current_model_id)
 
     def start_scoring_checkpoint(self,
+                                 exp_name: str,
                                  checkpoint: Iterable[Tensor],
                                  model_id: int,
                                  num_targets: int,
@@ -286,6 +295,12 @@ class TRAKer():
         to start computing scores for a set of targets.
 
         Args:
+            exp_name (str):
+                Experiment name. Each experiment should have a unique name, and
+                it corresponds to a set of targets being scored. The experiment
+                name is used as the name for saving the target features, as well
+                as scores produced by this method in the :code:`save_dir` of the
+                :class:`.TRAKer` class.
             checkpoint (Iterable[Tensor]):
                 model checkpoint (state dict)
             model_id (int):
@@ -294,12 +309,15 @@ class TRAKer():
                 number of targets to score
 
         """
-        self.saver.load_target_store(model_id, num_targets, mode='w+')
+        self.saver.init_experiment(exp_name, num_targets, model_id)
+        self.saver.load_current_store(model_id, exp_name, num_targets, mode='w+')
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
         self.gradient_computer.load_model_params(self.model)
 
+        # TODO: make this exp_name-dependent
+        # e.g. make it a value in self.saver.experiments[exp_name]
         self._last_ind_target = 0
 
     def score(self,
@@ -329,9 +347,7 @@ class TRAKer():
         assert (inds is not None) or (num_samples is not None),\
             "Exactly one of num_samples and inds should be specified"
 
-        # TODO: currently this is breaking abstraction -- either define dict
-        # items in abstract __init__, or don't access them here
-        if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
+        if self.saver.model_ids[self.saver.current_model_id]['is_finalized'] == 0:
             print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
             return None
 
@@ -346,34 +362,33 @@ class TRAKer():
 
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
-        self.saver.current_target_grads[inds] = grads.cpu().clone().detach()
+        exp_name = self.saver.current_experiment_name
+        self.saver.current_store[f'{exp_name}_grads'][inds] = grads.cpu().clone().detach()
 
     def finalize_scores(self,
+                        exp_name: str,
                         model_ids: Iterable[int] = None,
-                        del_grads: bool = False,
                         allow_skip: bool = False,
-                        exp_name: str = None) -> Tensor:
+                        ) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
 
         Args:
+            exp_name (str):
+                Experiment name. Each experiment should have a unique name, and
+                it corresponds to a set of targets being scored. The experiment
+                name is used as the name for saving the target features, as well
+                as scores produced by this method in the :code:`save_dir` of the
+                :class:`.TRAKer` class.
             model_ids (Iterable[int], optional):
                 A list of model IDs for which
                 scores should be finalized. If None, scores are computed
                 for all model IDs in the :code:`save_dir` of the :class:`.TRAKer`
                 class. Defaults to None.
-            del_grads (bool, optional):
-                If True, the target gradients (intermediate results) are deleted
-                from the internal store of the :class:`.TRAKer` class.  Defaults
-                to False.
             allow_skip (bool, optional):
                 If True, raises only a warning, instead of an error, when target
                 gradients are not computed for a given model ID. Defaults to
                 False.
-            exp_name (str, optional):
-                Used to name the scores :code:`.npy` array produced by this
-                method in the :code:`save_dir` of the :class:`.TRAKer` class. If
-                None, a random uuid is generated.  Defaults to None.
 
         Returns:
             Tensor: TRAK scores
@@ -386,15 +401,20 @@ class TRAKer():
             model_ids = self.saver.model_ids
 
         _completed = [False] * len(model_ids)
+        if self.saver.experiments.get(exp_name) is None:
+            raise ValueError(f'Experiment {exp_name} does not exist. Create it\n\
+                              and compute scores first before finalizing.')
+
+        num_targets = self.saver.experiments[exp_name]['num_targets']
         _scores = ch.zeros(self.train_set_size,
-                           self.saver.num_targets,
+                           num_targets,
                            device=self.device)
         _avg_out_to_losses = ch.zeros(self.saver.train_set_size, 1, device=self.device)
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
-            self.saver.load_store(model_id)
+            self.saver.load_current_store(model_id)
             try:
-                self.saver.load_target_store(model_id, self.saver.num_targets)
+                self.saver.load_current_store(model_id, exp_name, num_targets)
             except OSError as e:
                 if allow_skip:
                     print(f'Could not read target gradients for model ID {model_id}. Skipping.')
@@ -402,23 +422,18 @@ class TRAKer():
                 else:
                     raise e
 
-            # TODO: currently this is breaking abstraction -- either define dict
-            # items in abstract __init__, or don't access them here
-            if self.saver.model_ids[self.saver.current_model_id]['finalized'] == 0:
+            if self.saver.model_ids[self.saver.current_model_id]['is_finalized'] == 0:
                 print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
 
-            g = ch.as_tensor(self.saver.current_features, device=self.device)
-            g_target = ch.as_tensor(self.saver.current_target_grads, device=self.device)
+            g = ch.as_tensor(self.saver.current_store['features'], device=self.device)
+            g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
+                                    device=self.device)
 
             _scores += self.score_computer.get_scores(g, g_target)
-            _avg_out_to_losses += ch.as_tensor(self.saver.current_out_to_loss, device=self.device)
+            _avg_out_to_losses += ch.as_tensor(self.saver.current_store['out_to_loss'],
+                                               device=self.device)
             _completed[j] = True
-
-            if del_grads:
-                self.saver.del_grads(model_id, target=True)
-            else:
-                self.saver.clear_target_grad_count(model_id)
 
         _num_models_used = float(sum(_completed))
         self.scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
