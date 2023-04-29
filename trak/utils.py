@@ -18,10 +18,6 @@ def get_num_params(model: torch.nn.Module) -> int:
     return parameters_to_vector(model.parameters()).numel()
 
 
-def get_params_dict(model: torch.nn.Module) -> list:
-    return [x[0] for x in list(model.named_parameters())]
-
-
 def is_not_buffer(ind, params_dict) -> bool:
     name = params_dict[ind]
     if ('running_mean' in name) or ('running_var' in name) or ('num_batches_tracked' in name):
@@ -31,17 +27,31 @@ def is_not_buffer(ind, params_dict) -> bool:
 
 def vectorize_and_ignore_buffers(g, params_dict=None) -> Tensor:
     """
-    gradients are given as a tuple :code:`(grad_w0, grad_w1, ... grad_wp)` where
-    :code:`p` is the number of weight matrices. each :code:`grad_wi` has shape
-    :code:`[batch_size, ...]` this function flattens :code:`g` to have shape
-    :code:`[batch_size, num_params]`.
+    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
+    grad_wp)` where :code:`p` is the number of weight matrices. each
+    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
+    :code:`g` to have shape :code:`[batch_size, num_params]`.
     """
-    batch_size = len(g[0])
+    batch_size = len(g[next(iter(g))][0])
     out = []
     if params_dict is not None:
         for b in range(batch_size):
-            out.append(ch.cat([x[b].flatten() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
+            out.append(ch.cat([x[b].flatten() for i, x in enumerate(g.values()) if is_not_buffer(i, params_dict)]))
     else:
         for b in range(batch_size):
             out.append(ch.cat([x[b].flatten() for x in g]))
+    return ch.stack(out)
+
+
+def vectorize(g) -> Tensor:
+    """
+    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
+    grad_wp)` where :code:`p` is the number of weight matrices. each
+    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
+    :code:`g` to have shape :code:`[batch_size, num_params]`.
+    """
+    batch_size = len(g[next(iter(g))])
+    out = []
+    for b in range(batch_size):
+        out.append(ch.cat([x[b].flatten() for x in g.values()]))
     return ch.stack(out)

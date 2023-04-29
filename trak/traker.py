@@ -104,7 +104,7 @@ class TRAKer():
         self.load_from_save_dir = load_from_save_dir
 
         if type(self.task) is str:
-            self.task = TASK_TO_MODELOUT[(self.task, gradient_computer.is_functional)]
+            self.task = TASK_TO_MODELOUT[self.task]
 
         self.gradient_computer = gradient_computer(model=self.model,
                                                    modelout_fn=self.task,
@@ -235,8 +235,7 @@ class TRAKer():
             num_samples = inds.reshape(-1).shape[0]
         self._num_featurized += num_samples
 
-        grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
-                                                               batch_size=num_samples)
+        grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
         self.saver.current_store['grads'][inds] = grads.cpu().clone().detach()
 
@@ -360,8 +359,7 @@ class TRAKer():
         else:
             num_samples = inds.reshape(-1).shape[0]
 
-        grads = self.gradient_computer.compute_per_sample_grad(batch=batch,
-                                                               batch_size=num_samples)
+        grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
 
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
