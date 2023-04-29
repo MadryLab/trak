@@ -25,7 +25,8 @@ class AbstractSaver(ABC):
     def __init__(self,
                  save_dir: Union[Path, str],
                  metadata: Iterable,
-                 load_from_save_dir: bool) -> None:
+                 load_from_save_dir: bool,
+                 logging_level) -> None:
         """ Creates the save directory if it doesn't already exist.
         If the save directory already exists, it validates that the current
         TRAKer class has the same hyperparameters (metadata) as the one
@@ -50,7 +51,7 @@ class AbstractSaver(ABC):
         os.makedirs(self.save_dir, exist_ok=True)
 
         self.logger = logging.getLogger('STORE')
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging_level)
 
         # init TRAKer metadata
         self.metadata_file = self.save_dir.joinpath('metadata.json')
@@ -96,12 +97,6 @@ class AbstractSaver(ABC):
         existing_ids = list(self.model_ids.keys())
         if len(existing_ids) > 0:
             self.logger.info(f'Existing model IDs in {self.save_dir}: {sorted(existing_ids)}')
-            ids_featurized = sorted(list([id for id, v in self.model_ids.items()
-                                          if v['is_featurized'] == 1]))
-            if len(ids_featurized) > 0:
-                self.logger.info(f'Model IDs that have been featurized: {ids_featurized}')
-            else:
-                self.logger.info(f'No model IDs in {self.save_dir} have been featurized.')
             ids_finalized = sorted(list([id for id, v in self.model_ids.items()
                                          if v['is_finalized'] == 1]))
             if len(ids_finalized) > 0:
@@ -205,10 +200,11 @@ class MmapSaver(AbstractSaver):
 
     """
     def __init__(self, save_dir, metadata, train_set_size, proj_dim,
-                 load_from_save_dir) -> None:
+                 load_from_save_dir, logging_level) -> None:
         super().__init__(save_dir=save_dir,
                          metadata=metadata,
-                         load_from_save_dir=load_from_save_dir)
+                         load_from_save_dir=load_from_save_dir,
+                         logging_level=logging_level)
         self.train_set_size = train_set_size
         self.proj_dim = proj_dim
 
@@ -234,14 +230,26 @@ class MmapSaver(AbstractSaver):
         if self.current_model_id in self.model_ids.keys() and (not _allow_featurizing_already_registered):
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
-        self.model_ids[self.current_model_id] = {'is_featurized': 0, 'is_finalized': 0}
+        self.model_ids[self.current_model_id] = {'total_num_featurized': 0, 'is_finalized': 0}
 
         self.init_store(self.current_model_id)
-        self.serialize_model_id_metadata(self.current_model_id)
+        self.serialize_model_id_metadata(self.current_model_id, already_exists=False)
 
-    def serialize_model_id_metadata(self, model_id) -> None:
-        with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w+') as f:
-            content = {self.current_model_id: self.model_ids[self.current_model_id]}
+    def serialize_model_id_metadata(self, model_id, already_exists=True) -> None:
+        if already_exists:
+            with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'r') as f:
+                existing_content = json.load(f)
+                featurized_so_far = int(existing_content[str(model_id)]['total_num_featurized'])
+        else:
+            featurized_so_far = 0
+        content = {
+            self.current_model_id:
+                {
+                    'total_num_featurized': featurized_so_far + self.model_ids[model_id]['total_num_featurized'],
+                    'is_finalized': self.model_ids[model_id]['is_finalized']
+                }
+            }
+        with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w') as f:
             json.dump(content, f)
 
     def init_store(self, model_id) -> None:
@@ -261,8 +269,12 @@ class MmapSaver(AbstractSaver):
         self.experiments[exp_name] = {'num_targets': num_targets,
                                       'scores_path': self.save_dir.joinpath(f'scores/{exp_name}_scores.npy')
                                       }
+        if os.path.exists(prefix.joinpath(f'{exp_name}_grads.mmap')):
+            mode = 'r+'
+        else:
+            mode = 'w+'
         self.load_current_store(model_id=model_id, exp_name=exp_name,
-                                exp_num_targets=num_targets, mode='w+')
+                                exp_num_targets=num_targets, mode=mode)
 
     def _load(self, fname, shape, mode):
         if mode == 'w+':

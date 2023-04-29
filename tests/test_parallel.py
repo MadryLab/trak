@@ -1,4 +1,5 @@
 import pytest
+import logging
 from tqdm import tqdm
 from pathlib import Path
 import numpy as np
@@ -34,7 +35,8 @@ def test_featurize_and_score_in_parallel(tmp_path):
                         task='image_classification',
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        logging_level=logging.DEBUG)
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
             traker.featurize(batch=batch, num_samples=len(batch[0]))
@@ -45,7 +47,8 @@ def test_featurize_and_score_in_parallel(tmp_path):
                         task='image_classification',
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        logging_level=logging.DEBUG)
 
         traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
@@ -79,7 +82,8 @@ def test_score_multiple(tmp_path):
                     task='image_classification',
                     train_set_size=10_000,
                     save_dir=tmp_path,
-                    device=device)
+                    device=device,
+                    logging_level=logging.DEBUG)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -94,7 +98,8 @@ def test_score_multiple(tmp_path):
                             task='image_classification',
                             train_set_size=10_000,
                             save_dir=tmp_path,
-                            device=device)
+                            device=device,
+                            logging_level=logging.DEBUG)
 
             traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
             for batch in tqdm(loader_val, desc='Scoring...'):
@@ -127,7 +132,8 @@ def test_score_in_shards(tmp_path):
                     task='image_classification',
                     train_set_size=10_000,
                     save_dir=tmp_path,
-                    device=device)
+                    device=device,
+                    logging_level=logging.DEBUG)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -146,7 +152,8 @@ def test_score_in_shards(tmp_path):
                             task='image_classification',
                             train_set_size=10_000,
                             save_dir=tmp_path,
-                            device=device)
+                            device=device,
+                            logging_level=logging.DEBUG)
 
             traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2000)
             for batch_idx, batch in enumerate(tqdm(loader_val, desc='Scoring...')):
@@ -186,7 +193,8 @@ def test_featurize_in_shards(tmp_path):
                         task='image_classification',
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        logging_level=logging.DEBUG)
 
         for model_id, ckpt in enumerate(ckpts):
             traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -200,7 +208,8 @@ def test_featurize_in_shards(tmp_path):
                     task='image_classification',
                     train_set_size=10_000,
                     save_dir=tmp_path,
-                    device=device)
+                    device=device,
+                    logging_level=logging.DEBUG)
 
     for model_id, ckpt in enumerate(ckpts):
 

@@ -11,6 +11,7 @@ from pathlib import Path
 from tqdm import tqdm
 from torch import Tensor
 
+import os
 import logging
 import numpy as np
 import torch
@@ -35,6 +36,7 @@ class TRAKer():
                  saver: Optional[AbstractSaver] = None,
                  score_computer: Optional[AbstractScoreComputer] = None,
                  proj_dim: int = 2048,
+                 logging_level=logging.INFO
                  ) -> None:
         """
 
@@ -80,6 +82,8 @@ class TRAKer():
                 Dimension of the projected TRAK features. See Section 4.3 of
                 `our paper <https://arxiv.org/abs/2303.14186>`_ for more
                 details. Defaults to 2048.
+            logging_level (int, optional):
+                Logging level for TRAK loggers. Defaults to logging.INFO.
 
         """
 
@@ -90,7 +94,7 @@ class TRAKer():
 
         logging.basicConfig()
         self.logger = logging.getLogger('TRAK')
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging_level)
         self.logger.warning('TRAK is still in an early 0.x.x version.\n\
                              Report any issues at https://github.com/MadryLab/trak/issues')
 
@@ -123,7 +127,8 @@ class TRAKer():
                            metadata=metadata,
                            train_set_size=self.train_set_size,
                            proj_dim=self.proj_dim,
-                           load_from_save_dir=self.load_from_save_dir)
+                           load_from_save_dir=self.load_from_save_dir,
+                           logging_level=logging_level)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
@@ -150,8 +155,8 @@ class TRAKer():
                 projector = CudaProjector
 
             except (ImportError, RuntimeError, AttributeError) as e:
-                print(f'Could not use CudaProjector.\nReason: {str(e)}')
-                print('Defaulting to BasicProjector.')
+                self.logger.error(f'Could not use CudaProjector.\nReason: {str(e)}')
+                self.logger.error('Defaulting to BasicProjector.')
                 projector = BasicProjector
 
             self.projector = projector(grad_dim=self.num_params,
@@ -163,7 +168,7 @@ class TRAKer():
     def load_checkpoint(self,
                         checkpoint: Iterable[Tensor],
                         model_id: int,
-                        _allow_featurizing_already_registered=None) -> None:
+                        _allow_featurizing_already_registered=False) -> None:
         """ Loads state dictionary for the given checkpoint; initializes arrays
         to store TRAK features for that checkpoint, tied to the model ID.
 
@@ -239,9 +244,9 @@ class TRAKer():
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_store['out_to_loss'][inds] = loss_grads.cpu().clone().detach()
 
-        if self._num_featurized == self.train_set_size:
-            self.saver.model_ids[self.saver.current_model_id]['is_featurized'] = 1
-            self.saver.serialize_model_id_metadata(self.saver.current_model_id)
+        id = self.saver.current_model_id
+        self.saver.model_ids[id]['total_num_featurized'] += num_samples
+        self.saver.serialize_model_id_metadata(id)
 
     def finalize_features(self,
                           model_ids: Iterable[int] = None,
@@ -267,10 +272,10 @@ class TRAKer():
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
-            elif self.saver.model_ids[model_id]['is_featurized'] == 0:
-                raise ModelIDException(f'Model ID {model_id} not featurized, not ready for finalizing.')
+            elif self.saver.model_ids[model_id]['total_num_featurized'] < self.train_set_size:
+                raise ModelIDException(f'Model ID {model_id} not fully featurized, not ready for finalizing.')
             elif self.saver.model_ids[model_id]['is_finalized'] == 1:
-                print(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
+                self.logger.warning(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
                 continue
 
             self.saver.load_current_store(model_id)
@@ -310,7 +315,6 @@ class TRAKer():
 
         """
         self.saver.init_experiment(exp_name, num_targets, model_id)
-        self.saver.load_current_store(model_id, exp_name, num_targets, mode='w+')
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
@@ -348,7 +352,7 @@ class TRAKer():
             "Exactly one of num_samples and inds should be specified"
 
         if self.saver.model_ids[self.saver.current_model_id]['is_finalized'] == 0:
-            print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
+            self.logger.error(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
             return None
 
         if num_samples is not None:
@@ -400,12 +404,15 @@ class TRAKer():
         if model_ids is None:
             model_ids = self.saver.model_ids
 
-        _completed = [False] * len(model_ids)
         if self.saver.experiments.get(exp_name) is None:
             raise ValueError(f'Experiment {exp_name} does not exist. Create it\n\
                               and compute scores first before finalizing.')
+        elif os.path.exists(self.saver.save_dir.joinpath(f'scores/{exp_name}.mmap')):
+            self.logger.warning(f'Scores for {exp_name} already exist. Returning existing scores.')
+            return np.load(self.saver.save_dir.joinpath(f'scores/{exp_name}.mmap'))
 
         num_targets = self.saver.experiments[exp_name]['num_targets']
+        _completed = [False] * len(model_ids)
         _scores = ch.zeros(self.train_set_size,
                            num_targets,
                            device=self.device)
@@ -417,13 +424,13 @@ class TRAKer():
                 self.saver.load_current_store(model_id, exp_name, num_targets)
             except OSError as e:
                 if allow_skip:
-                    print(f'Could not read target gradients for model ID {model_id}. Skipping.')
+                    self.logger.warning(f'Could not read target gradients for model ID {model_id}. Skipping.')
                     continue
                 else:
                     raise e
 
             if self.saver.model_ids[self.saver.current_model_id]['is_finalized'] == 0:
-                print(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
+                self.logger.warning(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
 
             g = ch.as_tensor(self.saver.current_store['features'], device=self.device)
