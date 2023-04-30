@@ -26,7 +26,8 @@ class AbstractSaver(ABC):
                  save_dir: Union[Path, str],
                  metadata: Iterable,
                  load_from_save_dir: bool,
-                 logging_level) -> None:
+                 logging_level: int,
+                 use_half_precision: bool) -> None:
         """ Creates the save directory if it doesn't already exist.
         If the save directory already exists, it validates that the current
         TRAKer class has the same hyperparameters (metadata) as the one
@@ -48,6 +49,8 @@ class AbstractSaver(ABC):
         self.metadata = metadata
         self.save_dir = Path(save_dir).resolve()
         self.load_from_save_dir = load_from_save_dir
+        self.use_half_precision = use_half_precision
+
         os.makedirs(self.save_dir, exist_ok=True)
         os.makedirs(self.save_dir.joinpath('scores'), exist_ok=True)
 
@@ -213,11 +216,12 @@ class MmapSaver(AbstractSaver):
 
     """
     def __init__(self, save_dir, metadata, train_set_size, proj_dim,
-                 load_from_save_dir, logging_level) -> None:
+                 load_from_save_dir, logging_level, use_half_precision) -> None:
         super().__init__(save_dir=save_dir,
                          metadata=metadata,
                          load_from_save_dir=load_from_save_dir,
-                         logging_level=logging_level)
+                         logging_level=logging_level,
+                         use_half_precision=use_half_precision)
         self.train_set_size = train_set_size
         self.proj_dim = proj_dim
 
@@ -295,7 +299,8 @@ class MmapSaver(AbstractSaver):
             self.logger.debug(f'Creating {fname}.')
         else:
             self.logger.debug(f'Loading {fname}.')
-        return open_memmap(filename=fname, mode=mode, shape=shape, dtype=np.float32)
+        dtype = np.float16 if self.use_half_precision else np.float32
+        return open_memmap(filename=fname, mode=mode, shape=shape, dtype=dtype)
 
     def load_current_store(self,
                            model_id: int,

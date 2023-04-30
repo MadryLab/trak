@@ -1,21 +1,19 @@
 """
-Here we provide an abstract "model output" class AbstractModelOutput, together with a number
-of subclasses for particular applications (vision, language, etc):
+Here we provide an abstract "model output" class AbstractModelOutput, together
+with a number of subclasses for particular applications (vision, language, etc):
 
 - :class:`.ImageClassificationModelOutput`
-- :class:`.IterImageClassificationModelOutput`
 - :class:`.CLIPModelOutput`
 - :class:`.TextClassificationModelOutput`
 
-These classes implement methods that transform input batches to the desired model output
-(e.g. logits, loss, etc).
-See Sections 2 & 3 of `our paper <https://arxiv.org/abs/2303.14186>`_ for more
-details on what model output functions are in the context of TRAK and how to use
-& design them.
+These classes implement methods that transform input batches to the desired
+model output (e.g. logits, loss, etc).  See Sections 2 & 3 of `our paper
+<https://arxiv.org/abs/2303.14186>`_ for more details on what model output
+functions are in the context of TRAK and how to use & design them.
 
-See, e.g. `this tutorial <https://trak.readthedocs.io/en/latest/clip.html>`_ for an
-example on how to subclass :code:`AbstractModelOutput` for a task of your
-choice.
+See, e.g. `this tutorial
+<https://trak.readthedocs.io/en/latest/modeloutput.html>`_ for an example on how
+to subclass :code:`AbstractModelOutput` for a task of your choice.
 """
 from abc import ABC, abstractmethod
 from typing import Iterable

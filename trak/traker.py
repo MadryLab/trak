@@ -35,7 +35,8 @@ class TRAKer():
                  saver: Optional[AbstractSaver] = None,
                  score_computer: Optional[AbstractScoreComputer] = None,
                  proj_dim: int = 2048,
-                 logging_level=logging.INFO
+                 logging_level=logging.INFO,
+                 use_half_precision: bool = True,
                  ) -> None:
         """
 
@@ -83,6 +84,10 @@ class TRAKer():
                 details. Defaults to 2048.
             logging_level (int, optional):
                 Logging level for TRAK loggers. Defaults to logging.INFO.
+            use_half_precision (bool, optional):
+                If True, TRAK will use half precision (float16) for all
+                computations and arrays will be stored in float16. Otherwise, it
+                will use float32. Defaults to True.
 
         """
 
@@ -90,6 +95,7 @@ class TRAKer():
         self.task = task
         self.train_set_size = train_set_size
         self.device = device
+        self.dtype = ch.float16 if use_half_precision else ch.float32
 
         logging.basicConfig()
         self.logger = logging.getLogger('TRAK')
@@ -112,7 +118,8 @@ class TRAKer():
 
         if score_computer is None:
             score_computer = BasicScoreComputer
-        self.score_computer = score_computer(device=self.device)
+        self.score_computer = score_computer(dtype=self.dtype,
+                                             device=self.device)
 
         metadata = {
             'JL dimension': self.proj_dim,
@@ -127,7 +134,8 @@ class TRAKer():
                            train_set_size=self.train_set_size,
                            proj_dim=self.proj_dim,
                            load_from_save_dir=self.load_from_save_dir,
-                           logging_level=logging_level)
+                           logging_level=logging_level,
+                           use_half_precision=use_half_precision)
 
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
@@ -162,6 +170,7 @@ class TRAKer():
                                        proj_dim=self.proj_dim,
                                        seed=0,
                                        proj_type=ProjectionType.rademacher,
+                                       dtype=self.dtype,
                                        device=self.device)
 
     def load_checkpoint(self,
@@ -237,10 +246,10 @@ class TRAKer():
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
-        self.saver.current_store['grads'][inds] = grads.cpu().clone().detach()
+        self.saver.current_store['grads'][inds] = grads.to(self.dtype).cpu().clone().detach()
 
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
-        self.saver.current_store['out_to_loss'][inds] = loss_grads.cpu().clone().detach()
+        self.saver.current_store['out_to_loss'][inds] = loss_grads.to(self.dtype).cpu().clone().detach()
 
         id = self.saver.current_model_id
         self.saver.model_ids[id]['total_num_featurized'] += num_samples
@@ -279,9 +288,15 @@ class TRAKer():
             self.saver.load_current_store(model_id)
 
             g = ch.as_tensor(self.saver.current_store['grads'])
+            # normalize to make X^TX numerically stable
+            # doing this instead of normalizing the projector matrix
+            g /= ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
             xtx = self.score_computer.get_xtx(g)
+            self.logger.debug(f'XTX is {xtx}')
 
-            self.saver.current_store['features'][:] = self.score_computer.get_x_xtx_inv(g, xtx).cpu()
+            features = self.score_computer.get_x_xtx_inv(g, xtx)
+            self.logger.debug(f'Features are {features}')
+            self.saver.current_store['features'][:] = features.to(self.dtype).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
 
@@ -364,7 +379,7 @@ class TRAKer():
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
 
         exp_name = self.saver.current_experiment_name
-        self.saver.current_store[f'{exp_name}_grads'][inds] = grads.cpu().clone().detach()
+        self.saver.current_store[f'{exp_name}_grads'][inds] = grads.to(self.dtype).cpu().clone().detach()
 
     def finalize_scores(self,
                         exp_name: str,
@@ -411,7 +426,8 @@ class TRAKer():
         _scores = self.saver.current_store[f'{exp_name}_scores']
         _scores[:] = 0.
 
-        _avg_out_to_losses = np.zeros((self.saver.train_set_size, 1))
+        _avg_out_to_losses = np.zeros((self.saver.train_set_size, 1),
+                                      dtype=np.float16 if self.dtype == ch.float16 else np.float32)
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_current_store(model_id)
@@ -431,6 +447,7 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_store['features'], device=self.device)
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
                                     device=self.device)
+            g_target /= ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
 
             _scores += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
 
@@ -439,6 +456,10 @@ class TRAKer():
 
         _num_models_used = float(sum(_completed))
         _scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
+
+        self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)
         self.scores = _scores
+        self.logger.debug('Scores are', self.scores)
+
         return self.scores

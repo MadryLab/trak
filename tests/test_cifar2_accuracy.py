@@ -46,13 +46,16 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
     ckpt_files = download_cifar_checkpoints(CKPT_PATH, 'cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
 
+    use_half_precision = (dtype == ch.float16)
+
     traker = TRAKer(model=model,
                     task='image_classification',
                     projector=projector,
                     proj_dim=1024,
                     train_set_size=10_000,
                     save_dir=tmp_path,
-                    device=device)
+                    device=device,
+                    use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -69,7 +72,8 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
                         proj_dim=1024,
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.start_scoring_checkpoint(exp_name, ckpt, model_id, num_targets=2_000)

@@ -106,7 +106,7 @@ class BasicSingleBlockProjector(AbstractProjector):
     BasicProjector.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float16, model_id=0) -> None:
+                 ProjectionType, device, dtype=ch.float32, model_id=0) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.model_id = model_id
@@ -115,10 +115,10 @@ class BasicSingleBlockProjector(AbstractProjector):
         self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
         self.dtype = dtype
 
-        self.proj_matrix = ch.ones(self.grad_dim,
-                                   self.proj_dim,
-                                   dtype=self.dtype,
-                                   device=self.device)
+        self.proj_matrix = ch.empty(self.grad_dim,
+                                    self.proj_dim,
+                                    dtype=self.dtype,
+                                    device=self.device)
 
         self.generate_sketch_matrix()  # updates self.proj_matrix
 
@@ -134,6 +134,7 @@ class BasicSingleBlockProjector(AbstractProjector):
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = grads.to(dtype=self.dtype)
         if model_id != self.model_id:
             self.model_id = model_id
             self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
@@ -165,7 +166,8 @@ class BasicProjector(AbstractProjector):
         self.proj_type = proj_type
         self.model_id = model_id
 
-        self.proj_matrix = ch.empty(self.grad_dim, self.block_size,
+        self.proj_matrix = ch.empty(self.grad_dim,
+                                    self.block_size,
                                     dtype=self.dtype,
                                     device=self.device)
 
@@ -197,6 +199,7 @@ class BasicProjector(AbstractProjector):
             raise KeyError(f'Projection type {self.proj_type} not recognized.')
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = grads.to(dtype=self.dtype)
         sketch = ch.zeros(size=(grads.size(0), self.proj_dim),
                           dtype=self.dtype, device=self.device)
 

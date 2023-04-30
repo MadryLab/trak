@@ -130,6 +130,27 @@ def test_score_finalize(tmp_path):
     traker.finalize_scores(exp_name='test_experiment')
 
 
+@pytest.mark.cuda
+def test_score_finalize_full_precision(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    device='cuda:0',
+                    use_half_precision=False)
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+    traker.finalize_features()
+
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 0, num_targets=N)
+    traker.score(batch, num_samples=N)
+    traker.finalize_scores(exp_name='test_experiment')
+
+
 def test_custom_model_output(tmp_path, cpu_proj):
     model = resnet18()
     TRAKer(model=model,
