@@ -33,6 +33,7 @@ def test_cifar_acc(serialize=False, dtype=ch.float32, batch_size=100, tmp_path='
                     proj_dim=1024,
                     train_set_size=10_000,
                     save_dir=tmp_path,
+                    logging_level=logging.DEBUG,
                     device=device)
 
     for model_id, ckpt in enumerate(ckpts):

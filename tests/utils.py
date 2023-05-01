@@ -43,7 +43,7 @@ def get_dataloader(BETONS,
         image_pipeline.extend([
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2, fill=tuple(map(int, STATS['mean']))),
-                Cutout(4, tuple(map(int, STATS['std']))),
+                Cutout(4, tuple(map(int, STATS['mean']))),
         ])
 
     image_pipeline.extend([

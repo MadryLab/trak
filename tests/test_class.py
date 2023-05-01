@@ -1,5 +1,6 @@
 from trak import TRAKer
 from torchvision.models import resnet18
+import logging
 import pytest
 import torch as ch
 from trak.projectors import BasicProjector
@@ -23,6 +24,7 @@ def test_class_init_cpu(tmp_path, cpu_proj):
            save_dir=tmp_path,
            projector=cpu_proj,
            train_set_size=20,
+           logging_level=logging.DEBUG,
            device='cpu')
 
 
@@ -33,6 +35,7 @@ def test_class_init(tmp_path, cpu_proj):
            save_dir=tmp_path,
            projector=cpu_proj,
            train_set_size=20,
+           logging_level=logging.DEBUG,
            device='cuda:0')
 
 
@@ -43,6 +46,7 @@ def test_load_ckpt(tmp_path, cpu_proj):
                     save_dir=tmp_path,
                     projector=cpu_proj,
                     train_set_size=20,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -55,6 +59,7 @@ def test_load_ckpt_repeat(tmp_path, cpu_proj):
                     save_dir=tmp_path,
                     projector=cpu_proj,
                     train_set_size=20,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -70,6 +75,7 @@ def test_featurize(tmp_path):
                     task='image_classification',
                     save_dir=tmp_path,
                     train_set_size=20,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -85,6 +91,7 @@ def test_finalize_features(tmp_path):
                     task='image_classification',
                     save_dir=tmp_path,
                     train_set_size=N,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -101,6 +108,7 @@ def test_score(tmp_path):
                     task='image_classification',
                     save_dir=tmp_path,
                     train_set_size=N,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -119,6 +127,7 @@ def test_score_finalize(tmp_path):
                     task='image_classification',
                     save_dir=tmp_path,
                     train_set_size=N,
+                    logging_level=logging.DEBUG,
                     device='cuda:0')
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
@@ -139,6 +148,7 @@ def test_score_finalize_full_precision(tmp_path):
                     task='image_classification',
                     save_dir=tmp_path,
                     train_set_size=N,
+                    logging_level=logging.DEBUG,
                     device='cuda:0',
                     use_half_precision=False)
     ckpt = model.state_dict()
@@ -158,4 +168,5 @@ def test_custom_model_output(tmp_path, cpu_proj):
            save_dir=tmp_path,
            projector=cpu_proj,
            train_set_size=20,
+           logging_level=logging.DEBUG,
            device='cpu')

@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from pathlib import Path
 from itertools import product
+import logging
 import pytest
 import torch as ch
 
@@ -55,6 +56,7 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
                     train_set_size=10_000,
                     save_dir=tmp_path,
                     device=device,
+                    logging_level=logging.DEBUG,
                     use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):
@@ -73,6 +75,7 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
                         train_set_size=10_000,
                         save_dir=tmp_path,
                         device=device,
+                        logging_level=logging.DEBUG,
                         use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):

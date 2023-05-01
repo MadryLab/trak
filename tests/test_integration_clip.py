@@ -1,10 +1,9 @@
-import pytest
 from tqdm import tqdm
 from torchvision import datasets
-import open_clip
-
 from trak import TRAKer
-# from trak.gradient_computers import IterativeGradientComputer
+import logging
+import pytest
+import open_clip
 
 
 @pytest.mark.cuda
@@ -25,6 +24,7 @@ def test_mscoco(tmp_path, device='cuda:0'):
                     train_set_size=len(ds_train),
                     device=device,
                     proj_dim=512,
+                    logging_level=logging.DEBUG
                     )
 
     traker.modelout_fn.get_embeddings(model, ds_train, batch_size=1, size=600,
@@ -40,5 +40,3 @@ def test_mscoco(tmp_path, device='cuda:0'):
         traker.featurize(batch=(x, y), num_samples=x.shape[0])
         if bind == 2:
             break
-
-    traker.finalize_features()
