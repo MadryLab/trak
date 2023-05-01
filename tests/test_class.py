@@ -164,7 +164,7 @@ def test_score_finalize_full_precision(tmp_path):
 def test_custom_model_output(tmp_path, cpu_proj):
     model = resnet18()
     TRAKer(model=model,
-           task=ImageClassificationModelOutput,
+           task=ImageClassificationModelOutput(),
            save_dir=tmp_path,
            projector=cpu_proj,
            train_set_size=20,

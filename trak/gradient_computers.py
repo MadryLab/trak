@@ -26,7 +26,7 @@ class AbstractGradientComputer(ABC):
     @abstractmethod
     def __init__(self,
                  model: torch.nn.Module,
-                 modelout_fn: AbstractModelOutput,
+                 task: AbstractModelOutput,
                  grad_dim: Optional[int] = None,
                  ) -> None:
         """ Initializes attributes, nothing too interesting happening.
@@ -34,15 +34,15 @@ class AbstractGradientComputer(ABC):
         Args:
             model (torch.nn.Module):
                 model
-            modelout_fn (AbstractModelOutput):
-                model output function
+            task (AbstractModelOutput):
+                task (model output function)
             grad_dim (int, optional):
                 Size of the gradients (number of model parameters). Defaults to
                 None.
 
         """
         self.model = model
-        self.modelout_fn = modelout_fn()
+        self.modelout_fn = task
         self.grad_dim = grad_dim
 
     @abstractmethod
@@ -61,9 +61,9 @@ class AbstractGradientComputer(ABC):
 class FunctionalGradientComputer(AbstractGradientComputer):
     def __init__(self,
                  model: torch.nn.Module,
-                 modelout_fn: AbstractModelOutput,
+                 task: AbstractModelOutput,
                  grad_dim: int) -> None:
-        super().__init__(model, modelout_fn, grad_dim)
+        super().__init__(model, task, grad_dim)
         self.model = model
         self.load_model_params(model)
 

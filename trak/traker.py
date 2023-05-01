@@ -49,7 +49,8 @@ class TRAKer():
                 - :code:`image_classification`
                 - :code:`text_classification`
                 - :code:`clip`
-                or an implementation of :class:`.AbstractModelOutput`.
+                or an instance of some implementation of the abstract class
+                :class:`.AbstractModelOutput`.
             train_set_size (int):
                 Size of the train set that TRAK is featurizing
             save_dir (str, optional):
@@ -110,10 +111,10 @@ class TRAKer():
         self.load_from_save_dir = load_from_save_dir
 
         if type(self.task) is str:
-            self.task = TASK_TO_MODELOUT[self.task]
+            self.task = TASK_TO_MODELOUT[self.task]()
 
         self.gradient_computer = gradient_computer(model=self.model,
-                                                   modelout_fn=self.task,
+                                                   task=self.task,
                                                    grad_dim=self.num_params)
 
         if score_computer is None:
@@ -460,6 +461,5 @@ class TRAKer():
         self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)
         self.scores = _scores
-        self.logger.debug('Scores are', self.scores)
 
         return self.scores
