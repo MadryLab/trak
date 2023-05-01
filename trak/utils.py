@@ -1,6 +1,45 @@
 from torch import Tensor
+import tempfile
 import torch
 ch = torch
+
+
+def test_install(use_fast_jl: bool = True):
+    try:
+        from trak import TRAKer
+    except ImportError:
+        raise ImportError('TRAK is not installed! Please install it using `pip install traker`')
+
+    data = (ch.randn(20, 256), ch.randint(high=2, size=(20,)))
+    model = ch.nn.Linear(256, 2, bias=False)
+
+    if use_fast_jl:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            data = [x.cuda() for x in data]
+            model = model.cuda()
+            traker = TRAKer(model=model,
+                            task='image_classification',
+                            proj_dim=512,
+                            save_dir=tmpdirname,
+                            train_set_size=20,
+                            logging_level=100)
+            traker.load_checkpoint(model.state_dict(), model_id=0)
+            traker.featurize(data, num_samples=20)
+            print('TRAK and fast_jl are installed correctly!')
+    else:
+        from trak.projectors import NoOpProjector
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            traker = TRAKer(model=model,
+                            task='image_classification',
+                            train_set_size=20,
+                            proj_dim=512,
+                            save_dir=tmpdirname,
+                            projector=NoOpProjector(),
+                            device='cpu',
+                            logging_level=100)
+            traker.load_checkpoint(model.state_dict(), model_id=0)
+            traker.featurize(data, num_samples=20)
+            print('TRAK is installed correctly!')
 
 
 def parameters_to_vector(parameters) -> Tensor:

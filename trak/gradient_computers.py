@@ -21,9 +21,6 @@ class AbstractGradientComputer(ABC):
       function with respect to the model output (which should be a scalar) for
       every sample.
 
-    The class attribute :code:`is_functional` is used to determine what
-    implementation of ModelOutput to use, i.e. whether it should use
-    :code:`functorch`'s functional models.
     """
 
     @abstractmethod
