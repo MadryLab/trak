@@ -83,6 +83,7 @@ class AbstractSaver(ABC):
 
         self.model_ids = {}
         self.experiments = {}
+        self.experiments_file = self.save_dir.joinpath('experiments.json')
         if self.load_from_save_dir:
             # check if there are existing model ids in the save_dir
             self.model_ids_files = self.save_dir.rglob('id_*.json')
@@ -94,9 +95,12 @@ class AbstractSaver(ABC):
                                    for model_id, metadata in existing_id.items()}
                 self.model_ids.update(existing_id)
 
-            if os.path.isfile('experiments.json'):
-                with open('experiments.json', 'r') as f:
+            if os.path.isfile(self.experiments_file):
+                with open(self.experiments_file, 'r') as f:
                     self.experiments.update(json.load(f))
+            else:
+                with open(self.experiments_file, 'w') as f:
+                    json.dump({}, f)
 
         existing_ids = list(self.model_ids.keys())
         if len(existing_ids) > 0:
@@ -112,7 +116,7 @@ class AbstractSaver(ABC):
 
         if len(list(self.experiments.keys())) > 0:
             self.logger.info('Existing TRAK scores:')
-            for exp_name, values in self.expers.items():
+            for exp_name, values in self.experiments.items():
                 self.logger.info(f"{exp_name}: {values['scores_path']}")
                 self.logger.info(f"{values['num_targets']} targets, finalized: {values['scores_finalized']})")
         else:
@@ -284,9 +288,18 @@ class MmapSaver(AbstractSaver):
             raise ModelIDException(f'model ID folder {prefix} does not exist,\n\
             cannot start scoring')
         self.experiments[exp_name] = {'num_targets': num_targets,
-                                      'scores_path': self.save_dir.joinpath(f'scores/{exp_name}_scores.npy'),
-                                      'scores_finalized': False,
+                                      'scores_path': str(self.save_dir.joinpath(f'scores/{exp_name}.mmap')),
+                                      'scores_finalized': 0,
                                       }
+
+        # update experiments.json
+        with open(self.experiments_file, 'r') as fp:
+            exp_f = json.load(fp)
+
+        exp_f[exp_name] = self.experiments[exp_name]
+        with open(self.experiments_file, 'w') as fp:
+            json.dump(exp_f, fp)
+
         if os.path.exists(prefix.joinpath(f'{exp_name}_grads.mmap')):
             mode = 'r+'
         else:

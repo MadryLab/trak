@@ -140,6 +140,64 @@ def test_score_finalize(tmp_path):
 
 
 @pytest.mark.cuda
+def test_score_finalize_some_model_ids(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+    traker.load_checkpoint(ckpt, model_id=1)
+    traker.featurize(batch, num_samples=N)
+    traker.finalize_features()
+
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 0, num_targets=N)
+    traker.score(batch, num_samples=N)
+    traker.finalize_scores(exp_name='test_experiment', model_ids=[0])
+
+
+@pytest.mark.cuda
+def test_score_finalize_split(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+    traker.load_checkpoint(ckpt, model_id=1)
+    traker.featurize(batch, num_samples=N)
+    traker.finalize_features()
+
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 0, num_targets=N)
+    traker.score(batch, num_samples=N)
+
+    traker.start_scoring_checkpoint('test_experiment', ckpt, 1, num_targets=N)
+    traker.score(batch, num_samples=N)
+
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    traker.finalize_scores(exp_name='test_experiment')
+
+
+@pytest.mark.cuda
 def test_score_finalize_full_precision(tmp_path):
     model = resnet18().cuda().eval()
     N = 5

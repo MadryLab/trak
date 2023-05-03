@@ -416,6 +416,9 @@ class TRAKer():
 
         if model_ids is None:
             model_ids = self.saver.model_ids
+        else:
+            model_ids = {model_id: self.saver.model_ids[model_id] for model_id in model_ids}
+        assert len(model_ids) > 0, 'No model IDs to finalize scores for'
 
         if self.saver.experiments.get(exp_name) is None:
             raise ValueError(f'Experiment {exp_name} does not exist. Create it\n\
@@ -424,6 +427,7 @@ class TRAKer():
         num_targets = self.saver.experiments[exp_name]['num_targets']
         _completed = [False] * len(model_ids)
 
+        self.saver.load_current_store(list(model_ids.keys())[0], exp_name, num_targets)
         _scores = self.saver.current_store[f'{exp_name}_scores']
         _scores[:] = 0.
 
