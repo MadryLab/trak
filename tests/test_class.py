@@ -100,6 +100,45 @@ def test_finalize_features(tmp_path):
 
 
 @pytest.mark.cuda
+def test_finalize_features_multiple_ftr(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 10
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize([x[:3] for x in batch], num_samples=3)
+    traker.featurize([x[3:6] for x in batch], num_samples=3)
+    traker.featurize([x[6:] for x in batch], num_samples=4)
+    traker.finalize_features()
+
+
+@pytest.mark.cuda
+def test_finalize_features_multiple_ftr_and_id(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 10
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    for model_id in range(2):
+        traker.load_checkpoint(ckpt, model_id=model_id)
+        traker.featurize([x[:3] for x in batch], num_samples=3)
+        traker.featurize([x[3:6] for x in batch], num_samples=3)
+        traker.featurize([x[6:] for x in batch], num_samples=4)
+    traker.finalize_features()
+
+
+@pytest.mark.cuda
 def test_score(tmp_path):
     model = resnet18().cuda().eval()
     N = 5

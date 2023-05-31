@@ -106,6 +106,9 @@ class TRAKer():
 
         self.num_params = get_num_params(self.model)
         self.init_projector(projector, proj_dim)  # inits self.projector
+        # normalize to make X^TX numerically stable
+        # doing this instead of normalizing the projector matrix
+        self.normalize_factor = ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
 
         self.save_dir = Path(save_dir).resolve()
         self.load_from_save_dir = load_from_save_dir
@@ -204,7 +207,6 @@ class TRAKer():
         self.gradient_computer.load_model_params(self.model)
 
         self._last_ind = 0
-        self._num_featurized = 0
 
     def featurize(self,
                   batch: Iterable[Tensor],
@@ -243,10 +245,10 @@ class TRAKer():
             self._last_ind += num_samples
         else:
             num_samples = inds.reshape(-1).shape[0]
-        self._num_featurized += num_samples
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
+        grads /= self.normalize_factor
         self.saver.current_store['grads'][inds] = grads.to(self.dtype).cpu().clone().detach()
 
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
@@ -280,7 +282,7 @@ class TRAKer():
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
-            elif self.saver.model_ids[model_id]['total_num_featurized'] < self.train_set_size:
+            elif self.saver.model_ids[model_id]['total_num_featurized'] != self.train_set_size:
                 raise ModelIDException(f'Model ID {model_id} not fully featurized, not ready for finalizing.')
             elif self.saver.model_ids[model_id]['is_finalized'] == 1:
                 self.logger.warning(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
@@ -289,9 +291,6 @@ class TRAKer():
             self.saver.load_current_store(model_id)
 
             g = ch.as_tensor(self.saver.current_store['grads'])
-            # normalize to make X^TX numerically stable
-            # doing this instead of normalizing the projector matrix
-            g /= ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
             xtx = self.score_computer.get_xtx(g)
             self.logger.debug(f'XTX is {xtx}')
 
@@ -378,6 +377,7 @@ class TRAKer():
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
 
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
+        grads /= self.normalize_factor
 
         exp_name = self.saver.current_experiment_name
         self.saver.current_store[f'{exp_name}_grads'][inds] = grads.to(self.dtype).cpu().clone().detach()
@@ -452,7 +452,6 @@ class TRAKer():
             g = ch.as_tensor(self.saver.current_store['features'], device=self.device)
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
                                     device=self.device)
-            g_target /= ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
 
             _scores += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
 

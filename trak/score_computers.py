@@ -76,6 +76,10 @@ class BasicScoreComputer(AbstractScoreComputer):
     def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor) -> Tensor:
         blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
         xtx_inv = ch.linalg.inv(xtx.to(ch.float32))
+
+        # center X^TX inverse a bit to avoid numerical issues when going to float16
+        xtx_inv /= xtx_inv.abs().mean()
+
         xtx_inv = xtx_inv.to(self.dtype)
 
         result = ch.empty(grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device=self.device)

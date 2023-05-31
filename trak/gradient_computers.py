@@ -109,6 +109,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                                                         self.func_weights,
                                                         self.func_buffers,
                                                         *batch)
+
         return vectorize(grads)
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
