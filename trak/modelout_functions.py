@@ -386,7 +386,7 @@ class TextClassificationModelOutput(AbstractModelOutput):
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
         cloned_logits = logits.clone()
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(logits.device)
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf, device=logits.device, dtype=logits.dtype)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
