@@ -83,6 +83,22 @@ def test_featurize(tmp_path):
 
 
 @pytest.mark.cuda
+def test_forgot_loading_ckpt(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=20,
+                    logging_level=logging.DEBUG,
+                    device='cuda:0')
+    with pytest.raises(AssertionError,
+                       match='Load a checkpoint using traker.load_checkpoint before featurizing'):
+        traker.featurize(batch, num_samples=N)
+
+
+@pytest.mark.cuda
 def test_finalize_features(tmp_path):
     model = resnet18().cuda().eval()
     N = 5

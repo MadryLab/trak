@@ -141,6 +141,8 @@ class TRAKer():
                            logging_level=logging_level,
                            use_half_precision=use_half_precision)
 
+        self.ckpt_loaded = 'no ckpt loaded'
+
     def init_projector(self, projector, proj_dim) -> None:
         """ Initialize the projector for a traker class
 
@@ -207,6 +209,7 @@ class TRAKer():
         self.gradient_computer.load_model_params(self.model)
 
         self._last_ind = 0
+        self.ckpt_loaded = model_id
 
     def featurize(self,
                   batch: Iterable[Tensor],
@@ -235,6 +238,8 @@ class TRAKer():
                 Number of samples in the batch. Defaults to None.
 
         """
+        assert self.ckpt_loaded == self.saver.current_model_id,\
+            "Load a checkpoint using traker.load_checkpoint before featurizing"
         assert (inds is None) or (num_samples is None),\
             "Exactly one of num_samples and inds should be specified"
         assert (inds is not None) or (num_samples is not None),\
