@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional
 from torch import Tensor
-from .utils import vectorize
+from .utils import vectorize, get_num_params
 from .modelout_functions import AbstractModelOutput
 import torch
 ch = torch
@@ -65,6 +65,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                  grad_dim: int) -> None:
         super().__init__(model, task, grad_dim)
         self.model = model
+        self.num_params = get_num_params(self.model)
         self.load_model_params(model)
 
     def load_model_params(self, model) -> None:
@@ -103,14 +104,19 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         # taking the gradient wrt weights (second argument of get_output, hence argnums=1)
         grads_loss = torch.func.grad(self.modelout_fn.get_output, has_aux=False, argnums=1)
         # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
-        grads = torch.func.vmap(grads_loss,
-                                in_dims=(None, None, None, *([0] * len(batch))),
-                                randomness='different')(self.model,
-                                                        self.func_weights,
-                                                        self.func_buffers,
-                                                        *batch)
+        grads = torch.empty(size=(batch[0].shape[0], self.num_params),
+                            dtype=batch[0].dtype,
+                            device=batch[0].device)
 
-        return vectorize(grads)
+        vectorize(torch.func.vmap(grads_loss,
+                                  in_dims=(None, None, None, *([0] * len(batch))),
+                                  randomness='different')(self.model,
+                                                          self.func_weights,
+                                                          self.func_buffers,
+                                                          *batch),
+                  grads)
+
+        return grads
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output

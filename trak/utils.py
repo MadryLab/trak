@@ -64,25 +64,7 @@ def is_not_buffer(ind, params_dict) -> bool:
     return True
 
 
-def vectorize_and_ignore_buffers(g, params_dict=None) -> Tensor:
-    """
-    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
-    grad_wp)` where :code:`p` is the number of weight matrices. each
-    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
-    :code:`g` to have shape :code:`[batch_size, num_params]`.
-    """
-    batch_size = len(g[next(iter(g))][0])
-    out = []
-    if params_dict is not None:
-        for b in range(batch_size):
-            out.append(ch.cat([x[b].flatten() for i, x in enumerate(g.values()) if is_not_buffer(i, params_dict)]))
-    else:
-        for b in range(batch_size):
-            out.append(ch.cat([x[b].flatten() for x in g]))
-    return ch.stack(out)
-
-
-def vectorize(g) -> Tensor:
+def vectorize_old(g) -> Tensor:
     """
     gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
     grad_wp)` where :code:`p` is the number of weight matrices. each
@@ -94,3 +76,19 @@ def vectorize(g) -> Tensor:
     for b in range(batch_size):
         out.append(ch.cat([x[b].flatten() for x in g.values()]))
     return ch.stack(out)
+
+
+def vectorize(g, arr) -> Tensor:
+    """
+    records result into arr
+
+    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
+    grad_wp)` where :code:`p` is the number of weight matrices. each
+    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
+    :code:`g` to have shape :code:`[batch_size, num_params]`.
+    """
+    pointer = 0
+    for param in g.values():
+        num_param = param[0].numel()
+        arr[:, pointer:pointer + num_param] = param.flatten(start_dim=1).data
+        pointer += num_param
