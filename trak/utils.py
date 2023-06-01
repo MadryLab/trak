@@ -64,20 +64,6 @@ def is_not_buffer(ind, params_dict) -> bool:
     return True
 
 
-def vectorize_old(g) -> Tensor:
-    """
-    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
-    grad_wp)` where :code:`p` is the number of weight matrices. each
-    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
-    :code:`g` to have shape :code:`[batch_size, num_params]`.
-    """
-    batch_size = len(g[next(iter(g))])
-    out = []
-    for b in range(batch_size):
-        out.append(ch.cat([x[b].flatten() for x in g.values()]))
-    return ch.stack(out)
-
-
 def vectorize(g, arr) -> Tensor:
     """
     records result into arr
