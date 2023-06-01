@@ -2,11 +2,13 @@ from tqdm import tqdm
 from pathlib import Path
 from pytorch_memlab import LineProfiler, MemReporter
 from trak import TRAKer
+import logging
 import torch
-ch = torch
 
-from utils import construct_rn9, get_dataloader, eval_correlations
+from utils import construct_rn9, get_dataloader
 from utils import download_cifar_checkpoints, download_cifar_betons
+
+ch = torch
 
 
 def test_cifar_acc(serialize=False, dtype=ch.float32, batch_size=100, tmp_path='/tmp/trak_results/'):
@@ -31,11 +33,10 @@ def test_cifar_acc(serialize=False, dtype=ch.float32, batch_size=100, tmp_path='
                     proj_dim=1024,
                     train_set_size=10_000,
                     save_dir=tmp_path,
+                    logging_level=logging.DEBUG,
                     device=device)
 
     for model_id, ckpt in enumerate(ckpts):
-        i = 0
-
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
 
         for batch in tqdm(loader_train, desc='Computing TRAK embeddings...'):
@@ -51,14 +52,16 @@ def test_cifar_acc(serialize=False, dtype=ch.float32, batch_size=100, tmp_path='
                         proj_dim=1024,
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        logging_level=logging.DEBUG)
 
     for model_id, ckpt in enumerate(ckpts):
-        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2_000)
+        traker.start_scoring_checkpoint('test_experiment', ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores().cpu()
+    traker.finalize_scores('test_experiment')
+
 
 with LineProfiler(test_cifar_acc, TRAKer.featurize, TRAKer.load_checkpoint) as prof:
     test_cifar_acc()

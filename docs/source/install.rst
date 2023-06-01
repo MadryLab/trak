@@ -25,6 +25,20 @@ for the JL projection step, use
 need to have compatible versions of :code:`gcc` and :code:`CUDA toolkit`. See
 the sections below for tips regarding this.
 
+Confirm your :code:`TRAK` installation using
+
+.. code-block:: python
+
+    >>> import trak
+    >>> trak.test_install(use_fast_jl=False)
+
+and your :code:`fast_jl` installation using
+
+.. code-block:: python
+
+    >>> trak.test_install(use_fast_jl=True)
+
+
 How to install :code:`nvcc` (:code:`CUDA toolkit`)?
 ---------------------------------------------------
 
@@ -119,17 +133,23 @@ Pick one option:
 
     export CXX=g++10 CC=gcc-10
 
-Verify that the installation worked
------------------------------------
+Running the tests
+-----------------
 
-You can quickly verify that :code:`TRAK` has been correctly installed by running
+You can further verify that :code:`TRAK` has been correctly installed by running
 some of our tests, e.g.:
 
 .. code-block:: bash
 
-  python -m pytest -sv tests/test_rademacher.py
+    python -m pytest -sv tests/test_rademacher.py
 
-Note that you'll need the optional :code:`[tests]` dependencies to run the tests.
+Note that you'll need the optional :code:`[tests]` dependencies to run the
+tests, i.e. you'll need to install
+
+.. code-block:: bash
+
+    pip install traker[tests]
+
 
 Misc Q&A
 --------
