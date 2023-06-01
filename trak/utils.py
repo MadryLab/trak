@@ -75,6 +75,12 @@ def vectorize(g, arr) -> Tensor:
     """
     pointer = 0
     for param in g.values():
-        num_param = param[0].numel()
-        arr[:, pointer:pointer + num_param] = param.flatten(start_dim=1).data
+        if len(param.shape) < 2:
+            num_param = 1
+            p = param.data.reshape(-1, 1)
+        else:
+            num_param = param[0].numel()
+            p = param.flatten(start_dim=1).data
+
+        arr[:, pointer:pointer + num_param] = p
         pointer += num_param

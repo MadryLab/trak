@@ -176,6 +176,7 @@ class ImageClassificationModelOutput(AbstractModelOutput):
 class CLIPModelOutput(AbstractModelOutput):
     """ Margin for multimodal contrastive learning (CLIP). See Section 5.1 of
     `our paper <https://arxiv.org/abs/2303.14186>`_ for more details.
+    Compatible with the open_clip implementation of CLIP.
 
     Raises:
         AssertionError: this model output function requires using additional
@@ -205,6 +206,8 @@ class CLIPModelOutput(AbstractModelOutput):
         self.softmax = ch.nn.Softmax(-1)
         self.temperature = temperature
 
+        ch.backends.cuda.enable_mem_efficient_sdp(False)
+
         self.sim_batch_size = simulated_batch_size
         CLIPModelOutput.sim_batch_size = simulated_batch_size
 
@@ -212,10 +215,11 @@ class CLIPModelOutput(AbstractModelOutput):
     def get_embeddings(model,
                        loader,
                        batch_size: int,
+                       embedding_dim: int,
                        size: int = 50_000,
-                       embedding_dim: int = 1024,
                        preprocess_fn_img=None,
-                       preprocess_fn_txt=None) -> None:
+                       preprocess_fn_txt=None,
+                       ) -> None:
         """ Computes (image and text) embeddings and saves them in the class
         attributes :code:`image_embeddings` and :code:`text_embeddings`.
 
@@ -309,12 +313,15 @@ class CLIPModelOutput(AbstractModelOutput):
         sim_bs = CLIPModelOutput.sim_batch_size
 
         if all_im_embs is None:
-            raise AssertionError('Run traker.modelout_fn.get_embeddings first before featurizing!')
+            raise AssertionError('Run traker.task.get_embeddings first before featurizing!')
 
+        # tailored for open_clip
+        # https://github.com/mlfoundations/open_clip/blob/fb72f4db1b17133befd6c67c9cf32a533b85a321/src/open_clip/model.py#L242-L245
+        clip_inputs = {'image': image.unsqueeze(0), 'text': label.unsqueeze(0)}
         image_embeddings, text_embeddings, _ = ch.func.functional_call(model,
                                                                        (weights, buffers),
-                                                                       image.unsqueeze(0),
-                                                                       label.unsqueeze(0))
+                                                                       args=(),
+                                                                       kwargs=clip_inputs)
 
         ii = ch.multinomial(input=ch.arange(N).float(),
                             num_samples=sim_bs,
@@ -342,9 +349,12 @@ class CLIPModelOutput(AbstractModelOutput):
                 out-to-loss (reweighting term) for the input batch
 
         """
+        image, label = batch
+        clip_inputs = {'image': image, 'text': label}
         image_embeddings, text_embeddings, temp = ch.func.functional_call(model,
                                                                           (weights, buffers),
-                                                                          *batch)
+                                                                          args=(),
+                                                                          kwargs=clip_inputs)
         if self.temperature is None:
             self.temperature = temp
         res = self.temperature * image_embeddings @ text_embeddings.T
