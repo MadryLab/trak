@@ -3,7 +3,7 @@ from torchvision.models import resnet18
 import logging
 import pytest
 import torch as ch
-from trak.projectors import BasicProjector
+from trak.projectors import BasicProjector, NoOpProjector
 from trak.modelout_functions import ImageClassificationModelOutput
 
 
@@ -69,14 +69,65 @@ def test_load_ckpt_repeat(tmp_path, cpu_proj):
 @pytest.mark.cuda
 def test_featurize(tmp_path):
     model = resnet18().cuda().eval()
-    N = 5
+    N = 32
     batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir=tmp_path,
-                    train_set_size=20,
+                    train_set_size=N,
                     logging_level=logging.DEBUG,
                     device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+
+@pytest.mark.cuda
+def test_max_batch_size(tmp_path):
+    model = resnet18().cuda().eval()
+    N = 32
+    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    proj_max_batch_size=16,
+                    device='cuda:0')
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+
+def test_class_featurize_cpu(tmp_path, cpu_proj):
+    model = resnet18()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32), ch.randint(low=0, high=10, size=(N,))
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    projector=cpu_proj,
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cpu')
+
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+
+def test_class_featurize_noop(tmp_path):
+    model = resnet18()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32), ch.randint(low=0, high=10, size=(N,))
+    traker = TRAKer(model=model,
+                    task='image_classification',
+                    save_dir=tmp_path,
+                    projector=NoOpProjector(),
+                    train_set_size=N,
+                    logging_level=logging.DEBUG,
+                    device='cpu')
+
     ckpt = model.state_dict()
     traker.load_checkpoint(ckpt, model_id=0)
     traker.featurize(batch, num_samples=N)
@@ -90,7 +141,7 @@ def test_forgot_loading_ckpt(tmp_path):
     traker = TRAKer(model=model,
                     task='image_classification',
                     save_dir=tmp_path,
-                    train_set_size=20,
+                    train_set_size=N,
                     logging_level=logging.DEBUG,
                     device='cuda:0')
     with pytest.raises(AssertionError,

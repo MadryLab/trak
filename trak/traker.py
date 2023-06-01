@@ -37,6 +37,7 @@ class TRAKer():
                  proj_dim: int = 2048,
                  logging_level=logging.INFO,
                  use_half_precision: bool = True,
+                 proj_max_batch_size: int = 32,
                  ) -> None:
         """
 
@@ -105,7 +106,9 @@ class TRAKer():
                              Report any issues at https://github.com/MadryLab/trak/issues')
 
         self.num_params = get_num_params(self.model)
-        self.init_projector(projector, proj_dim)  # inits self.projector
+        # inits self.projector
+        self.init_projector(projector, proj_dim, proj_max_batch_size)
+
         # normalize to make X^TX numerically stable
         # doing this instead of normalizing the projector matrix
         self.normalize_factor = ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
@@ -143,7 +146,7 @@ class TRAKer():
 
         self.ckpt_loaded = 'no ckpt loaded'
 
-    def init_projector(self, projector, proj_dim) -> None:
+    def init_projector(self, projector, proj_dim, proj_max_batch_size) -> None:
         """ Initialize the projector for a traker class
 
         Args:
@@ -176,6 +179,7 @@ class TRAKer():
                                        proj_dim=self.proj_dim,
                                        seed=0,
                                        proj_type=ProjectionType.rademacher,
+                                       max_batch_size=proj_max_batch_size,
                                        dtype=self.dtype,
                                        device=self.device)
 

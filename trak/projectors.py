@@ -77,7 +77,9 @@ class NoOpProjector(AbstractProjector):
                  proj_dim: int = 0,
                  seed: int = 0,
                  proj_type: Union[str, ProjectionType] = 'na',
-                 device: Union[str, torch.device] = 'na') -> None:
+                 device: Union[str, torch.device] = 'na',
+                 *args,
+                 **kwargs) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
@@ -106,7 +108,8 @@ class BasicSingleBlockProjector(AbstractProjector):
     BasicProjector.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float32, model_id=0) -> None:
+                 ProjectionType, device, dtype=ch.float32, model_id=0,
+                 *args, **kwargs) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.model_id = model_id
@@ -157,7 +160,7 @@ class BasicProjector(AbstractProjector):
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
                  ProjectionType, device, block_size: int = 200, dtype=ch.float32,
-                 model_id=0) -> None:
+                 model_id=0, *args, **kwargs) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.block_size = min(self.proj_dim, block_size)
@@ -227,7 +230,7 @@ class CudaProjector(AbstractProjector):
     capability >= 7.0.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, max_batch_size: int = 32, *args, **kwargs) -> None:
+                 ProjectionType, device, max_batch_size: int, *args, **kwargs) -> None:
         """
 
         Args:
@@ -293,9 +296,9 @@ class CudaProjector(AbstractProjector):
         try:
             result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
         except RuntimeError as e:
-            if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':
+            if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':  # noqa: E501
                 # provide a more helpful error message
-                raise RuntimeError(f'The batch size of the CudaProjector is too large for your GPU. Reduce it by using the max_batch_size argument of the CudaProjector.\nOriginal error: {str(e)}')
+                raise RuntimeError('The batch size of the CudaProjector is too large for your GPU. Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error.')  # noqa: E501
             else:
                 raise e
 
