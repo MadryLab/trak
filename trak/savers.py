@@ -45,6 +45,11 @@ class AbstractSaver(ABC):
                 to load existing metadata from save_dir. May lead to I/O issues
                 if multiple Saver instances ran in parallel have this flag set
                 to True. See the SLURM tutorial in our docs for more details.
+            logging_level (int):
+                logging level for the logger associated with this Saver instance
+            use_half_precision (bool):
+                If True, the Saver instance will save all results and intermediate
+                values in half precision (float16).
         """
         self.metadata = metadata
         self.save_dir = Path(save_dir).resolve()
@@ -64,13 +69,13 @@ class AbstractSaver(ABC):
                 existsing_metadata = json.load(f)
             existing_jl_dim = int(existsing_metadata['JL dimension'])
             assert self.metadata['JL dimension'] == existing_jl_dim,\
-                   f"In {self.save_dir} there are models using JL dimension {existing_jl_dim}\n\
-                   , and this TRAKer instance uses JL dimension {self.metadata['JL dimension']}."
+                   f"In {self.save_dir} there are models using JL dimension {existing_jl_dim},\n\
+                   and this TRAKer instance uses JL dimension {self.metadata['JL dimension']}."
 
             existing_matrix_type = existsing_metadata['JL matrix type']
             assert self.metadata['JL matrix type'] == existing_matrix_type,\
-                   f"In {self.save_dir} there are models using a {existing_matrix_type} JL matrix\n\
-                   , and this TRAKer instance uses a {self.metadata['JL matrix type']} JL matrix."
+                   f"In {self.save_dir} there are models using a {existing_matrix_type} JL matrix,\n\
+                   and this TRAKer instance uses a {self.metadata['JL matrix type']} JL matrix."
 
             assert self.metadata['train set size'] == existsing_metadata['train set size'],\
                    f"In {self.save_dir} there are models TRAKing\n\
@@ -118,7 +123,6 @@ class AbstractSaver(ABC):
             self.logger.info('Existing TRAK scores:')
             for exp_name, values in self.experiments.items():
                 self.logger.info(f"{exp_name}: {values['scores_path']}")
-                self.logger.info(f"{values['num_targets']} targets, finalized: {values['scores_finalized']})")
         else:
             self.logger.info(f'No existing TRAK scores in {self.save_dir}.')
 
@@ -141,13 +145,9 @@ class AbstractSaver(ABC):
         ...
 
     @abstractmethod
-    def serialize_model_id_metadata(self, model_id: int) -> None:
+    def serialize_current_model_id_metadata(self) -> None:
         """ Write to disk / commit any updates to the metadata associated
-        to a given model ID
-
-        Args:
-            model_id (int):
-                a unique ID for a checkpoint
+        to the current model ID
 
         """
         ...
@@ -160,6 +160,7 @@ class AbstractSaver(ABC):
             model_id (int):
                 a unique ID for a checkpoint
         """
+        ...
 
     @abstractmethod
     def init_experiment(self, model_id: int) -> None:
@@ -169,6 +170,7 @@ class AbstractSaver(ABC):
             model_id (int):
                 a unique ID for a checkpoint
         """
+        ...
 
     @abstractmethod
     def load_current_store(self, model_id: int) -> None:
@@ -251,34 +253,40 @@ class MmapSaver(AbstractSaver):
         if self.current_model_id in self.model_ids.keys() and (not _allow_featurizing_already_registered):
             err_msg = f'model id {self.current_model_id} is already registered. Check {self.save_dir}'
             raise ModelIDException(err_msg)
-        self.model_ids[self.current_model_id] = {'total_num_featurized': 0, 'is_finalized': 0}
+        self.model_ids[self.current_model_id] = {'is_featurized': 0, 'is_finalized': 0}
 
         self.init_store(self.current_model_id)
-        self.serialize_model_id_metadata(self.current_model_id, already_exists=False)
+        self.serialize_current_model_id_metadata(already_exists=False)
 
-    def serialize_model_id_metadata(self, model_id, already_exists=True) -> None:
-        if already_exists:
-            with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'r') as f:
-                existing_content = json.load(f)
-                featurized_so_far = int(existing_content[str(model_id)]['total_num_featurized'])
-        else:
-            featurized_so_far = 0
+    def serialize_current_model_id_metadata(self, already_exists=True) -> None:
+        is_featurized = int(self.current_store['is_featurized'].sum() == self.train_set_size)
+
+        # update the metadata JSON file
         content = {
             self.current_model_id:
                 {
-                    'total_num_featurized': featurized_so_far + self.model_ids[model_id]['total_num_featurized'],
-                    'is_finalized': self.model_ids[model_id]['is_finalized']
+                    'is_featurized': is_featurized,
+                    'is_finalized': self.model_ids[self.current_model_id]['is_finalized']
                 }
             }
-        with open(self.save_dir.joinpath(f'id_{model_id}.json'), 'w') as f:
-            json.dump(content, f)
+        # update the metadata dict within the class instance
+        self.model_ids[self.current_model_id]['is_featurized'] = is_featurized
+        if (is_featurized == 1) or not already_exists:
+            with open(self.save_dir.joinpath(f'id_{self.current_model_id}.json'), 'w') as f:
+                json.dump(content, f)
 
     def init_store(self, model_id) -> None:
         prefix = self.save_dir.joinpath(str(model_id))
-        try:
-            os.makedirs(prefix)
-        except FileExistsError:
-            raise ModelIDException(f'model ID folder {prefix} already exists')
+        if os.path.exists(prefix):
+            self.logger.info(f'Model ID folder {prefix} already exists')
+        os.makedirs(prefix, exist_ok=True)
+        featurized_so_far = np.zeros(shape=(self.train_set_size,), dtype=np.int32)
+        ft = self._load(prefix.joinpath('_is_featurized.mmap'),
+                        shape=(self.train_set_size, ),
+                        mode='w+',
+                        dtype=np.int32)
+        ft[:] = featurized_so_far[:]
+        ft.flush()
 
         self.load_current_store(model_id, mode='w+')
 
@@ -307,12 +315,13 @@ class MmapSaver(AbstractSaver):
         self.load_current_store(model_id=model_id, exp_name=exp_name,
                                 exp_num_targets=num_targets, mode=mode)
 
-    def _load(self, fname, shape, mode):
+    def _load(self, fname, shape, mode, dtype=None):
         if mode == 'w+':
             self.logger.debug(f'Creating {fname}.')
         else:
             self.logger.debug(f'Loading {fname}.')
-        dtype = np.float16 if self.use_half_precision else np.float32
+        if dtype is None:
+            dtype = np.float16 if self.use_half_precision else np.float32
         return open_memmap(filename=fname, mode=mode, shape=shape, dtype=dtype)
 
     def load_current_store(self,
@@ -343,20 +352,29 @@ class MmapSaver(AbstractSaver):
 
         if exp_name is None:
             to_load = {
-                'grads': (prefix.joinpath('grads.mmap'), (self.train_set_size, self.proj_dim)),
-                'out_to_loss': (prefix.joinpath('out_to_loss.mmap'), (self.train_set_size, 1)),
-                'features': (prefix.joinpath('features.mmap'), (self.train_set_size, self.proj_dim)),
+                'grads': (prefix.joinpath('grads.mmap'),
+                          (self.train_set_size, self.proj_dim),
+                          None),
+                'out_to_loss': (prefix.joinpath('out_to_loss.mmap'),
+                                (self.train_set_size, 1),
+                                None),
+                'features': (prefix.joinpath('features.mmap'),
+                             (self.train_set_size, self.proj_dim),
+                             None),
+                'is_featurized': (prefix.joinpath('_is_featurized.mmap'),
+                                  (self.train_set_size, 1),
+                                  np.int32),
             }
         else:
             to_load = {
                 f'{exp_name}_grads': (prefix.joinpath(f'{exp_name}_grads.mmap'),
-                                                     (exp_num_targets, self.proj_dim)),
+                                                     (exp_num_targets, self.proj_dim), None),
                 f'{exp_name}_scores': (self.save_dir.joinpath(f'scores/{exp_name}.mmap'),
-                                                             (self.train_set_size, exp_num_targets)),
+                                                             (self.train_set_size, exp_num_targets), None),
             }
 
-        for name, (path, shape) in to_load.items():
-            self.current_store[name] = self._load(path, shape, mode)
+        for name, (path, shape, dtype) in to_load.items():
+            self.current_store[name] = self._load(path, shape, mode, dtype)
 
     def save_scores(self, exp_name):
         assert self.current_experiment_name == exp_name

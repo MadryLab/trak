@@ -254,9 +254,8 @@ class TRAKer():
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
         self.saver.current_store['out_to_loss'][inds] = loss_grads.to(self.dtype).cpu().clone().detach()
 
-        id = self.saver.current_model_id
-        self.saver.model_ids[id]['total_num_featurized'] += num_samples
-        self.saver.serialize_model_id_metadata(id)
+        self.saver.current_store['is_featurized'][inds] = 1
+        self.saver.serialize_current_model_id_metadata()
 
     def finalize_features(self,
                           model_ids: Iterable[int] = None,
@@ -282,7 +281,7 @@ class TRAKer():
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
-            elif self.saver.model_ids[model_id]['total_num_featurized'] != self.train_set_size:
+            elif self.saver.model_ids[model_id]['is_featurized'] == 0:
                 raise ModelIDException(f'Model ID {model_id} not fully featurized, not ready for finalizing.')
             elif self.saver.model_ids[model_id]['is_finalized'] == 1:
                 self.logger.warning(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
@@ -301,7 +300,7 @@ class TRAKer():
                 self.saver.del_grads(model_id)
 
             self.saver.model_ids[self.saver.current_model_id]['is_finalized'] = 1
-            self.saver.serialize_model_id_metadata(self.saver.current_model_id)
+            self.saver.serialize_current_model_id_metadata()
 
     def start_scoring_checkpoint(self,
                                  exp_name: str,
