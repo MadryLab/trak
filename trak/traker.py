@@ -246,6 +246,13 @@ class TRAKer():
         else:
             num_samples = inds.reshape(-1).shape[0]
 
+        # handle re-starting featurizing from a partially featurized model (some inds already featurized)
+        _already_done = (self.saver.current_store['is_featurized'][inds] == 1).reshape(-1)
+        inds = inds[~_already_done]
+        if len(inds) == 0:
+            self.logger.debug('All samples in batch already featurized.')
+            return 0
+
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
         grads /= self.normalize_factor
