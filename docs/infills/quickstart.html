@@ -31,7 +31,8 @@
             <p class="text-start">
               Below we provide a minimal (pseudo)code example showcasing the
               basic workflow of getting <code>TRAK</code> scores for a given
-              model-dataset pair. For more in-depth examples, including, check
+              model-dataset pair. For more in-depth examples, including
+              ready-to-run notebooks, check
               <a href="https://trak.readthedocs.io/en/latest/" class="link-info"
                 >the tutorials in our docs</a
               >. Those include how to use <code>TRAK</code> with BERT, how to
@@ -54,9 +55,9 @@ train_loader = ImageNetDataloader(train=True, ...)</code></pre>
             <pre class="text-start text-muted">
               <code class="language-python">traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 
-traker.load_checkpoint(ckeckpoint)
+traker.load_checkpoint(ckeckpoint, model_id=0)
 for batch in train_loader:
-  traker.featurize(batch=batch, num_samples=train_loader.batch_size)
+  traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 traker.finalize_features()</code></pre>
             <p class="text-start">
               Finally, get the <code>TRAK</code> scores for your targets, e.g.
@@ -65,10 +66,10 @@ traker.finalize_features()</code></pre>
             <pre
               class="text-start text-muted"
             ><code class="language-python">targets_loader = ImageNetLoader(train=False, ...)
-traker.start_scoring_checkpoint(ckeckpoint, num_targets=...)
+traker.start_scoring_checkpoint('quickstart', ckeckpoint, num_targets=...)
 for batch in targets_loader:
-    traker.score(batch=batch, num_samples=targets_loader.batch_size)
-scores = traker.finalize_scores()</code></pre>
+    traker.score(batch=batch, num_samples=batch[0].shape[0])
+scores = traker.finalize_scores(exp_name='quickstart')</code></pre>
             <p class="text-start">
               That's it! Now you're have the <code>TRAK</code> scores in a
               <code>numpy</code> array. Check out
