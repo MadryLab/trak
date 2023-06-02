@@ -3,6 +3,14 @@
 Quickstart --- get :code:`TRAK` scores for :code:`CIFAR`
 ===========================================================
 
+.. note::
+
+    Follow along in this `Jupyter notebook
+    <https://github.com/MadryLab/trak/blob/main/examples/cifar_quickstart.ipynb>`_.
+    If you want to browse pre-computed TRAK scores instead, check out this
+    `Colab notebook
+    <https://colab.research.google.com/drive/1Mlpzno97qpI3UC1jpOATXEHPD-lzn9Wg?usp=sharing>`_.
+
 In this tutorial, we'll show you how to use the :code:`TRAK` API to compute data
 attribution scores for `ResNet-9 <https://github.com/wbaek/torchskeleton>`_ models trained on
 :code:`CIFAR-10`. While we use a particular model architecture and dataset, the code in this tutorial can be easily adapted to any classification task.
@@ -17,14 +25,6 @@ Overall, this tutorial will show you how to:
 
 #. :ref:`Compute :code:\`TRAK\` scores for target examples`
 
-
-.. note::
-
-    Follow along in this `Jupyter notebook
-    <https://github.com/MadryLab/trak/blob/main/examples/cifar_quickstart.ipynb>`_.
-    If you want to browse pre-computed TRAK scores instead, check out this
-    `Colab notebook
-    <https://colab.research.google.com/drive/1Mlpzno97qpI3UC1jpOATXEHPD-lzn9Wg?usp=sharing>`_.
 
 Let's get started!
 
@@ -110,7 +110,7 @@ classification task of your choice.)
                              torchvision.transforms.ToTensor(),
                              torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                               (0.2023, 0.1994, 0.201))])
-            
+
         is_train = (split == 'train')
         dataset = torchvision.datasets.CIFAR10(root='/tmp/cifar/',
                                                download=True,
@@ -121,12 +121,12 @@ classification task of your choice.)
                                              shuffle=shuffle,
                                              batch_size=batch_size,
                                              num_workers=num_workers)
-        
+
         return loader
 
     def train(model, loader, lr=0.4, epochs=24, momentum=0.9,
               weight_decay=5e-4, lr_peak_epoch=5, label_smoothing=0.0, model_id=0):
-        
+
         opt = SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
         iters_per_epoch = len(loader)
         # Cyclic LR with single triangle
@@ -152,7 +152,7 @@ classification task of your choice.)
                 scheduler.step()
             if ep in [12, 15, 18, 21, 23]:
                 torch.save(model.state_dict(), f'./checkpoints/sd_{model_id}_epoch_{ep}.pt')
-            
+
         return model
 
     os.makedirs('./checkpoints', exist_ok=True)
@@ -303,14 +303,15 @@ As before, we iterate over checkpoints and batches of data:
     :linenos:
 
     for model_id, ckpt in enumerate(tqdm(ckpts)):
-        traker.start_scoring_checkpoint(ckpt,
+        traker.start_scoring_checkpoint(exp_name='quickstart',
+                                        checkpoint=ckpt,
                                         model_id=model_id,
                                         num_targets=len(loader_targets.dataset))
         for batch in loader_targets:
             batch = [x.cuda() for x in batch]
             traker.score(batch=batch, num_samples=batch[0].shape[0])
 
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores(exp_name='quickstart')
 
 Here, :meth:`.start_scoring_checkpoint` has a similar function to
 :meth:`.load_checkpoint` used when featuring the training set; it prepares the
@@ -329,8 +330,9 @@ the corresponding features.
     open an issue on github and we can add an :code:`assert` to check for :code:`model_id`
     consistency.
 
-The final line above returns :code:`TRAK` scores as a :code:`numpy.array` from the
-:meth:`.finalize_scores` method.
+The final line above returns :code:`TRAK` scores as a :code:`numpy.array` from
+the :meth:`.finalize_scores` method. Additionally, :meth:`.finalize_scores`
+saves the scores to disk in memory-mapped file (:code:`.mmap` format).
 
 We can visualize some of the top scoring :code:`TRAK` images from the
 :code:`scores` array we just computed:
@@ -340,5 +342,5 @@ We can visualize some of the top scoring :code:`TRAK` images from the
 
 
 That's it!
-Once you have your model(s) and your data, just a few API-calls to TRAK
+Once you have your model(s) and your data, just a few API-calls to :code:`TRAK``
 let's you compute data attribution scores.

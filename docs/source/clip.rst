@@ -56,26 +56,37 @@ Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
 
 .. code-block:: python
 
-    def get_output(func_model,
+    def get_output(model,
                    weights: Iterable[Tensor],
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor):
-        image_embeddings, text_embeddings, _ = func_model(weights, buffers,
-                                                          image.unsqueeze(0),
-                                                          label.unsqueeze(0))
+        image_embeddings, text_embeddings, _ = ch.func.functional_call(model,
+                                                                       (weights, buffers),
+                                                                       args=(),
+                                                                       kwargs=clip_inputs)
 
-        ii = ch.multinomial(input=ch.arange(N).float(), num_samples=sim_bs, replacement=False)
-        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embeddings[ii]).T, dim=1) +\
-                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_img_embeddings[ii]).T, dim=1)
-        return result.sum()  # shape of result should be [1], .sum() just removes the extra dimension
+        ii = ch.multinomial(input=ch.arange(N).float(),
+                            num_samples=sim_bs,
+                            replacement=False)
 
-Finally, to compute the output-to-loss gradient term, we observe in our paper that we can reduce to the classification case and compute the corresponding probabilities:
+        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1) +\
+                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1)
+        return result.sum()  # shape of result should be [1]
+
+Finally, to compute the output-to-loss gradient term, we observe in our paper
+that we can reduce to the classification case and compute the corresponding
+probabilities:
 
 .. code-block:: python
 
-    def get_out_to_loss_grad(self, func_model, weights, buffers, batch):
-        image_embeddings, text_embeddings, temp = func_model(weights, buffers, *batch)
+    def get_out_to_loss_grad(self, model, weights, buffers, batch):
+        image, label = batch
+        clip_inputs = {'image': image, 'text': label}
+        image_embeddings, text_embeddings, temp = ch.func.functional_call(model,
+                                                                          (weights, buffers),
+                                                                          args=(),
+                                                                          kwargs=clip_inputs)
         if self.temperature is None:
             self.temperature = temp
         res = self.temperature * image_embeddings @ text_embeddings.T
@@ -89,11 +100,13 @@ automatic differentiation.
 Putting it together
 ------------------------
 
-Using the above :code:`CLIPModelOutput` implementation, we can compute :code:`TRAK` scores as follows:
+Using the above :code:`CLIPModelOutput` implementation, we can compute
+:code:`TRAK` scores for `open_clip` models as follows:
 
 .. code-block:: python
 
-    model = ...
+    model, _, preprocess = open_clip.create_model_and_transforms(...)
+    tokenizer = ...
     loader_train, loader_val = ...
 
     traker = TRAKer(model=model,
@@ -103,19 +116,26 @@ Using the above :code:`CLIPModelOutput` implementation, we can compute :code:`TR
                     device=device,
                     proj_dim=1024)
 
+    traker.task.get_embeddings(model, loader_train, batch_size=...,
+                               preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
+                               preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
+
     traker.load_checkpoint(model.state_dict(), model_id=0)
-    for batch in tqdm(loader_train, desc='Featurizing..'):
+    for batch in tqdm(loader_train, desc='Featurizing...'):
         batch = [x.cuda() for x in batch]
         traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 
     traker.finalize_features()
 
-    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=VAL_SET_SIZE)
-    for batch in tqdm(loader_val, desc='Scoring..'):
+    traker.start_scoring_checkpoint(exp_name='clip_example',
+                                    checkpoint=model.state_dict(),
+                                    model_id=0,
+                                    num_targets=VAL_SET_SIZE)
+    for batch in tqdm(loader_val, desc='Scoring...'):
         batch = [x.cuda() for x in batch]
         traker.score(batch=batch, num_samples=batch[0].shape[0])
 
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores(exp_name='clip_example')
 
 
 That's all, now you're ready to adapt :code:`TRAK` to your custom tasks!

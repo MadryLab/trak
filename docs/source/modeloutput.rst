@@ -136,54 +136,47 @@ The model output function is implemented as follows:
 
 .. code-block:: python
 
-    def get_output(func_model,
+    def get_output(model: Module,
                    weights: Iterable[Tensor],
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor):
-        logits = func_model(weights, buffers, image.unsqueeze(0))
+        logits = ch.func.functional_call(model, (weights, buffers), image.unsqueeze(0))
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
         cloned_logits = logits.clone()
-        # Effectively remove the logits of the correct labels from the sum
+        # remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf).to(logits.device)
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf, device=logits.device, dtype=logits.dtype)
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
 
-Note that the :code:`get_output` function takes in the model in :code:`functorch`'s stateless form.
+
+Note that the :code:`get_output` function uses :code:`torch.func`'s
+:code:`functional_call` to make a stateless forward pass.
 
 .. note::
 
-    In :code:`TRAK`, we use :code:`functorch`'s :code:`vmap` to make the per-sample gradient
-    computations faster. Check out, e.g., `this functorch tutorial
-    <https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html>`_ to
-    learn more about how to use :code:`functorch` (e.g. learn what
-    :code:`func_model`, :code:`weights` and :code:`buffers` are).
+    In :code:`TRAK`, we use :code:`torch.func`'s :code:`vmap` to make the per-sample gradient
+    computations faster. Check out, e.g., `this torch.func tutorial
+    <https://pytorch.org/docs/stable/func.whirlwind_tour.html>`_ to
+    learn more about how to use :code:`torch.func`.
 
 Similarly, the output-to-loss gradient function is implemented as follows:
 
 .. code-block:: python
 
-    def get_out_to_loss_grad(self, func_model, weights, buffers, batch):
+    def get_out_to_loss_grad(self, model, weights, buffers, batch):
         images, labels = batch
-        logits = func_model(weights, buffers, images)
+        logits = ch.func.functional_call(model, (weights, buffers), images)
         # here we are directly implementing the gradient instead of relying on autodiff to do
         # that for us
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
         return (1 - ps).clone().detach().unsqueeze(-1)
 
 Note that we are directly implementing the gradient we analytically derived above (instead of using automatic differentiation).
-
-Finally, we need to implement a forward function, which simply passes in the elements in the batch excluding the label.
-
-.. code-block:: python
-
-    def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
-        images, _ = batch
-        return model(images)
 
 That's all!
 Though we showed how :class:`.ImageClassificationModelOutput` is implemented inside, to use it you just need to specify

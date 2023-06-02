@@ -389,9 +389,9 @@ class TextClassificationModelOutput(AbstractModelOutput):
                    ) -> Tensor:
         logits = ch.func.functional_call(model,
                                          (weights, buffers),
-                                         input_id.unsqueeze(0),
-                                         token_type_id.unsqueeze(0),
-                                         attention_mask.unsqueeze(0))
+                                         args=(input_id.unsqueeze(0),
+                                               token_type_id.unsqueeze(0),
+                                               attention_mask.unsqueeze(0)))
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 

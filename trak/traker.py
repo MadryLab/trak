@@ -468,13 +468,13 @@ class TRAKer():
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
                                     device=self.device)
 
-            _scores += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
+            _scores[:] += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
 
             _avg_out_to_losses += self.saver.current_store['out_to_loss']
             _completed[j] = True
 
         _num_models_used = float(sum(_completed))
-        _scores = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
+        _scores[:] = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
 
         self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)
