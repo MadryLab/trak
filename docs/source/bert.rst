@@ -214,18 +214,8 @@ Similarly, the gradient function is implemented as follows:
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
         return (1 - ps).clone().detach().unsqueeze(-1)
 
-Lastly, you need to implement a forward function, which simply passes in the elements in the batch excluding the label.
-
-.. code-block:: python
-
-    def forward(self, model: Module, batch: Iterable[Tensor]) -> Tensor:
-        input_ids, token_type_ids, attention_mask, _ = batch
-        return model(input_ids=input_ids,
-            token_type_ids=token_type_ids,
-            attention_mask=attention_mask)
-
 Putting it together
-------------------------
+-------------------
 
 Using the above :code:`TextClassificationModelOutput` implementation, we can compute :code:`TRAK` scores as follows:
 

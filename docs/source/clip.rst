@@ -89,11 +89,13 @@ automatic differentiation.
 Putting it together
 ------------------------
 
-Using the above :code:`CLIPModelOutput` implementation, we can compute :code:`TRAK` scores as follows:
+Using the above :code:`CLIPModelOutput` implementation, we can compute
+:code:`TRAK` scores for `open_clip` models as follows:
 
 .. code-block:: python
 
-    model = ...
+    model, _, preprocess = open_clip.create_model_and_transforms(...)
+    tokenizer = ...
     loader_train, loader_val = ...
 
     traker = TRAKer(model=model,
@@ -103,19 +105,26 @@ Using the above :code:`CLIPModelOutput` implementation, we can compute :code:`TR
                     device=device,
                     proj_dim=1024)
 
+    traker.task.get_embeddings(model, loader_train, batch_size=...,
+                               preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
+                               preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
+
     traker.load_checkpoint(model.state_dict(), model_id=0)
-    for batch in tqdm(loader_train, desc='Featurizing..'):
+    for batch in tqdm(loader_train, desc='Featurizing...'):
         batch = [x.cuda() for x in batch]
         traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 
     traker.finalize_features()
 
-    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=VAL_SET_SIZE)
-    for batch in tqdm(loader_val, desc='Scoring..'):
+    traker.start_scoring_checkpoint(exp_name='clip_example',
+                                    checkpoint=model.state_dict(),
+                                    model_id=0,
+                                    num_targets=VAL_SET_SIZE)
+    for batch in tqdm(loader_val, desc='Scoring...'):
         batch = [x.cuda() for x in batch]
         traker.score(batch=batch, num_samples=batch[0].shape[0])
 
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores(exp_name='clip_example')
 
 
 That's all, now you're ready to adapt :code:`TRAK` to your custom tasks!
