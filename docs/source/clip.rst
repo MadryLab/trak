@@ -56,26 +56,37 @@ Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
 
 .. code-block:: python
 
-    def get_output(func_model,
+    def get_output(model,
                    weights: Iterable[Tensor],
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor):
-        image_embeddings, text_embeddings, _ = func_model(weights, buffers,
-                                                          image.unsqueeze(0),
-                                                          label.unsqueeze(0))
+        image_embeddings, text_embeddings, _ = ch.func.functional_call(model,
+                                                                       (weights, buffers),
+                                                                       args=(),
+                                                                       kwargs=clip_inputs)
 
-        ii = ch.multinomial(input=ch.arange(N).float(), num_samples=sim_bs, replacement=False)
-        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embeddings[ii]).T, dim=1) +\
-                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_img_embeddings[ii]).T, dim=1)
-        return result.sum()  # shape of result should be [1], .sum() just removes the extra dimension
+        ii = ch.multinomial(input=ch.arange(N).float(),
+                            num_samples=sim_bs,
+                            replacement=False)
 
-Finally, to compute the output-to-loss gradient term, we observe in our paper that we can reduce to the classification case and compute the corresponding probabilities:
+        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1) +\
+                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1)
+        return result.sum()  # shape of result should be [1]
+
+Finally, to compute the output-to-loss gradient term, we observe in our paper
+that we can reduce to the classification case and compute the corresponding
+probabilities:
 
 .. code-block:: python
 
-    def get_out_to_loss_grad(self, func_model, weights, buffers, batch):
-        image_embeddings, text_embeddings, temp = func_model(weights, buffers, *batch)
+    def get_out_to_loss_grad(self, model, weights, buffers, batch):
+        image, label = batch
+        clip_inputs = {'image': image, 'text': label}
+        image_embeddings, text_embeddings, temp = ch.func.functional_call(model,
+                                                                          (weights, buffers),
+                                                                          args=(),
+                                                                          kwargs=clip_inputs)
         if self.temperature is None:
             self.temperature = temp
         res = self.temperature * image_embeddings @ text_embeddings.T
