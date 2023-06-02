@@ -68,7 +68,7 @@ For example, :code:`featurize_and_score.py` can be as follows:
             traker.featurize(batch=batch, ...)
         traker.finalize_features(model_ids=[model_id])
 
-        traker.start_scoring_checkpoint(ckpt, model_id, ...)
+        traker.start_scoring_checkpoint(exp_name=..., checkpoint=ckpt, model_id=model_id, ...)
         for batch in loader_val:
             traker.score(batch=batch, ...)
 
@@ -135,7 +135,7 @@ This is what :code:`gather.py` will do:
     model = ...
 
     traker = TRAKer(model=model, task='image_classification', ...)
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores(exp_name=...)
 
 That's it!
 

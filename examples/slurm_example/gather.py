@@ -11,4 +11,4 @@ traker = TRAKer(model=model,
                 train_set_size=50_000,  # hardcoding here
                 device='cuda')
 
-traker.finalize_scores()
+traker.finalize_scores(exp_name='slurm_example')
