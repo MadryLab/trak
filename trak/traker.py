@@ -476,7 +476,7 @@ class TRAKer():
         _num_models_used = float(sum(_completed))
         _scores[:] = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
 
-        self.logger.dtype(f'Scores dtype is {_scores.dtype}')
+        self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)
         self.scores = _scores
 
