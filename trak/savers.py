@@ -379,7 +379,7 @@ class MmapSaver(AbstractSaver):
     def save_scores(self, exp_name):
         assert self.current_experiment_name == exp_name
         prefix = self.save_dir.joinpath('scores')
-        self.logger.info(f'Saving scores in {prefix}/scores/{exp_name}.mmap')
+        self.logger.info(f'Saving scores in {prefix}/{exp_name}.mmap')
         self.current_store[f'{exp_name}_scores'].flush()
         self.experiments[exp_name]['scores_finalized'] = True
 
