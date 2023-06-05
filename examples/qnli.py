@@ -44,8 +44,8 @@ GLUE_TASK_TO_KEYS = {
 }
 
 # NOTE: CHANGE THIS IF YOU WANT TO RUN ON FULL DATASET
-TRAIN_SET_SIZE = 5_000
-VAL_SET_SIZE = 1_00
+TRAIN_SET_SIZE = 50_000
+VAL_SET_SIZE = 5_463
 
 
 class SequenceClassificationModel(nn.Module):
@@ -178,10 +178,10 @@ if __name__ == "__main__":
 
     traker.finalize_features()
 
-    traker.start_scoring_checkpoint(model.state_dict(), model_id=0, num_targets=VAL_SET_SIZE)
+    traker.start_scoring_checkpoint(exp_name='qnli', checkpoint=model.state_dict(), model_id=0, num_targets=VAL_SET_SIZE)
     for batch in tqdm(loader_val, desc='Scoring..'):
         batch = process_batch(batch)
         batch = [x.cuda() for x in batch]
         traker.score(batch=batch, num_samples=batch[0].shape[0])
 
-    scores = traker.finalize_scores()
+    scores = traker.finalize_scores(exp_name='qnli')

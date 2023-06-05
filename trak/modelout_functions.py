@@ -387,11 +387,14 @@ class TextClassificationModelOutput(AbstractModelOutput):
                    attention_mask: Tensor,
                    label: Tensor,
                    ) -> Tensor:
+        kw_inputs = {'input_ids': input_id.unsqueeze(0),
+                    'token_type_ids': token_type_id.unsqueeze(0),
+                    'attention_mask': attention_mask.unsqueeze(0)}
+
         logits = ch.func.functional_call(model,
                                          (weights, buffers),
-                                         args=(input_id.unsqueeze(0),
-                                               token_type_id.unsqueeze(0),
-                                               attention_mask.unsqueeze(0)))
+                                         args=(),
+                                         kwargs=kw_inputs)
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
@@ -403,7 +406,14 @@ class TextClassificationModelOutput(AbstractModelOutput):
 
     def get_out_to_loss_grad(self, model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
         input_ids, token_type_ids, attention_mask, labels = batch
-        logits = ch.func.functional_call(model, (weights, buffers), input_ids, token_type_ids, attention_mask)
+        kw_inputs = {'input_ids': input_ids,
+                    'token_type_ids': token_type_ids,
+                    'attention_mask': attention_mask}
+        logits = ch.func.functional_call(model,
+                                         (weights, buffers),
+                                         args=(),
+                                         kwargs=kw_inputs)
+        #logits = ch.func.functional_call(model, (weights, buffers), input_ids, token_type_ids, attention_mask)
         ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
         return (1 - ps).clone().detach().unsqueeze(-1)
 
