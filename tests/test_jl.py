@@ -8,6 +8,7 @@ from torch import testing
 from trak.projectors import CudaProjector, ProjectionType
 BasicProjector = CudaProjector
 
+MAX_BATCH_SIZE = 32
 PARAM = list(product([0, 1, 10**8],  # seed
                      [ProjectionType.normal, ProjectionType.rademacher],  # proj type
                      [ch.float16, ch.float32],  # dtype
@@ -43,7 +44,8 @@ def test_seed_consistency(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
 
     result = proj.project(g, model_id=0)
@@ -70,7 +72,8 @@ def test_seed_consistency_2(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
 
     result = proj.project(g, model_id=0)
@@ -80,7 +83,9 @@ def test_seed_consistency_2(seed,
                                 proj_type=proj_type,
                                 seed=seed,
                                 device='cuda:0',
-                                dtype=dtype)
+                                dtype=dtype,
+                                max_batch_size=MAX_BATCH_SIZE
+                                )
     result_again = proj_again.project(g, model_id=0)
     testing.assert_close(result, result_again, equal_nan=True)
 
@@ -102,7 +107,8 @@ def test_norm_preservation(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
 
     p = proj.project(g, model_id=0)
@@ -145,7 +151,8 @@ def test_prod_preservation(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
 
     # check that things break with a garbage matrix
@@ -193,7 +200,8 @@ def test_single_nonzero_feature(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
     p = proj.project(g, model_id=0)
     assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
@@ -218,7 +226,8 @@ def test_first_nonzero_feature(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
     p = proj.project(g, model_id=0)
     assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
@@ -243,7 +252,8 @@ def test_last_nonzero_feature(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
     p = proj.project(g, model_id=0)
     assert (~ch.isclose(p, ch.zeros_like(p))).all().item()
@@ -268,7 +278,8 @@ def test_same_features(seed,
                           proj_type=proj_type,
                           seed=seed,
                           device='cuda:0',
-                          dtype=dtype
+                          dtype=dtype,
+                          max_batch_size=MAX_BATCH_SIZE
                           )
     p = proj.project(g, model_id=0)
 
@@ -294,7 +305,9 @@ def test_orthogonality(seed,
                               proj_type=proj_type,
                               seed=seed,
                               device='cuda:0',
-                              dtype=dtype)
+                              dtype=dtype,
+                              max_batch_size=MAX_BATCH_SIZE
+                              )
 
         num_successes = 0
         num_trials = 100
