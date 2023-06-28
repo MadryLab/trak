@@ -417,7 +417,7 @@ class CLIPModelOutput(AbstractModelOutput):
         sim_bs = CLIPModelOutput.sim_batch_size
 
         if all_im_embs is None:
-            raise AssertionError('Run traker.modelout_fn.get_embeddings first before featurizing!')
+            raise AssertionError('Run traker.task.get_embeddings first before featurizing!')
 
         image_embeddings, text_embeddings, _ = func_model(weights,
                                                           buffers,
