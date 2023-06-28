@@ -614,7 +614,7 @@
         <span class="n">sim_bs</span> <span class="o">=</span> <span class="n">CLIPModelOutput</span><span class="o">.</span><span class="n">sim_batch_size</span>
 
         <span class="k">if</span> <span class="n">all_im_embs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s1">&#39;Run traker.modelout_fn.get_embeddings first before featurizing!&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s1">&#39;Run traker.task.get_embeddings first before featurizing!&#39;</span><span class="p">)</span>
 
         <span class="n">image_embeddings</span><span class="p">,</span> <span class="n">text_embeddings</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">func_model</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span>
                                                           <span class="n">buffers</span><span class="p">,</span>

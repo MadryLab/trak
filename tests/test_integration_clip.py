@@ -1,5 +1,10 @@
 from tqdm import tqdm
 from torchvision import datasets
+import torch
+torch.backends.cuda.enable_mem_efficient_sdp(False)
+
+import open_clip
+
 from trak import TRAKer
 import logging
 import pytest
@@ -15,8 +20,7 @@ def test_mscoco(tmp_path, device='cuda:0'):
     tokenizer = open_clip.get_tokenizer('RN50')
 
     ds_train = datasets.CocoCaptions(root='/path/to/coco2014/images/train2014',
-                                     annFile='/path/to/coco2014/annotations/annotations/captions_train2014.json'
-                                     )
+                                     annFile='/path/to/coco2014/annotations/annotations/captions_train2014.json')
 
     traker = TRAKer(model=model,
                     task='clip',
