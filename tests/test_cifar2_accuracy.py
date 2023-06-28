@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from pathlib import Path
 from itertools import product
+import logging
 import pytest
 import torch as ch
 
@@ -30,6 +31,8 @@ PARAM = list(product([False, True],  # serialize
 @pytest.mark.cuda
 def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
     device = 'cuda:0'
+    exp_name = 'test_experimet'
+
     projector = get_projector(use_cuda_projector, dtype)
     model = construct_rn9().to(memory_format=ch.channels_last).to(device)
     model = model.eval()
@@ -41,8 +44,10 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
     loader_val = get_dataloader(BETONS, batch_size=batch_size, split='val')
 
     CKPT_PATH = Path(tmp_path).joinpath('cifar_ckpts')
-    ckpt_files = download_cifar_checkpoints(CKPT_PATH)
+    ckpt_files = download_cifar_checkpoints(CKPT_PATH, 'cifar2')
     ckpts = [ch.load(ckpt, map_location='cpu') for ckpt in ckpt_files]
+
+    use_half_precision = (dtype == ch.float16)
 
     traker = TRAKer(model=model,
                     task='image_classification',
@@ -50,7 +55,9 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
                     proj_dim=1024,
                     train_set_size=10_000,
                     save_dir=tmp_path,
-                    device=device)
+                    device=device,
+                    logging_level=logging.DEBUG,
+                    use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):
         traker.load_checkpoint(checkpoint=ckpt, model_id=model_id)
@@ -67,14 +74,16 @@ def test_cifar_acc(serialize, use_cuda_projector, dtype, batch_size, tmp_path):
                         proj_dim=1024,
                         train_set_size=10_000,
                         save_dir=tmp_path,
-                        device=device)
+                        device=device,
+                        logging_level=logging.DEBUG,
+                        use_half_precision=use_half_precision)
 
     for model_id, ckpt in enumerate(ckpts):
-        traker.start_scoring_checkpoint(ckpt, model_id, num_targets=2_000)
+        traker.start_scoring_checkpoint(exp_name, ckpt, model_id, num_targets=2_000)
         for batch in tqdm(loader_val, desc='Scoring...'):
             traker.score(batch=batch, num_samples=len(batch[0]))
 
-    scores = traker.finalize_scores().cpu()
+    scores = traker.finalize_scores(exp_name)
 
-    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path)
+    avg_corr = eval_correlations(infls=scores, tmp_path=tmp_path, ds='cifar2')
     assert avg_corr > 0.062, 'correlation with 3 CIFAR-2 models should be >= 0.062'

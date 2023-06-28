@@ -45,7 +45,10 @@ def main(model_id):
         traker.featurize(batch=batch, num_samples=loader_train.batch_size)
     traker.finalize_features(model_ids=[model_id])
 
-    traker.start_scoring_checkpoint(ckpt, model_id, num_targets=len(loader_val.dataset))
+    traker.start_scoring_checkpoint(exp_name='slurm_example',
+                                    checkpoint=ckpt,
+                                    model_id=model_id,
+                                    num_targets=len(loader_val.dataset))
     for batch in tqdm(loader_val, desc='Scoring...'):
         batch = [x.cuda() for x in batch]
         traker.score(batch=batch, num_samples=loader_val.batch_size)

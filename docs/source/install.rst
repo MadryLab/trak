@@ -25,6 +25,20 @@ for the JL projection step, use
 need to have compatible versions of :code:`gcc` and :code:`CUDA toolkit`. See
 the sections below for tips regarding this.
 
+Confirm your :code:`TRAK` installation using
+
+.. code-block:: python
+
+    >>> import trak
+    >>> trak.test_install(use_fast_jl=False)
+
+and your :code:`fast_jl` installation using
+
+.. code-block:: python
+
+    >>> trak.test_install(use_fast_jl=True)
+
+
 How to install :code:`nvcc` (:code:`CUDA toolkit`)?
 ---------------------------------------------------
 
@@ -35,7 +49,7 @@ How to install :code:`nvcc` (:code:`CUDA toolkit`)?
 Pick one option:
 
 * Some machines might already have been setup with the :code:`CUDA toolkit`.
-  You can run 
+  You can run
 
   .. code:: bash
 
@@ -56,11 +70,11 @@ Pick one option:
   maintainers/documentation of your cluster.
 
 * Using :code:`conda`:
-  
+
   .. code:: bash
 
     conda install -c conda-forge cudatoolkit-dev
-  
+
   Note that the version of :code:`CUDA toolkit` on the :code:`conda` index may
   be outdated.
 
@@ -79,57 +93,70 @@ How to install :code:`gcc`?
 
 Pick one option:
 
-* Most Operating System come with gcc preinstalled. You can run 
-  
+* Most Operating System come with gcc preinstalled. You can run
+
   .. code:: bash
-    
+
     gcc --version
 
   in a terminal to check if it's the case on your machine and which version you
-  have. If you have a compatible version then you can proceed with the :code:`TRAK` 
+  have. If you have a compatible version then you can proceed with the :code:`TRAK`
   installation.
 * If your operating ships with an incompatible compiler they usually let you
   install other version alongside what comes by default. Here is an example for
   ubuntu and gcc 10:
-  1. Add repository: 
-   
+  1. Add repository:
+
   .. code:: bash
-        
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test 
+
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 
   2. Update list of packages:
-    
+
   .. code:: bash
-        
+
     sudo apt update
-    
+
   3. Download/install :code:`gcc 10`:
-    
+
   .. code:: bash
-        
+
     sudo apt install gcc-10 g++-10
-    
+
   4. Enable the compiler before runing :code:`pip install traker[fast]`:
-    
+
   .. note::
-        
+
     This has to be done in the same terminal.
 
   .. code:: bash
 
     export CXX=g++10 CC=gcc-10
 
-Verify that the installation worked
------------------------------------
+Running the tests
+-----------------
 
-You can quickly verify that :code:`TRAK` has been correctly installed by running
-some of our tests, e.g.:
+You can test your installation by running the following in a python shell:
+
+.. code-block:: python
+
+    >>> import trak
+    >>> trak.test_install(use_fast_jl=False)
+    >>> trak.test_install(use_fast_jl=True)  # if you're using the fast version
+
+If you want to run any of the tests in the :code:`tests` directory, you need to
+install the optional :code:`[tests]` dependencies:
 
 .. code-block:: bash
 
-  python -m pytest -sv tests/test_rademacher.py
+    pip install traker[tests]
 
-Note that you'll need the optional :code:`[tests]` dependencies to run the tests.
+Then you can run the tests using
+
+.. code-block:: bash
+
+    python -m pytest -sv tests/
+
 
 Misc Q&A
 --------

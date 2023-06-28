@@ -1,6 +1,45 @@
 from torch import Tensor
+import tempfile
 import torch
 ch = torch
+
+
+def test_install(use_fast_jl: bool = True):
+    try:
+        from trak import TRAKer
+    except ImportError:
+        raise ImportError('TRAK is not installed! Please install it using `pip install traker`')
+
+    data = (ch.randn(20, 256), ch.randint(high=2, size=(20,)))
+    model = ch.nn.Linear(256, 2, bias=False)
+
+    if use_fast_jl:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            data = [x.cuda() for x in data]
+            model = model.cuda()
+            traker = TRAKer(model=model,
+                            task='image_classification',
+                            proj_dim=512,
+                            save_dir=tmpdirname,
+                            train_set_size=20,
+                            logging_level=100)
+            traker.load_checkpoint(model.state_dict(), model_id=0)
+            traker.featurize(data, num_samples=20)
+            print('TRAK and fast_jl are installed correctly!')
+    else:
+        from trak.projectors import NoOpProjector
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            traker = TRAKer(model=model,
+                            task='image_classification',
+                            train_set_size=20,
+                            proj_dim=512,
+                            save_dir=tmpdirname,
+                            projector=NoOpProjector(),
+                            device='cpu',
+                            logging_level=100)
+            traker.load_checkpoint(model.state_dict(), model_id=0)
+            traker.featurize(data, num_samples=20)
+            print('TRAK is installed correctly!')
 
 
 def parameters_to_vector(parameters) -> Tensor:
@@ -18,10 +57,6 @@ def get_num_params(model: torch.nn.Module) -> int:
     return parameters_to_vector(model.parameters()).numel()
 
 
-def get_params_dict(model: torch.nn.Module) -> list:
-    return [x[0] for x in list(model.named_parameters())]
-
-
 def is_not_buffer(ind, params_dict) -> bool:
     name = params_dict[ind]
     if ('running_mean' in name) or ('running_var' in name) or ('num_batches_tracked' in name):
@@ -29,19 +64,23 @@ def is_not_buffer(ind, params_dict) -> bool:
     return True
 
 
-def vectorize_and_ignore_buffers(g, params_dict=None) -> Tensor:
+def vectorize(g, arr) -> Tensor:
     """
-    gradients are given as a tuple :code:`(grad_w0, grad_w1, ... grad_wp)` where
-    :code:`p` is the number of weight matrices. each :code:`grad_wi` has shape
-    :code:`[batch_size, ...]` this function flattens :code:`g` to have shape
-    :code:`[batch_size, num_params]`.
+    records result into arr
+
+    gradients are given as a dict :code:`(name_w0: grad_w0, ... name_wp:
+    grad_wp)` where :code:`p` is the number of weight matrices. each
+    :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
+    :code:`g` to have shape :code:`[batch_size, num_params]`.
     """
-    batch_size = len(g[0])
-    out = []
-    if params_dict is not None:
-        for b in range(batch_size):
-            out.append(ch.cat([x[b].flatten() for i, x in enumerate(g) if is_not_buffer(i, params_dict)]))
-    else:
-        for b in range(batch_size):
-            out.append(ch.cat([x[b].flatten() for x in g]))
-    return ch.stack(out)
+    pointer = 0
+    for param in g.values():
+        if len(param.shape) < 2:
+            num_param = 1
+            p = param.data.reshape(-1, 1)
+        else:
+            num_param = param[0].numel()
+            p = param.flatten(start_dim=1).data
+
+        arr[:, pointer:pointer + num_param] = p
+        pointer += num_param

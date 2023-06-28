@@ -1,4 +1,6 @@
 from .traker import TRAKer
+from .utils import test_install
 
-__version__ = '0.1.3'
+__version__ = '0.2.1'
 VERSION = __version__
+
