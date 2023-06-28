@@ -40,7 +40,7 @@ traker = TRAKer(model=model, task='image_classification', train_set_size=...)
 
 ```python
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.load_checkpoint(ckeckpoint, model_id=model_id)
+  traker.load_checkpoint(checkpoint, model_id=model_id)
   for batch in loader_train:
       # batch should be a tuple of inputs and labels
       traker.featurize(batch=batch, ...)
@@ -53,7 +53,7 @@ traker.finalize_features()
 targets_loader = ...
 
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.start_scoring_checkpoint(ckeckpoint,
+  traker.start_scoring_checkpoint(checkpoint,
                                   model_id=model_id,
                                   exp_name='test',
                                   num_targets=...)
