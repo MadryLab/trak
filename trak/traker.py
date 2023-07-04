@@ -401,6 +401,9 @@ class TRAKer():
                         exp_name: str,
                         model_ids: Iterable[int] = None,
                         allow_skip: bool = False,
+                        block_bs: int = 8096,
+                        target_dtype: str = 'float32',
+                        use_blockwise: str = False,
                         ) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
@@ -421,6 +424,11 @@ class TRAKer():
                 If True, raises only a warning, instead of an error, when target
                 gradients are not computed for a given model ID. Defaults to
                 False.
+            block_bs (int, optional)
+                If a blockwise matrix multiplication is to be done, `block_bs`
+                controls the size of each block
+            target_dtype (str, optional)
+                The data type of the trak matrix
 
         Returns:
             Tensor: TRAK scores
@@ -449,6 +457,9 @@ class TRAKer():
         _avg_out_to_losses = np.zeros((self.saver.train_set_size, 1),
                                       dtype=np.float16 if self.dtype == ch.float16 else np.float32)
 
+        torch_dtype = getattr(ch, target_dtype)
+        device = 'cpu' if use_blockwise else 'cuda'
+
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_current_store(model_id)
             try:
@@ -464,17 +475,20 @@ class TRAKer():
                 self.logger.warning(f'Model ID {self.saver.current_model_id} not finalized, cannot score')
                 continue
 
-            g = ch.as_tensor(self.saver.current_store['features'], device=self.device)
+            g = ch.as_tensor(self.saver.current_store['features'], device=device)
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
-                                    device=self.device)
+                                    device=device)
 
-            _scores[:] += self.score_computer.get_scores(g, g_target).cpu().clone().detach().numpy()
+            if use_blockwise:
+                _scores[:] += self.score_computer.get_scores(g, g_target, torch_dtype, block_bs, use_blockwise).detach().numpy()
+            else:
+                _scores[:] += self.score_computer.get_scores(g, g_target, torch_dtype, block_bs, use_blockwise).cpu().clone().detach().numpy()
 
             _avg_out_to_losses += self.saver.current_store['out_to_loss']
             _completed[j] = True
 
         _num_models_used = float(sum(_completed))
-        _scores[:] = (_scores / _num_models_used) * (_avg_out_to_losses / _num_models_used)
+        _scores[:] = (_scores / _num_models_used) #* (_avg_out_to_losses / _num_models_used)
 
         self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)
