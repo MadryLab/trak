@@ -2,7 +2,7 @@ from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
-from .score_computers import AbstractScoreComputer, BasicScoreComputer
+from .score_computers import SCORE_COMPUTERS
 from .savers import AbstractSaver, MmapSaver, ModelIDException
 from .utils import get_num_params
 
@@ -33,7 +33,7 @@ class TRAKer():
                  gradient_computer: AbstractGradientComputer = FunctionalGradientComputer,
                  projector: Optional[AbstractProjector] = None,
                  saver: Optional[AbstractSaver] = None,
-                 score_computer: Optional[AbstractScoreComputer] = None,
+                 score_computer: Optional[str] = 'BasicScoreComputer',
                  proj_dim: int = 2048,
                  logging_level=logging.INFO,
                  use_half_precision: bool = True,
@@ -123,10 +123,12 @@ class TRAKer():
                                                    task=self.task,
                                                    grad_dim=self.num_params)
 
-        if score_computer is None:
-            score_computer = BasicScoreComputer
-        self.score_computer = score_computer(dtype=self.dtype,
-                                             device=self.device)
+        if score_computer not in SCORE_COMPUTERS:
+            raise KeyError(f"Available score computers: {SCORE_COMPUTERS.keys()}")
+
+        self.score_computer = SCORE_COMPUTERS[score_computer](dtype=self.dtype,
+                                                              device=self.device)
+        self.use_blockwise = (score_computer == 'BlockwiseScoreComputer')
 
         metadata = {
             'JL dimension': self.proj_dim,
@@ -401,9 +403,8 @@ class TRAKer():
                         exp_name: str,
                         model_ids: Iterable[int] = None,
                         allow_skip: bool = False,
-                        block_bs: int = 8096,
-                        target_dtype: str = 'float32',
-                        use_blockwise: str = False,
+                        block_size: Optional[int] = 16192,
+                        target_dtype: Optional[str] = 'float32',
                         ) -> Tensor:
         """ This method computes the final TRAK scores for the given targets,
         train samples, and model checkpoints (specified by model IDs).
@@ -424,11 +425,11 @@ class TRAKer():
                 If True, raises only a warning, instead of an error, when target
                 gradients are not computed for a given model ID. Defaults to
                 False.
-            block_bs (int, optional)
-                If a blockwise matrix multiplication is to be done, `block_bs`
-                controls the size of each block
+            block_size (int, optional)
+                If score computer is `BlockwiseScoreComputer`, `block_size`
+                specifies the size of each block
             target_dtype (str, optional)
-                The data type of the trak matrix
+               `target_dtype` specifies the data type of the trak matrix
 
         Returns:
             Tensor: TRAK scores
@@ -452,13 +453,22 @@ class TRAKer():
 
         self.saver.load_current_store(list(model_ids.keys())[0], exp_name, num_targets)
         _scores = self.saver.current_store[f'{exp_name}_scores']
-        _scores[:] = 0.
+        # _scores[:] = 0.
 
         _avg_out_to_losses = np.zeros((self.saver.train_set_size, 1),
                                       dtype=np.float16 if self.dtype == ch.float16 else np.float32)
 
-        torch_dtype = getattr(ch, target_dtype)
-        device = 'cpu' if use_blockwise else 'cuda'
+        torch_target_dtype = getattr(ch, target_dtype)
+        device = 'cpu' if self.use_blockwise else 'cuda'
+
+        # we can make for small datasets accumulation faster by moving to gpu
+        # we assume here that memory is more of a bottleneck either way and
+        # sacrifice few minutes for the sake of memory
+        cumulative_scores = torch.zeros(size=_scores.shape, dtype=torch_target_dtype, device='cpu')
+        if device == 'cpu':
+            # we will be doing blockwise multiplication
+            # pin memory for speed
+            cumulative_scores.pin_memory()
 
         for j, model_id in enumerate(tqdm(model_ids, desc='Finalizing scores for all model IDs..')):
             self.saver.load_current_store(model_id)
@@ -476,19 +486,25 @@ class TRAKer():
                 continue
 
             g = ch.as_tensor(self.saver.current_store['features'], device=device)
+            # we divide by len(model_ids) here to reduce compute time later
+            # this makes a huge difference in time for large datasets
             g_target = ch.as_tensor(self.saver.current_store[f'{exp_name}_grads'],
-                                    device=device)
+                                    device=device) / len(model_ids)
 
-            if use_blockwise:
-                _scores[:] += self.score_computer.get_scores(g, g_target, torch_dtype, block_bs, use_blockwise).detach().numpy()
-            else:
-                _scores[:] += self.score_computer.get_scores(g, g_target, torch_dtype, block_bs, use_blockwise).cpu().clone().detach().numpy()
+            # maybe change name to accumulate_scores?
+            # we are returning object that we are passing as arg to be
+            # compatible with the basic score computers
+            cumulative_scores = self.score_computer.get_scores(g, g_target, cumulative_scores, target_dtype=torch_target_dtype, block_size=block_size)
 
             _avg_out_to_losses += self.saver.current_store['out_to_loss']
             _completed[j] = True
 
-        _num_models_used = float(sum(_completed))
-        _scores[:] = (_scores / _num_models_used) #* (_avg_out_to_losses / _num_models_used)
+        # this is the old verion - in the new version, we assume _num_models_used = len(model_ids)
+        # _num_models_used = float(sum(_completed))
+        # _scores[:] = (cumulative_scores / _num_models_used) #* (_avg_out_to_losses / _num_models_used)
+
+        # new version
+        _scores[:] = cumulative_scores.detach().numpy() #* (_avg_out_to_losses / _num_models_used)
 
         self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)

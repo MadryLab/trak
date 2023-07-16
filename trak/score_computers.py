@@ -26,7 +26,7 @@ class AbstractScoreComputer(ABC):
         ...
 
     @abstractmethod
-    def get_scores(self, features: Tensor, target_grads: Tensor) -> Tensor:
+    def get_scores(self, features: Tensor, target_grads: Tensor, accumulator: Tensor, target_dtype: type, **kwargs) -> Tensor:
         ...
 
 
@@ -46,8 +46,8 @@ class BasicSingleBlockScoreComputer(AbstractScoreComputer):
         # torch.linalg.inv does not support float16
         return grads @ ch.linalg.inv(xtx.float()).to(self.dtype)
 
-    def get_scores(self, features: Tensor, target_grads: Tensor) -> Tensor:
-        return features @ target_grads.T
+    def get_scores(self, features: Tensor, target_grads: Tensor, accumulator: Tensor, **kwargs) -> Tensor:
+        return (features @ target_grads.T).cpu() + accumulator
 
 
 class BasicScoreComputer(AbstractScoreComputer):
@@ -90,44 +90,57 @@ class BasicScoreComputer(AbstractScoreComputer):
             result[start: end] = (block.to(self.device) @ xtx_inv)
         return result
 
+    def get_scores(self, features: Tensor, target_grads: Tensor, accumulator: Tensor, target_dtype: type, **kwargs) -> Tensor:
+        train_dim = features.shape[0]
+        target_dim = target_grads.shape[0]
 
-    def get_output_memory(self, features: Tensor, target_grads: Tensor, target_dtype: type):
-        output_shape = features.size(0) * target_grads.size(0)
-        output_dtype_size = ch.empty((1,), dtype=target_dtype).element_size()
+        if target_dim < self.CUDA_MAX_DIM_SIZE:
+            return (features @ target_grads.T).to(device='cpu', dtype=target_dtype) + accumulator
 
-        return output_shape * output_dtype_size
+        result = ch.empty(train_dim, target_dim, dtype=self.dtype, device=self.device)
+        blocks = ch.split(target_grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
 
-    def get_free_memory(self):
-        reserved = ch.cuda.memory_reserved(0)
-        allocated = ch.cuda.memory_allocated(0)
+        for i, block in enumerate(blocks):
+            start = i * self.CUDA_MAX_DIM_SIZE
+            end = min(target_grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
+            result[:, start: end] = features @ block.T
 
-        free = reserved - allocated
-        return free
+        return result.to(device='cpu', dtype=target_dtype) + accumulator
 
-    def get_matrix_mult_standard(self, features: Tensor, target_grads: Tensor, target_dtype: type):
-        output = features @ target_grads.t()
-        return output.to(target_dtype)
+class BlockwiseScoreComputer(AbstractScoreComputer):
+    """ An implementation of :code:`ScoreComputer` that computes matmuls in a
+    block-wise manner.
+    """
+    def __init__(self, dtype, device, CUDA_MAX_DIM_SIZE: int = 10_000) -> None:
+        """
+        Args:
+            device (Union[str, torch.device]): torch device to do matmuls on
+            CUDA_MAX_DIM_SIZE (int, optional): Size of block for block-wise
+            matmuls. Defaults to 100_000.
+        """
+        super().__init__(dtype, device)
+        self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
 
-    def get_matrix_mult_blockwise(self, features: Tensor, target_grads: Tensor, target_dtype: type, bs: int):
+    def get_matrix_mult_blockwise(self, mat1: Tensor, mat2: Tensor, accumulator: Tensor, target_dtype: type, bs: int):
 
-        s_features = features.shape[0]
-        s_target_grads = target_grads.shape[0]
+        s_mat1 = mat1.shape[0]
+        s_mat2 = mat2.shape[0]
 
-        bs = min(s_features, s_target_grads, bs)
+        bs = min(s_mat1, s_mat2, bs)
 
         # Copy the data in a pinned memory location to allow non-blocking
         # copies to the GPU
-        features = features.pin_memory()
-        target_grads = target_grads.pin_memory()
+        mat1 = mat1.pin_memory()
+        mat2 = mat2.pin_memory()
 
         # precompute all the blocks we will have to compute
         slices = []
-        for i in range(int(np.ceil(s_features / bs))):
-            for j in range(int(np.ceil(s_target_grads / bs))):
+        for i in range(int(np.ceil(s_mat1 / bs))):
+            for j in range(int(np.ceil(s_mat2 / bs))):
                 slices.append((slice(i * bs, (i + 1) * bs), slice(j * bs, (j + 1) * bs)))
 
         # Allocate memory for the final output.
-        final_output = ch.empty((s_features, s_target_grads), dtype=target_dtype, device='cpu')
+        assert accumulator.shape == (s_mat1, s_mat2)
 
         # Output buffers pinned on the CPU to be able to collect data from the
         # GPU asynchronously
@@ -138,21 +151,21 @@ class BasicScoreComputer(AbstractScoreComputer):
         # If the size is not a multiple of batch size we need extra buffers
         # with the proper shapes
         outputs = [ch.zeros((bs, bs), dtype=target_dtype,
-            device=features.device).pin_memory() for x in range(4)]
-        left_bottom = s_features % bs
+            device=mat1.device).pin_memory() for x in range(4)]
+        left_bottom = s_mat1 % bs
         options = [outputs] # List of buffers we can potentially use
         if left_bottom:
-            outputs_target_gradsottom = [ch.zeros((left_bottom, bs), dtype=target_dtype,
-                device=features.device).pin_memory() for x in range(4)]
-            options.append(outputs_target_gradsottom)
-        left_right = s_target_grads % bs
+            outputs_bottom = [ch.zeros((left_bottom, bs), dtype=target_dtype,
+                device=mat1.device).pin_memory() for x in range(4)]
+            options.append(outputs_bottom)
+        left_right = s_mat2 % bs
         if left_right:
             outputs_right = [ch.zeros((bs, left_right), dtype=target_dtype,
-                device=features.device).pin_memory() for x in range(4)]
+                device=mat1.device).pin_memory() for x in range(4)]
             options.append(outputs_right)
         if left_right and left_bottom:
             outputs_corner = [ch.zeros((left_bottom, left_right), dtype=target_dtype,
-                device=features.device).pin_memory() for x in range(4)]
+                device=mat1.device).pin_memory() for x in range(4)]
             options.append(outputs_corner)
 
         streams = [ch.cuda.Stream() for x in range(2)]
@@ -170,10 +183,10 @@ class BasicScoreComputer(AbstractScoreComputer):
         for i, (slice_i, slice_j) in enumerate(slices):
             with ch.cuda.stream(streams[i % len(streams)]):
                 # Copy the relevant blocks from CPU to the GPU asynchronously
-                features_i = features[slice_i, :].cuda(non_blocking=True)
-                target_grads_j = target_grads[slice_j, :].cuda(non_blocking=True)
+                mat1_i = mat1[slice_i, :].cuda(non_blocking=True)
+                mat2_j = mat2[slice_j, :].cuda(non_blocking=True)
 
-                output_slice = features_i @ target_grads_j.t()
+                output_slice = mat1_i @ mat2_j.t() + accumulator[slice_i, slice_j].cuda(non_blocking=True)
 
                 find_buffer_for_shape(output_slice.shape)[i % 4].copy_(output_slice, non_blocking=False)
 
@@ -182,7 +195,7 @@ class BasicScoreComputer(AbstractScoreComputer):
             # so we swap back to the other one
             with ch.cuda.stream(streams[(i + 1) % len(streams)]):
                 if previous_slice is not None:
-                    output_slice = final_output[previous_slice[0], previous_slice[1]]
+                    output_slice = accumulator[previous_slice[0], previous_slice[1]]
                     output_slice.copy_(find_buffer_for_shape(output_slice.shape)[(i - 1) % 4],
                             non_blocking=True)
 
@@ -192,37 +205,49 @@ class BasicScoreComputer(AbstractScoreComputer):
         ch.cuda.synchronize()
 
         # Copy the last chunk to the final result (from the appropriate buffer)
-        output_slice = final_output[previous_slice[0], previous_slice[1]]
+        output_slice = accumulator[previous_slice[0], previous_slice[1]]
         output_slice.copy_(find_buffer_for_shape(output_slice.shape)[i % 4],
                 non_blocking=True)
 
-        return final_output
+        return accumulator
 
-    def get_matrix_mult(self, features: Tensor, target_grads: Tensor, target_dtype: type, batch_size: int, use_blockwise: bool):
-        if use_blockwise:
-            return self.get_matrix_mult_blockwise(features, target_grads, target_dtype, batch_size)
+    def get_xtx(self, grads: Tensor) -> Tensor:
+        self.proj_dim = grads.shape[1]
 
-        output_memory = self.get_output_memory(features, target_grads, target_dtype)
-        free_memory = self.get_free_memory()
-
-        if output_memory < free_memory:
-            return self.get_matrix_mult_standard(features, target_grads, target_dtype)
-        else:
-            return self.get_matrix_mult_blockwise(features.cpu(), target_grads.cpu(), target_dtype, batch_size)
-
-    def get_scores(self, features: Tensor, target_grads: Tensor, target_dtype: type, batch_size: int, use_blockwise: bool) -> Tensor:
-        train_dim = features.shape[0]
-        target_dim = target_grads.shape[0]
-
-        if target_dim < self.CUDA_MAX_DIM_SIZE:
-            return self.get_matrix_mult(features, target_grads, target_dtype, batch_size, use_blockwise)
-
-        result = ch.empty(train_dim, target_dim, dtype=self.dtype, device=self.device)
-        blocks = ch.split(target_grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
-
-        for i, block in enumerate(blocks):
-            start = i * self.CUDA_MAX_DIM_SIZE
-            end = min(target_grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[:, start: end] = self.get_matrix_mult(features, block, target_dtype, batch_size, use_blockwise)
+        result = ch.zeros(self.proj_dim, self.proj_dim, dtype=self.dtype, device=self.device)
+        blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
+        for block in blocks:
+            result += block.T.to(self.device) @ block.to(self.device)
 
         return result
+
+    def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor, **kwargs) -> Tensor:
+        blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
+        xtx_inv = ch.linalg.inv(xtx.to(ch.float32))
+
+        # center X^TX inverse a bit to avoid numerical issues when going to float16
+        xtx_inv /= xtx_inv.abs().mean()
+
+        xtx_inv = xtx_inv.to(self.dtype)
+
+        result = ch.empty(grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device=self.device)
+        for i, block in enumerate(blocks):
+            start = i * self.CUDA_MAX_DIM_SIZE
+            end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
+            result[start: end] = (block.to(self.device) @ xtx_inv)
+
+        return result
+
+    def get_scores(self, features: Tensor, target_grads: Tensor, accumulator: Tensor, target_dtype: type, **kwargs) -> Tensor:
+        block_size = kwargs.get('block_size', 16_384)
+
+        assert features.device == ch.device('cpu'), "Tensor `features` expected to be on cpu for blockwise multiplication"
+        assert target_grads.device == ch.device('cpu'), "Tensor `target_grads` expected to be on cpu for blockwise multiplication"
+
+        return self.get_matrix_mult_blockwise(features, target_grads, accumulator, target_dtype, bs=block_size)
+
+SCORE_COMPUTERS = {
+    'BasicSingleBlockScoreComputer': BasicSingleBlockScoreComputer,
+    'BasicScoreComputer': BasicScoreComputer,
+    'BlockwiseScoreComputer': BlockwiseScoreComputer,
+}
