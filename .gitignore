@@ -141,3 +141,5 @@ trak_results/
 
 # session
 Session.vim
+local/
+*trak_results/
