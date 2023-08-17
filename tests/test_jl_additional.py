@@ -38,6 +38,16 @@ PARAM = list(product([123],  # seed
                      ))
 
 
+# TEST CASES 3 (ONLY for test_same_features_diff_sms)
+PARAM = list(product([123],  # seed
+                     [ProjectionType.rademacher],  # proj type
+                     [ch.float32],  # dtype
+                     [
+                         (32, 100_000),
+                     ],  # input shape
+                     [4_096],  # proj dim
+                     ))
+
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
 def test_same_features(seed,
@@ -63,3 +73,43 @@ def test_same_features(seed,
     p = proj.project(g, model_id=0)
 
     assert ch.allclose(p[0], p[-1])
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_same_features_diff_sms(seed,
+                                proj_type,
+                                dtype,
+                                proj_dim,
+                                input_shape,
+                                ):
+    """
+    Check that output is the same for the same features
+    """
+    g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
+
+
+    # project with all SMs available
+    proj_full_sms = CudaProjector(grad_dim=input_shape[-1],
+                                  proj_dim=proj_dim,
+                                  proj_type=proj_type,
+                                  seed=seed,
+                                  device='cuda:0',
+                                  dtype=dtype,
+                                  max_batch_size=MAX_BATCH_SIZE
+                                  )
+    p_full_sms = proj_full_sms.project(g, model_id=0)
+
+    # project with half SMs available
+    proj_half_sms = CudaProjector(grad_dim=input_shape[-1],
+                                  proj_dim=proj_dim,
+                                  proj_type=proj_type,
+                                  seed=seed,
+                                  device='cuda:0',
+                                  dtype=dtype,
+                                  max_batch_size=MAX_BATCH_SIZE
+                                  )
+
+    proj_half_sms.num_sms = max(proj_half_sms.num_sms // 2, 1)
+    p_half_sms = proj_half_sms.project(g, model_id=0)
+
+    assert ch.allclose(p_full_sms, p_half_sms)
