@@ -273,6 +273,7 @@ class CudaProjector(AbstractProjector):
             import fast_jl
             # test run to catch at init time if projection goes through
             fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
+            # fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms, 0)
         except ImportError:
             err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
                   See the installation FAQs for more details."
@@ -295,6 +296,7 @@ class CudaProjector(AbstractProjector):
 
         try:
             result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+            # result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, 108, 0)
         except RuntimeError as e:
             if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':  # noqa: E501
                 # provide a more helpful error message
@@ -303,3 +305,63 @@ class CudaProjector(AbstractProjector):
                 raise e
 
         return result
+
+class ChunkedCudaProjector:
+    def __init__(self,
+                    projector_per_chunk: list,
+                    max_chunk_size: int,
+                    params_per_chunk: list,
+                    feat_bs: int,
+                    device: torch.device,
+                    dtype: torch.dtype,):
+
+        self.projector_per_chunk = projector_per_chunk
+        self.proj_dim = self.projector_per_chunk[0].proj_dim
+        self.proj_type = self.projector_per_chunk[0].proj_type
+        self.params_per_chunk = params_per_chunk
+
+        self.max_chunk_size = max_chunk_size
+        self.feat_bs = feat_bs
+        self.device = device
+        self.dtype = dtype
+
+        self.ch_input = ch.zeros(size=(self.feat_bs, self.max_chunk_size),
+                                 device=self.device,
+                                 dtype=self.dtype)
+
+    def project(self, grads, model_id):
+        ch_output = ch.zeros(size=(self.feat_bs, self.proj_dim),
+                             device=self.device,
+                             dtype=self.dtype)
+        pointer = 0
+        # here we need to iterate over params, keep a counter
+        # of params so far, and when prev chunk has enough,
+        # project, then continue with current chunk
+        projector_index = 0
+        for i, p in enumerate(grads.values()):
+            if len(p.shape) < 2:
+                p_flat = p.data.unsqueeze(-1)
+            else:
+                p_flat = p.data.flatten(start_dim=1)
+
+            param_size = p_flat.size(1)
+            if pointer + param_size > self.max_chunk_size:
+                # fill remaining entries with 0
+                assert pointer == self.params_per_chunk[projector_index]
+                # project and accumulate
+                ch_output.add_(self.projector_per_chunk[projector_index].project(self.ch_input[:, :pointer].contiguous(), model_id=model_id))
+                # reset counter
+                pointer = 0
+                projector_index += 1
+
+            # continue accumulation
+            self.ch_input[:, pointer:pointer + param_size].copy_(p_flat)
+            pointer += param_size
+
+        # at the end, we need to project remaining items
+        # fill remaining entries with 0
+        assert pointer == self.params_per_chunk[projector_index]
+        # project and accumulate
+        ch_output.add_(self.projector_per_chunk[projector_index].project(self.ch_input[:, :pointer].contiguous(), model_id=model_id))
+
+        return ch_output

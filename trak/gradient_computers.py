@@ -102,17 +102,23 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         # taking the gradient wrt weights (second argument of get_output, hence argnums=1)
         grads_loss = torch.func.grad(self.modelout_fn.get_output, has_aux=False, argnums=1)
         # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
-        grads = torch.empty(size=(batch[0].shape[0], self.num_params),
-                            dtype=batch[0].dtype,
-                            device=batch[0].device)
+        # grads = torch.empty(size=(batch[0].shape[0], self.num_params),
+        #                     dtype=batch[0].dtype,
+        #                     device=batch[0].device)
 
-        vectorize(torch.func.vmap(grads_loss,
-                                  in_dims=(None, None, None, *([0] * len(batch))),
-                                  randomness='different')(self.model,
-                                                          self.func_weights,
-                                                          self.func_buffers,
-                                                          *batch),
-                  grads)
+        # vectorize(torch.func.vmap(grads_loss,
+        #                           in_dims=(None, None, None, *([0] * len(batch))),
+        #                           randomness='different')(self.model,
+        #                                                   self.func_weights,
+        #                                                   self.func_buffers,
+        #                                                   *batch),
+        #           grads)
+        grads = torch.func.vmap(grads_loss,
+                                in_dims=(None, None, None, *([0] * len(batch))),
+                                randomness='different')(self.model,
+                                                        self.func_weights,
+                                                        self.func_buffers,
+                                                        *batch)
 
         return grads
 

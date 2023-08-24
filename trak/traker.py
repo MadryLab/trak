@@ -1,15 +1,16 @@
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
-from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
+from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector, ChunkedCudaProjector
 from .gradient_computers import FunctionalGradientComputer,\
                                 AbstractGradientComputer
 from .score_computers import SCORE_COMPUTERS
 from .savers import AbstractSaver, MmapSaver, ModelIDException
-from .utils import get_num_params
+from .utils import get_num_params, get_param_chunks
 
 from typing import Iterable, Optional, Union
 from pathlib import Path
 from tqdm import tqdm
 from torch import Tensor
+import numpy as np
 
 import logging
 import numpy as np
@@ -38,6 +39,7 @@ class TRAKer():
                  logging_level=logging.INFO,
                  use_half_precision: bool = True,
                  proj_max_batch_size: int = 32,
+                 feat_bs: int = 32
                  ) -> None:
         """
 
@@ -105,7 +107,9 @@ class TRAKer():
         self.logger.warning('TRAK is still in an early 0.x.x version.\n\
                              Report any issues at https://github.com/MadryLab/trak/issues')
 
+        self.feat_bs = feat_bs
         self.num_params = get_num_params(self.model)
+        self.max_chunk_size, self.params_per_chunk = get_param_chunks(self.model, self.feat_bs)
         # inits self.projector
         self.init_projector(projector, proj_dim, proj_max_batch_size)
 
@@ -169,7 +173,7 @@ class TRAKer():
                 import fast_jl
                 test_gradient = ch.ones(1, self.num_params).cuda()
                 num_sms = ch.cuda.get_device_properties('cuda').multi_processor_count
-                fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
+                fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms, 0)
                 projector = CudaProjector
 
             except (ImportError, RuntimeError, AttributeError) as e:
@@ -177,13 +181,31 @@ class TRAKer():
                 self.logger.error('Defaulting to BasicProjector.')
                 projector = BasicProjector
 
-            self.projector = projector(grad_dim=self.num_params,
-                                       proj_dim=self.proj_dim,
-                                       seed=0,
-                                       proj_type=ProjectionType.rademacher,
-                                       max_batch_size=proj_max_batch_size,
-                                       dtype=self.dtype,
-                                       device=self.device)
+            projector_per_chunk = [
+                    projector(grad_dim=chunk_size,
+                              proj_dim=self.proj_dim,
+                              seed=i,
+                              proj_type=ProjectionType.rademacher,
+                              max_batch_size=proj_max_batch_size,
+                              dtype=self.dtype,
+                              device=self.device)
+
+                    for i, chunk_size in enumerate(self.params_per_chunk)
+            ]
+            self.projector = ChunkedCudaProjector(projector_per_chunk,
+                                                  self.max_chunk_size,
+                                                  self.params_per_chunk,
+                                                  self.feat_bs,
+                                                  self.device,
+                                                  self.dtype)
+
+            # self.projector = projector(grad_dim=self.num_params,
+            #                            proj_dim=self.proj_dim,
+            #                            seed=0,
+            #                            proj_type=ProjectionType.rademacher,
+            #                            max_batch_size=proj_max_batch_size,
+            #                            dtype=self.dtype,
+            #                            device=self.device)
 
     def load_checkpoint(self,
                         checkpoint: Iterable[Tensor],
@@ -392,7 +414,6 @@ class TRAKer():
             num_samples = inds.reshape(-1).shape[0]
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
-
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
         grads /= self.normalize_factor
 
@@ -504,7 +525,8 @@ class TRAKer():
         # _scores[:] = (cumulative_scores / _num_models_used) #* (_avg_out_to_losses / _num_models_used)
 
         # new version
-        _scores[:] = cumulative_scores.detach().numpy() #* (_avg_out_to_losses / _num_models_used)
+        _scores[:] = cumulative_scores.detach().numpy()
+        # _scores[:] = cumulative_scores.detach().numpy() * (_avg_out_to_losses / len(model_ids))
 
         self.logger.debug(f'Scores dtype is {_scores.dtype}')
         self.saver.save_scores(exp_name)

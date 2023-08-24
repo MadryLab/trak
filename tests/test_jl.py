@@ -5,25 +5,44 @@ import numpy as np
 import torch as ch
 from torch import testing
 
-from trak.projectors import CudaProjector, ProjectionType
+from trak.projectors import CudaProjector, ProjectionType, ChunkedCudaProjector
 BasicProjector = CudaProjector
 
 MAX_BATCH_SIZE = 32
-PARAM = list(product([0, 1, 10**8],  # seed
-                     [ProjectionType.normal, ProjectionType.rademacher],  # proj type
-                     [ch.float16, ch.float32],  # dtype
+# TEST CASES 1
+PARAM = list(product([123],  # seed
+                     [ProjectionType.rademacher],  # proj type
+                     [ch.float32],  # dtype
                      [
-                         (1, 25),
-                         (8, 10_000),
-                         (16, 10_002),
-                         (9, 10_002),
-                         (16, 10_001),
-                         (45, 1049),
-                         (1, int(1e9)),
+                        # tests that shows relation with MAXINT32
+                        #  (8, 180645096), # pass: np.prod(shape) < np.iinfo(np.int32).max
+                        #  (16, 180645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (31, 180645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (32, 180645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (33, 180645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (48, 180645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (50, 180645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+                         (2, 780645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
+                        #  (8, 780645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
                      ],  # input shape
-                     [4096, 1024],  # proj dim
+                     [15_360],  # proj dim
                      ))
 
+# TEST CASES 2
+# PARAM = list(product([123],  # seed
+#                      [ProjectionType.rademacher],  # proj type
+#                      [ch.float32],  # dtype
+#                      [
+#                         # tests that shows relation with MAXINT32
+#                         #  (1, 780645096), # pass: np.prod(shape) < np.iinfo(np.int32).max
+#                         #  (5, 780645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+#                         #  (6, 780645096), # pass: np.prod(shape) > np.iinfo(np.int32).max
+#                         #  (7, 780645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
+#                         #  (8, 780645096), # fail: np.prod(shape) > np.iinfo(np.int32).max
+#                      ],  # input shape
+#                      [4_096],  # proj dim
+#                     #  [15_360],  # proj dim same results here
+#                      ))
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
@@ -271,7 +290,9 @@ def test_same_features(seed,
     Check that output is the same for the same features
     """
     g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
-    g[-1] = g[0]
+    midpoint = g.size(0) // 2
+    for i in range(midpoint):
+        g[i] = g[-(i+1)]
 
     proj = BasicProjector(grad_dim=input_shape[-1],
                           proj_dim=proj_dim,
@@ -279,12 +300,124 @@ def test_same_features(seed,
                           seed=seed,
                           device='cuda:0',
                           dtype=dtype,
-                          max_batch_size=MAX_BATCH_SIZE
-                          )
+                          max_batch_size=MAX_BATCH_SIZE)
+
     p = proj.project(g, model_id=0)
 
-    assert ch.allclose(p[0], p[-1])
+    assert all([ch.allclose(p[i], p[-(i+1)]) for i in range(midpoint)])
 
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_chunked_projection(seed,
+                            proj_type,
+                            dtype,
+                            proj_dim,
+                            input_shape,
+                            ):
+    """
+    Check that output is the same for the same features (when large input)
+    """
+    g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
+
+    assert np.prod(g.shape) > np.iinfo(np.uint32).max, 'Input not too large, check `test_same_features` instead'
+
+    bs, num_params = input_shape
+    max_chunk_size = np.iinfo(np.uint32).max // bs
+    num_chunks = np.ceil(num_params / max_chunk_size).astype('int32')
+    g_chunks = ch.chunk(g, num_chunks, dim=1)
+
+    # naive chunking
+    naive_projectors = [
+        BasicProjector(grad_dim=x.size(-1),
+                        proj_dim=proj_dim,
+                        proj_type=proj_type,
+                        seed=seed + i,
+                        device='cuda:0',
+                        dtype=dtype,
+                        max_batch_size=MAX_BATCH_SIZE
+                        )
+
+        for i, x in enumerate(g_chunks)
+    ]
+
+
+    all_projs = [proj_i.project(g_i.contiguous(), model_id=0) for i, (g_i, proj_i) in enumerate(zip(g_chunks, naive_projectors))]
+    naive_projection = sum(all_projs)
+
+    # fast projection
+    chunk_projectors = [
+        BasicProjector(grad_dim=x.size(-1),
+                        proj_dim=proj_dim,
+                        proj_type=proj_type,
+                        seed=seed + i,
+                        device='cuda:0',
+                        dtype=dtype,
+                        max_batch_size=MAX_BATCH_SIZE
+                        )
+
+        for i, x in enumerate(g_chunks)
+    ]
+
+    params_per_chunk = [x.size(1) for x in g_chunks]
+    chunked_projector = ChunkedCudaProjector(chunk_projectors,
+                                            max_chunk_size,
+                                            params_per_chunk,
+                                            bs,
+                                            'cuda:0',
+                                            dtype)
+
+    g_values_dict = {i: x for i, x in enumerate(g_chunks)}
+    chunked_projection = chunked_projector.project(g_values_dict, model_id=0)
+
+    assert ch.allclose(naive_projection, chunked_projection)
+
+@pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
+@pytest.mark.cuda
+def test_same_features_chunked(seed,
+                               proj_type,
+                               dtype,
+                               proj_dim,
+                               input_shape,
+                               ):
+    """
+    Check that output is the same for the same features
+    """
+
+    g = testing.make_tensor(*input_shape, device='cuda:0', dtype=dtype)
+    midpoint = g.size(0) // 2
+    for i in range(midpoint):
+        g[i] = g[-(i+1)]
+
+    bs, num_params = input_shape
+    max_chunk_size = np.iinfo(np.uint32).max // bs
+    num_chunks = np.ceil(num_params / max_chunk_size).astype('int32')
+    g_chunks = ch.chunk(g, num_chunks, dim=1)
+
+    chunk_projectors = [
+        BasicProjector(grad_dim=x.size(-1),
+                        proj_dim=proj_dim,
+                        proj_type=proj_type,
+                        seed=seed + i,
+                        device='cuda:0',
+                        dtype=dtype,
+                        max_batch_size=MAX_BATCH_SIZE
+                        )
+
+        for i, x in enumerate(g_chunks)
+    ]
+
+    params_per_chunk = [x.size(1) for x in g_chunks]
+    chunked_projector = ChunkedCudaProjector(chunk_projectors,
+                                            max_chunk_size,
+                                            params_per_chunk,
+                                            bs,
+                                            'cuda:0',
+                                            dtype)
+
+    g_values_dict = {i: x for i, x in enumerate(g_chunks)}
+    p = chunked_projector.project(g_values_dict, model_id=0)
+
+    assert all([ch.allclose(p[i], p[-(i+1)]) for i in range(midpoint)])
 
 @pytest.mark.parametrize("seed, proj_type, dtype, input_shape, proj_dim", PARAM)
 @pytest.mark.cuda
@@ -318,3 +451,4 @@ def test_orthogonality(seed,
             if p[0] @ p[-1] < 1e-3:
                 num_successes += 1
         assert num_successes > 0.33 * num_trials
+

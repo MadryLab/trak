@@ -3,6 +3,7 @@ import tempfile
 import torch
 ch = torch
 
+import numpy as np
 
 def test_install(use_fast_jl: bool = True):
     try:
@@ -56,6 +57,30 @@ def parameters_to_vector(parameters) -> Tensor:
 def get_num_params(model: torch.nn.Module) -> int:
     return parameters_to_vector(model.parameters()).numel()
 
+def get_param_chunks(model: torch.nn.Module, batch_size: int):
+
+    shapes = []
+    for p in model.parameters():
+        p_flat = p.flatten()
+        shapes.append(p_flat.size(0))
+
+    shapes = np.array(shapes)
+
+    chunk_sum = 0
+    proj_id = 0
+    max_chunk_size = np.iinfo(np.uint32).max // batch_size
+    chunk_id_per_group, params_per_chunk = [], []
+    for i, ps in enumerate(shapes):
+        if chunk_sum + ps >= max_chunk_size:
+            params_per_chunk.append(chunk_sum)
+            chunk_sum = 0
+            proj_id += 1
+
+        chunk_sum += ps
+        chunk_id_per_group.append(proj_id)
+
+    params_per_chunk.append(shapes.sum() - np.sum(params_per_chunk))
+    return max_chunk_size, params_per_chunk
 
 def is_not_buffer(ind, params_dict) -> bool:
     name = params_dict[ind]
