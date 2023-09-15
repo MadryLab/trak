@@ -39,7 +39,8 @@ class TRAKer():
                  logging_level=logging.INFO,
                  use_half_precision: bool = True,
                  proj_max_batch_size: int = 32,
-                 feat_bs: int = 32
+                 feat_bs: int = 32,
+                 drop_rate: float = 0,
                  ) -> None:
         """
 
@@ -111,7 +112,7 @@ class TRAKer():
         self.num_params = get_num_params(self.model)
         self.max_chunk_size, self.params_per_chunk = get_param_chunks(self.model, self.feat_bs)
         # inits self.projector
-        self.init_projector(projector, proj_dim, proj_max_batch_size)
+        self.init_projector(projector, proj_dim, proj_max_batch_size, drop_rate)
 
         # normalize to make X^TX numerically stable
         # doing this instead of normalizing the projector matrix
@@ -152,7 +153,7 @@ class TRAKer():
 
         self.ckpt_loaded = 'no ckpt loaded'
 
-    def init_projector(self, projector, proj_dim, proj_max_batch_size) -> None:
+    def init_projector(self, projector, proj_dim, proj_max_batch_size, drop_rate) -> None:
         """ Initialize the projector for a traker class
 
         Args:
@@ -181,14 +182,16 @@ class TRAKer():
                 self.logger.error('Defaulting to BasicProjector.')
                 projector = BasicProjector
 
+            seeds = np.random.randint(low=0, high=500, size=len(self.params_per_chunk))
             projector_per_chunk = [
                     projector(grad_dim=chunk_size,
                               proj_dim=self.proj_dim,
-                              seed=i,
+                              seed=seeds[i],
                               proj_type=ProjectionType.rademacher,
                               max_batch_size=proj_max_batch_size,
                               dtype=self.dtype,
-                              device=self.device)
+                              device=self.device,
+                              drop_rate=drop_rate)
 
                     for i, chunk_size in enumerate(self.params_per_chunk)
             ]
@@ -286,6 +289,8 @@ class TRAKer():
             self.logger.debug('All samples in batch already featurized.')
             return 0
 
+        self.projector.allocate_input()
+
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
         grads /= self.normalize_factor
@@ -313,10 +318,13 @@ class TRAKer():
                 class. Defaults to None.
 
         """
+        torch.cuda.empty_cache()
         if model_ids is None:
             model_ids = list(self.saver.model_ids.keys())
 
         self._last_ind = 0
+
+        self.projector.free_input()
 
         for model_id in tqdm(model_ids, desc='Finalizing features for all model IDs..'):
             if self.saver.model_ids.get(model_id) is None:
@@ -412,6 +420,8 @@ class TRAKer():
             self._last_ind_target += num_samples
         else:
             num_samples = inds.reshape(-1).shape[0]
+
+        self.projector.allocate_input()
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)

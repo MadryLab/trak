@@ -230,7 +230,8 @@ class CudaProjector(AbstractProjector):
     capability >= 7.0.
     """
     def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, max_batch_size: int, *args, **kwargs) -> None:
+                 ProjectionType, device, max_batch_size: int, drop_rate: float=0,
+                 *args, **kwargs) -> None:
         """
 
         Args:
@@ -267,13 +268,15 @@ class CudaProjector(AbstractProjector):
             err = "CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector"
             raise ValueError(err)
 
-        self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
+        # self.num_sms = ch.cuda.get_device_properties(device.index).multi_processor_count
+        self.num_sms = 108
+        self.drop_rate = drop_rate
 
         try:
             import fast_jl
             # test run to catch at init time if projection goes through
-            fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
-            # fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms, 0)
+            # fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
+            fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms, 0)
         except ImportError:
             err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
                   See the installation FAQs for more details."
@@ -295,8 +298,8 @@ class CudaProjector(AbstractProjector):
         fn = getattr(fast_jl, function_name)
 
         try:
-            result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
-            # result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, 108, 0)
+            # result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+            result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms, self.drop_rate)
         except RuntimeError as e:
             if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':  # noqa: E501
                 # provide a more helpful error message
@@ -324,10 +327,25 @@ class ChunkedCudaProjector:
         self.feat_bs = feat_bs
         self.device = device
         self.dtype = dtype
+        self.input_allocated = False
+
+
+    def allocate_input(self):
+        if self.input_allocated:
+            return
 
         self.ch_input = ch.zeros(size=(self.feat_bs, self.max_chunk_size),
                                  device=self.device,
                                  dtype=self.dtype)
+
+        self.input_allocated = True
+
+    def free_input(self):
+        if not self.input_allocated:
+            return
+
+        del self.ch_input
+        self.input_allocated = False
 
     def project(self, grads, model_id):
         ch_output = ch.zeros(size=(self.feat_bs, self.proj_dim),
@@ -355,13 +373,14 @@ class ChunkedCudaProjector:
                 projector_index += 1
 
             # continue accumulation
-            self.ch_input[:, pointer:pointer + param_size].copy_(p_flat)
+            actual_bs = min(self.ch_input.size(0), p_flat.size(0))
+            self.ch_input[:actual_bs, pointer:pointer + param_size].copy_(p_flat)
             pointer += param_size
 
         # at the end, we need to project remaining items
         # fill remaining entries with 0
         assert pointer == self.params_per_chunk[projector_index]
         # project and accumulate
-        ch_output.add_(self.projector_per_chunk[projector_index].project(self.ch_input[:, :pointer].contiguous(), model_id=model_id))
+        ch_output[:actual_bs].add_(self.projector_per_chunk[projector_index].project(self.ch_input[:actual_bs, :pointer].contiguous(), model_id=model_id))
 
-        return ch_output
+        return ch_output[:actual_bs]

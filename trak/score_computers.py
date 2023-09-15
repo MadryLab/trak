@@ -111,7 +111,7 @@ class BlockwiseScoreComputer(AbstractScoreComputer):
     """ An implementation of :code:`ScoreComputer` that computes matmuls in a
     block-wise manner.
     """
-    def __init__(self, dtype, device, CUDA_MAX_DIM_SIZE: int = 5_000) -> None:
+    def __init__(self, dtype, device, CUDA_MAX_DIM_SIZE: int = 500) -> None:
         """
         Args:
             device (Union[str, torch.device]): torch device to do matmuls on
