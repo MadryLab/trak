@@ -38,6 +38,7 @@ class TRAKer():
                  logging_level=logging.INFO,
                  use_half_precision: bool = True,
                  proj_max_batch_size: int = 32,
+                 projector_seed: int = 0,
                  ) -> None:
         """
 
@@ -90,6 +91,12 @@ class TRAKer():
                 If True, TRAK will use half precision (float16) for all
                 computations and arrays will be stored in float16. Otherwise, it
                 will use float32. Defaults to True.
+            proj_max_batch_size (int):
+                Batch size used by fast_jl if teh CudaProjector is used. Must be
+                a multiple of 8. The maximum batch size is 32 for A100 GPUs, 16
+                for V100 GPUs, 40 for H100 GPUs. Defaults to 32.
+            projecotr_seed (int):
+                Random seed used by the projector. Defaults to 0.
 
         """
 
@@ -107,6 +114,7 @@ class TRAKer():
 
         self.num_params = get_num_params(self.model)
         # inits self.projector
+        self.proj_seed = projector_seed
         self.init_projector(projector, proj_dim, proj_max_batch_size)
 
         # normalize to make X^TX numerically stable
@@ -177,7 +185,7 @@ class TRAKer():
 
             self.projector = projector(grad_dim=self.num_params,
                                        proj_dim=self.proj_dim,
-                                       seed=0,
+                                       seed=self.proj_seed,
                                        proj_type=ProjectionType.rademacher,
                                        max_batch_size=proj_max_batch_size,
                                        dtype=self.dtype,
