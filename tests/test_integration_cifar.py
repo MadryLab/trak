@@ -49,4 +49,3 @@ def test_cifar10(tmp_path, device='cpu'):
 @pytest.mark.cuda
 def test_cifar10_cuda(tmp_path):
     test_cifar10(tmp_path, device='cuda:0')
-

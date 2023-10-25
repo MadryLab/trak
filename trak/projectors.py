@@ -158,9 +158,15 @@ class BasicProjector(AbstractProjector):
     a CUDA-enabled device with compute capability >=7.0 (see
     https://developer.nvidia.com/cuda-gpus).
     """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, block_size: int = 200, dtype=ch.float32,
-                 model_id=0, *args, **kwargs) -> None:
+    def __init__(self, grad_dim: int,
+                 proj_dim: int,
+                 seed: int,
+                 proj_type: ProjectionType,
+                 device: torch.device,
+                 block_size: int = 100,
+                 dtype: torch.dtype = ch.float32,
+                 model_id=0,
+                 *args, **kwargs) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.block_size = min(self.proj_dim, block_size)
