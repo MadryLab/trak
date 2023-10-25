@@ -115,7 +115,9 @@ class TRAKer():
         self.num_params = get_num_params(self.model)
         # inits self.projector
         self.proj_seed = projector_seed
-        self.init_projector(projector, proj_dim, proj_max_batch_size)
+        self.init_projector(projector=projector,
+                            proj_dim=proj_dim,
+                            proj_max_batch_size=proj_max_batch_size)
 
         # normalize to make X^TX numerically stable
         # doing this instead of normalizing the projector matrix
@@ -173,25 +175,37 @@ class TRAKer():
 
         else:
             self.proj_dim = proj_dim
-            try:
-                import fast_jl
-                test_gradient = ch.ones(1, self.num_params).cuda()
-                num_sms = ch.cuda.get_device_properties('cuda').multi_processor_count
-                fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
-                projector = CudaProjector
-
-            except (ImportError, RuntimeError, AttributeError) as e:
-                self.logger.error(f'Could not use CudaProjector.\nReason: {str(e)}')
-                self.logger.error('Defaulting to BasicProjector.')
+            if self.device == 'cpu':
+                self.logger.info('Using BasicProjector since device is CPU')
                 projector = BasicProjector
+                # Sampling from bernoulli distribution is not supported for
+                # dtype float16 on CPU; playing it safe here by defaulting to
+                # normal projection, rather than rademacher
+                proj_type = ProjectionType.normal
+                self.logger.info('Using Normal projection')
+            else:
+                try:
+                    import fast_jl
+                    test_gradient = ch.ones(1, self.num_params).cuda()
+                    num_sms = ch.cuda.get_device_properties('cuda').multi_processor_count
+                    fast_jl.project_rademacher_8(test_gradient, self.proj_dim, 0, num_sms)
+                    projector = CudaProjector
 
+                except (ImportError, RuntimeError, AttributeError) as e:
+                    self.logger.error(f'Could not use CudaProjector.\nReason: {str(e)}')
+                    self.logger.error('Defaulting to BasicProjector.')
+                    projector = BasicProjector
+                proj_type = ProjectionType.rademacher
+
+            self.logger.debug(f'Initializing projector with grad_dim {self.num_params}')
             self.projector = projector(grad_dim=self.num_params,
                                        proj_dim=self.proj_dim,
                                        seed=self.proj_seed,
-                                       proj_type=ProjectionType.rademacher,
+                                       proj_type=proj_type,
                                        max_batch_size=proj_max_batch_size,
                                        dtype=self.dtype,
                                        device=self.device)
+            self.logger.debug(f'Initialized projector with proj_dim {self.proj_dim}')
 
     def load_checkpoint(self,
                         checkpoint: Iterable[Tensor],
@@ -252,11 +266,11 @@ class TRAKer():
                 Number of samples in the batch. Defaults to None.
 
         """
-        assert self.ckpt_loaded == self.saver.current_model_id,\
+        assert self.ckpt_loaded == self.saver.current_model_id, \
             "Load a checkpoint using traker.load_checkpoint before featurizing"
-        assert (inds is None) or (num_samples is None),\
+        assert (inds is None) or (num_samples is None), \
             "Exactly one of num_samples and inds should be specified"
-        assert (inds is not None) or (num_samples is not None),\
+        assert (inds is not None) or (num_samples is not None), \
             "Exactly one of num_samples and inds should be specified"
 
         if num_samples is not None:
@@ -384,9 +398,9 @@ class TRAKer():
                 Number of samples in the batch. Defaults to None.
 
         """
-        assert (inds is None) or (num_samples is None),\
+        assert (inds is None) or (num_samples is None), \
             "Exactly one of num_samples and inds should be specified"
-        assert (inds is not None) or (num_samples is not None),\
+        assert (inds is not None) or (num_samples is not None), \
             "Exactly one of num_samples and inds should be specified"
 
         if self.saver.model_ids[self.saver.current_model_id]['is_finalized'] == 0:
