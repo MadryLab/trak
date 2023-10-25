@@ -141,3 +141,8 @@ trak_results/
 
 # session
 Session.vim
+local/
+*trak_results/
+slurm-*.out
+A100.pt
+H100.pt

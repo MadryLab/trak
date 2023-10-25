@@ -1,24 +1,11 @@
-"""
-Example applying TRAK to language models finetuned for text classification.
-
-Dataset: GLUE QNLI
-Model: bert-base-cased (https://huggingface.co/bert-base-cased)
-
-Tokenizers and loaders are adapted from the Hugging Face example
-(https://github.com/huggingface/transformers/tree/main/examples/pytorch/text-classification).
-
-"""
-
-from argparse import ArgumentParser
 from tqdm import tqdm
-
-import torch as ch
-import torch.nn as nn
 from torch.utils.data import DataLoader
+import torch.nn as nn
+import pytest
+import logging
 
 from trak import TRAKer
 
-# Huggingface
 from datasets import load_dataset
 from transformers import (
     AutoConfig,
@@ -40,9 +27,9 @@ GLUE_TASK_TO_KEYS = {
     "wnli": ("sentence1", "sentence2"),
 }
 
-# NOTE: CHANGE THIS IF YOU WANT TO RUN ON FULL DATASET
-TRAIN_SET_SIZE = 50_000
-VAL_SET_SIZE = 5_463
+# for testing purposes
+TRAIN_SET_SIZE = 20
+VAL_SET_SIZE = 10
 
 
 class SequenceClassificationModel(nn.Module):
@@ -84,10 +71,7 @@ def get_dataset(split, inds=None):
             cache_dir=None,
             use_auth_token=None,
         )
-    label_list = raw_datasets["train"].features["label"].names
     sentence1_key, sentence2_key = GLUE_TASK_TO_KEYS['qnli']
-
-    label_to_id = None  # {v: i for i, v in enumerate(label_list)}
 
     tokenizer = AutoTokenizer.from_pretrained(
         'bert-base-cased',
@@ -107,9 +91,6 @@ def get_dataset(split, inds=None):
         )
         result = tokenizer(*args, padding=padding, max_length=max_seq_length, truncation=True)
 
-        # Map labels to IDs (not necessary for GLUE tasks)
-        if label_to_id is not None and "label" in examples:
-            result["label"] = [(label_to_id[lbl] if lbl != -1 else -1) for lbl in examples["label"]]
         return result
 
     raw_datasets = raw_datasets.map(
@@ -128,14 +109,7 @@ def get_dataset(split, inds=None):
     return ds
 
 
-def init_model(ckpt_path, device='cuda'):
-    model = SequenceClassificationModel()
-    sd = ch.load(ckpt_path)
-    model.model.load_state_dict(sd)
-    return model
-
-
-def init_loaders(batch_size=16):
+def init_loaders(batch_size=10):
     ds_train = get_dataset('train')
     ds_train = ds_train.select(range(TRAIN_SET_SIZE))
     ds_val = get_dataset('val')
@@ -148,28 +122,33 @@ def process_batch(batch):
     return batch['input_ids'], batch['token_type_ids'], batch['attention_mask'], batch['labels']
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument('--ckpt', type=str, help='model checkpoint', required=True)
-    parser.add_argument('--out', type=str, help='dir to save TRAK scores and metadata to', required=True)
-    args = parser.parse_args()
-
-    device = 'cuda'
+# model too large to test on CPU
+@pytest.mark.cuda
+def test_qnli(tmp_path, device='cuda'):
     loader_train, loader_val = init_loaders()
-    model = init_model(args.ckpt, device)
+
+    # no need to load model from checkpoint, just testing featurization and scoring
+    model = SequenceClassificationModel()
+
+    logger = logging.getLogger('QNLI')
+    logger.setLevel(logging.DEBUG)
+    logger.info(f'Initializing TRAKer with device {device}')
 
     traker = TRAKer(model=model,
                     task='text_classification',
                     train_set_size=TRAIN_SET_SIZE,
-                    save_dir=args.out,
+                    save_dir=tmp_path,
                     device=device,
-                    proj_dim=1024)
+                    logging_level=logging.DEBUG,
+                    proj_dim=512)
 
+    logger.info('Loading checkpoint')
     traker.load_checkpoint(model.state_dict(), model_id=0)
+    logger.info('Loaded checkpoint')
     for batch in tqdm(loader_train, desc='Featurizing..'):
         # process batch into compatible form for TRAKer TextClassificationModelOutput
         batch = process_batch(batch)
-        batch = [x.cuda() for x in batch]
+        batch = [x.to(device) for x in batch]
         traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 
     traker.finalize_features()
@@ -180,7 +159,7 @@ if __name__ == "__main__":
                                     num_targets=VAL_SET_SIZE)
     for batch in tqdm(loader_val, desc='Scoring..'):
         batch = process_batch(batch)
-        batch = [x.cuda() for x in batch]
+        batch = [x.to(device) for x in batch]
         traker.score(batch=batch, num_samples=batch[0].shape[0])
 
-    scores = traker.finalize_scores(exp_name='qnli')
+    traker.finalize_scores(exp_name='qnli')

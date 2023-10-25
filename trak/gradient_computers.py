@@ -28,6 +28,8 @@ class AbstractGradientComputer(ABC):
                  model: torch.nn.Module,
                  task: AbstractModelOutput,
                  grad_dim: Optional[int] = None,
+                 dtype: Optional[torch.dtype] = torch.float16,
+                 device: Optional[torch.device] = 'cuda',
                  ) -> None:
         """ Initializes attributes, nothing too interesting happening.
 
@@ -39,11 +41,17 @@ class AbstractGradientComputer(ABC):
             grad_dim (int, optional):
                 Size of the gradients (number of model parameters). Defaults to
                 None.
+            dtype (torch.dtype, optional):
+                Torch dtype of the gradients. Defaults to torch.float16.
+            device (torch.device, optional):
+                Torch device where gradients will be stored. Defaults to 'cuda'.
 
         """
         self.model = model
         self.modelout_fn = task
         self.grad_dim = grad_dim
+        self.dtype = dtype
+        self.device = device
 
     @abstractmethod
     def load_model_params(self, model) -> None:
@@ -62,8 +70,10 @@ class FunctionalGradientComputer(AbstractGradientComputer):
     def __init__(self,
                  model: torch.nn.Module,
                  task: AbstractModelOutput,
-                 grad_dim: int) -> None:
-        super().__init__(model, task, grad_dim)
+                 grad_dim: int,
+                 dtype: torch.dtype,
+                 device: torch.device) -> None:
+        super().__init__(model, task, grad_dim, dtype, device)
         self.model = model
         self.num_params = get_num_params(self.model)
         self.load_model_params(model)
@@ -103,8 +113,8 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         grads_loss = torch.func.grad(self.modelout_fn.get_output, has_aux=False, argnums=1)
         # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
         grads = torch.empty(size=(batch[0].shape[0], self.num_params),
-                            dtype=batch[0].dtype,
-                            device=batch[0].device)
+                            dtype=self.dtype,
+                            device=self.device)
 
         vectorize(torch.func.vmap(grads_loss,
                                   in_dims=(None, None, None, *([0] * len(batch))),
@@ -151,8 +161,10 @@ class IterativeGradientComputer(AbstractGradientComputer):
     def __init__(self,
                  model,
                  task: AbstractModelOutput,
-                 grad_dim: int) -> None:
-        super().__init__(model, task, grad_dim)
+                 grad_dim: int,
+                 dtype: torch.dtype,
+                 device: torch.device) -> None:
+        super().__init__(model, task, grad_dim, dtype, device)
         self.load_model_params(model)
 
     def load_model_params(self, model) -> Tensor:

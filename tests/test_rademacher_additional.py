@@ -15,7 +15,8 @@ bs_error_str = 'CUDA error: too many resources requested for launch\nCUDA kernel
 new_bs_error_str = f'The batch size of the CudaProjector is too large for your GPU. Reduce it by using the max_batch_size argument of the CudaProjector.\nOriginal error: {bs_error_str}' # noqa
 
 
-PARAM = list(product([8], [1024, 2048], [512, 1024, 2048], [0, 1]))
+PARAM = list(product([8, 16, 32, 48], [180645096], [2048, 4096, 15_360], [0]))
+# PARAM = list(product([1, 6, 7, 8], [780645096], [4096, 15_360], [0]))
 
 
 @pytest.mark.parametrize("bs, input_size, output_size, seed ", PARAM)
