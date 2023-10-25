@@ -1,6 +1,6 @@
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
-from .gradient_computers import FunctionalGradientComputer,\
+from .gradient_computers import FunctionalGradientComputer, \
                                 AbstractGradientComputer
 from .score_computers import AbstractScoreComputer, BasicScoreComputer
 from .savers import AbstractSaver, MmapSaver, ModelIDException
@@ -129,7 +129,9 @@ class TRAKer():
 
         self.gradient_computer = gradient_computer(model=self.model,
                                                    task=self.task,
-                                                   grad_dim=self.num_params)
+                                                   grad_dim=self.num_params,
+                                                   dtype=self.dtype,
+                                                   device=self.device)
 
         if score_computer is None:
             score_computer = BasicScoreComputer
