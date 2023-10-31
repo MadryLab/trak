@@ -322,7 +322,11 @@ class MmapSaver(AbstractSaver):
             self.logger.debug(f'Loading {fname}.')
         if dtype is None:
             dtype = np.float16 if self.use_half_precision else np.float32
-        return open_memmap(filename=fname, mode=mode, shape=shape, dtype=dtype)
+        try:
+            return open_memmap(filename=fname, mode=mode, shape=shape, dtype=dtype)
+        except OSError:
+            self.logger.info(f'{fname} does not exist, skipping.')
+            return None
 
     def load_current_store(self,
                            model_id: int,
