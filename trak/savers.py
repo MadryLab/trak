@@ -438,7 +438,9 @@ class MmapSaver(AbstractSaver):
         prefix = self.save_dir.joinpath("scores")
         self.logger.info(f"Saving scores in {prefix}/{exp_name}.mmap")
         self.current_store[f"{exp_name}_scores"].flush()
-        self.experiments[exp_name]["scores_finalized"] = True
+        self.experiments[exp_name]["scores_finalized"] = 1
+        with open(self.experiments_file, "w") as fp:
+            json.dump(self.experiments, fp)
 
     def del_grads(self, model_id):
         grads_file = self.save_dir.joinpath(str(model_id)).joinpath("grads.mmap")
