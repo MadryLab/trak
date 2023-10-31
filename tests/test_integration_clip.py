@@ -7,29 +7,37 @@ import open_clip
 
 
 @pytest.mark.cuda
-def test_mscoco(tmp_path, device='cuda:0'):
-    model, _, preprocess = open_clip.create_model_and_transforms('RN50')
+def test_mscoco(tmp_path, device="cuda:0"):
+    model, _, preprocess = open_clip.create_model_and_transforms("RN50")
     model = model.to(device)
     model.eval()
 
-    tokenizer = open_clip.get_tokenizer('RN50')
+    tokenizer = open_clip.get_tokenizer("RN50")
 
-    ds_train = datasets.CocoCaptions(root='/path/to/coco2014/images/train2014',
-                                     annFile='/path/to/coco2014/annotations/annotations/captions_train2014.json'
-                                     )
+    ds_train = datasets.CocoCaptions(
+        root="/path/to/coco2014/images/train2014",
+        annFile="/path/to/coco2014/annotations/annotations/captions_train2014.json",
+    )
 
-    traker = TRAKer(model=model,
-                    task='clip',
-                    save_dir=tmp_path,
-                    train_set_size=len(ds_train),
-                    device=device,
-                    proj_dim=512,
-                    logging_level=logging.DEBUG
-                    )
+    traker = TRAKer(
+        model=model,
+        task="clip",
+        save_dir=tmp_path,
+        train_set_size=len(ds_train),
+        device=device,
+        proj_dim=512,
+        logging_level=logging.DEBUG,
+    )
 
-    traker.task.get_embeddings(model, ds_train, batch_size=1, size=600, embedding_dim=1024,
-                               preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
-                               preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
+    traker.task.get_embeddings(
+        model,
+        ds_train,
+        batch_size=1,
+        size=600,
+        embedding_dim=1024,
+        preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
+        preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device),
+    )
 
     traker.load_checkpoint(model.state_dict(), model_id=0)
     for bind, (img, captions) in enumerate(tqdm(ds_train)):

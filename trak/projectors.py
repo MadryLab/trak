@@ -4,27 +4,31 @@ from enum import Enum
 from torch import Tensor
 import math
 import torch
+
 ch = torch
 
 
 class ProjectionType(str, Enum):
-    normal: str = 'normal'
-    rademacher: str = 'rademacher'
+    normal: str = "normal"
+    rademacher: str = "rademacher"
 
 
 class AbstractProjector(ABC):
-    """ Implementations of the Projector class must implement the
+    """Implementations of the Projector class must implement the
     :meth:`AbstractProjector.project` method, which takes in model gradients and
     returns
     """
+
     @abstractmethod
-    def __init__(self,
-                 grad_dim: int,
-                 proj_dim: int,
-                 seed: int,
-                 proj_type: Union[str, ProjectionType],
-                 device: Union[str, torch.device]) -> None:
-        """ Initializes hyperparameters for the projection.
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: Union[str, ProjectionType],
+        device: Union[str, torch.device],
+    ) -> None:
+        """Initializes hyperparameters for the projection.
 
         Args:
             grad_dim (int):
@@ -53,7 +57,7 @@ class AbstractProjector(ABC):
 
     @abstractmethod
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        """ Performs the random projection. Model ID is included
+        """Performs the random projection. Model ID is included
         so that we generate different projection matrices for every
         model ID.
 
@@ -72,18 +76,21 @@ class NoOpProjector(AbstractProjector):
     A projector that returns the gradients as they are, i.e., implements
     :code:`projector.project(grad) = grad`.
     """
-    def __init__(self,
-                 grad_dim: int = 0,
-                 proj_dim: int = 0,
-                 seed: int = 0,
-                 proj_type: Union[str, ProjectionType] = 'na',
-                 device: Union[str, torch.device] = 'na',
-                 *args,
-                 **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int = 0,
+        proj_dim: int = 0,
+        seed: int = 0,
+        proj_type: Union[str, ProjectionType] = "na",
+        device: Union[str, torch.device] = "na",
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        """ A no-op method.
+        """A no-op method.
 
         Args:
             grads (Tensor): a batch of gradients to be projected
@@ -107,40 +114,56 @@ class BasicSingleBlockProjector(AbstractProjector):
     added this only for testing purposes), use instead the CudaProjector or
     BasicProjector.
     """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float32, model_id=0,
-                 *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device,
+        dtype=ch.float32,
+        model_id=0,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.model_id = model_id
         self.proj_type = proj_type
         self.generator = ch.Generator(device=self.device)
-        self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
+        self.generator = self.generator.manual_seed(
+            self.seed + int(1e4) * self.model_id
+        )
         self.dtype = dtype
 
-        self.proj_matrix = ch.empty(self.grad_dim,
-                                    self.proj_dim,
-                                    dtype=self.dtype,
-                                    device=self.device)
+        self.proj_matrix = ch.empty(
+            self.grad_dim, self.proj_dim, dtype=self.dtype, device=self.device
+        )
 
         self.generate_sketch_matrix()  # updates self.proj_matrix
 
     def generate_sketch_matrix(self):
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
+        if self.proj_type == ProjectionType.normal or self.proj_type == "normal":
             self.proj_matrix.normal_(generator=self.generator)
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
+        elif (
+            self.proj_type == ProjectionType.rademacher
+            or self.proj_type == "rademacher"
+        ):
             self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
             # going from Bernoulli {0, 1} to Rademacher {-1, 1}
-            self.proj_matrix *= 2.
-            self.proj_matrix -= 1.
+            self.proj_matrix *= 2.0
+            self.proj_matrix -= 1.0
         else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+            raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         grads = grads.to(dtype=self.dtype)
         if model_id != self.model_id:
             self.model_id = model_id
-            self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
+            self.generator = self.generator.manual_seed(
+                self.seed + int(1e4) * self.model_id
+            )
             self.generate_sketch_matrix()  # updates self.proj_matrix
 
         return grads @ self.proj_matrix
@@ -158,15 +181,20 @@ class BasicProjector(AbstractProjector):
     a CUDA-enabled device with compute capability >=7.0 (see
     https://developer.nvidia.com/cuda-gpus).
     """
-    def __init__(self, grad_dim: int,
-                 proj_dim: int,
-                 seed: int,
-                 proj_type: ProjectionType,
-                 device: torch.device,
-                 block_size: int = 100,
-                 dtype: torch.dtype = ch.float32,
-                 model_id=0,
-                 *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device: torch.device,
+        block_size: int = 100,
+        dtype: torch.dtype = ch.float32,
+        model_id=0,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.block_size = min(self.proj_dim, block_size)
@@ -175,10 +203,9 @@ class BasicProjector(AbstractProjector):
         self.proj_type = proj_type
         self.model_id = model_id
 
-        self.proj_matrix = ch.empty(self.grad_dim,
-                                    self.block_size,
-                                    dtype=self.dtype,
-                                    device=self.device)
+        self.proj_matrix = ch.empty(
+            self.grad_dim, self.block_size, dtype=self.dtype, device=self.device
+        )
 
         self.generator = ch.Generator(device=self.device)
 
@@ -198,19 +225,23 @@ class BasicProjector(AbstractProjector):
 
     def generate_sketch_matrix(self, generator_state):
         self.generator.set_state(generator_state)
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
+        if self.proj_type == ProjectionType.normal or self.proj_type == "normal":
             self.proj_matrix.normal_(generator=self.generator)
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
+        elif (
+            self.proj_type == ProjectionType.rademacher
+            or self.proj_type == "rademacher"
+        ):
             self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
-            self.proj_matrix *= 2.
-            self.proj_matrix -= 1.
+            self.proj_matrix *= 2.0
+            self.proj_matrix -= 1.0
         else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+            raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
         grads = grads.to(dtype=self.dtype)
-        sketch = ch.zeros(size=(grads.size(0), self.proj_dim),
-                          dtype=self.dtype, device=self.device)
+        sketch = ch.zeros(
+            size=(grads.size(0), self.proj_dim), dtype=self.dtype, device=self.device
+        )
 
         if model_id != self.model_id:
             self.model_id = model_id
@@ -226,7 +257,9 @@ class BasicProjector(AbstractProjector):
 
                 st = ind * self.block_size
                 ed = min((ind + 1) * self.block_size, self.proj_dim)
-                sketch[:, st:ed] = grads.type(self.dtype) @ self.proj_matrix[:, :(ed - st)]
+                sketch[:, st:ed] = (
+                    grads.type(self.dtype) @ self.proj_matrix[:, : (ed - st)]
+                )
         return sketch.type(grads.dtype)
 
 
@@ -235,8 +268,18 @@ class CudaProjector(AbstractProjector):
     A performant implementation of the projection for CUDA with compute
     capability >= 7.0.
     """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, max_batch_size: int, *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device,
+        max_batch_size: int,
+        *args,
+        **kwargs,
+    ) -> None:
         """
 
         Args:
@@ -269,7 +312,7 @@ class CudaProjector(AbstractProjector):
         if isinstance(device, str):
             device = ch.device(device)
 
-        if device.type != 'cuda':
+        if device.type != "cuda":
             err = "CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector"
             raise ValueError(err)
 
@@ -277,8 +320,11 @@ class CudaProjector(AbstractProjector):
 
         try:
             import fast_jl
+
             # test run to catch at init time if projection goes through
-            fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
+            fast_jl.project_rademacher_8(
+                ch.zeros(8, 1_000, device="cuda"), 512, 0, self.num_sms
+            )
         except ImportError:
             err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
                   See the installation FAQs for more details."
@@ -297,14 +343,22 @@ class CudaProjector(AbstractProjector):
 
         function_name = f"project_{self.proj_type.value}_{effective_batch_size}"
         import fast_jl
+
         fn = getattr(fast_jl, function_name)
 
         try:
-            result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+            result = fn(
+                grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms
+            )
         except RuntimeError as e:
-            if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':  # noqa: E501
+            if (
+                str(e)
+                == "CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n"
+            ):  # noqa: E501
                 # provide a more helpful error message
-                raise RuntimeError('The batch size of the CudaProjector is too large for your GPU. Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error.')  # noqa: E501
+                raise RuntimeError(
+                    "The batch size of the CudaProjector is too large for your GPU. Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error."
+                )  # noqa: E501
             else:
                 raise e
 

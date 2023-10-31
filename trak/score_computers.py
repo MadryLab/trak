@@ -11,6 +11,7 @@ class AbstractScoreComputer(ABC):
     - :code:`get_x_xtx_inv`
     - :code:`get_scores`
     """
+
     @abstractmethod
     def __init__(self, dtype, device) -> None:
         self.dtype = dtype
@@ -30,11 +31,12 @@ class AbstractScoreComputer(ABC):
 
 
 class BasicSingleBlockScoreComputer(AbstractScoreComputer):
-    """ A bare-bones implementation of :code:`ScoreComputer` that will likely
+    """A bare-bones implementation of :code:`ScoreComputer` that will likely
     OOM for almost all applications. Here for testing purposes only. Unless you
     have a good reason not to, you should use :func:`BasicScoreComputer`
     instead.
     """
+
     def __init__(self, dtype, device) -> None:
         super().__init__(dtype, device)
 
@@ -50,9 +52,10 @@ class BasicSingleBlockScoreComputer(AbstractScoreComputer):
 
 
 class BasicScoreComputer(AbstractScoreComputer):
-    """ An implementation of :code:`ScoreComputer` that computes matmuls in a
+    """An implementation of :code:`ScoreComputer` that computes matmuls in a
     block-wise manner.
     """
+
     def __init__(self, dtype, device, CUDA_MAX_DIM_SIZE: int = 100_000) -> None:
         """
         Args:
@@ -65,7 +68,9 @@ class BasicScoreComputer(AbstractScoreComputer):
 
     def get_xtx(self, grads: Tensor) -> Tensor:
         self.proj_dim = grads.shape[1]
-        result = ch.zeros(self.proj_dim, self.proj_dim, dtype=self.dtype, device=self.device)
+        result = ch.zeros(
+            self.proj_dim, self.proj_dim, dtype=self.dtype, device=self.device
+        )
         blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
 
         for block in blocks:
@@ -82,11 +87,13 @@ class BasicScoreComputer(AbstractScoreComputer):
 
         xtx_inv = xtx_inv.to(self.dtype)
 
-        result = ch.empty(grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device=self.device)
+        result = ch.empty(
+            grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device=self.device
+        )
         for i, block in enumerate(blocks):
             start = i * self.CUDA_MAX_DIM_SIZE
             end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[start: end] = (block.to(self.device) @ xtx_inv)
+            result[start:end] = block.to(self.device) @ xtx_inv
         return result
 
     def get_scores(self, features: Tensor, target_grads: Tensor) -> Tensor:
@@ -97,11 +104,13 @@ class BasicScoreComputer(AbstractScoreComputer):
             return features @ target_grads.T
 
         result = ch.empty(train_dim, target_dim, dtype=self.dtype, device=self.device)
-        blocks = ch.split(target_grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
+        blocks = ch.split(
+            target_grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0
+        )
 
         for i, block in enumerate(blocks):
             start = i * self.CUDA_MAX_DIM_SIZE
             end = min(target_grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[:, start: end] = features @ block.T
+            result[:, start:end] = features @ block.T
 
         return result

@@ -23,7 +23,7 @@ import torch as ch
 
 
 class AbstractModelOutput(ABC):
-    """ See, e.g. `this tutorial <https://trak.readthedocs.io/en/latest/clip.html>`_
+    """See, e.g. `this tutorial <https://trak.readthedocs.io/en/latest/clip.html>`_
     for an example on how to subclass :code:`AbstractModelOutput` for a task of
     your choice.
 
@@ -40,15 +40,14 @@ class AbstractModelOutput(ABC):
       the diagonal of) :math:`Q`.
 
     """
+
     @abstractmethod
     def __init__(self) -> None:
         pass
 
     @abstractmethod
-    def get_output(self,
-                   model,
-                   batch: Iterable[Tensor]) -> Tensor:
-        """ See Sections 2 & 3 of `our paper
+    def get_output(self, model, batch: Iterable[Tensor]) -> Tensor:
+        """See Sections 2 & 3 of `our paper
         <https://arxiv.org/abs/2303.14186>`_ for more details on what model
         output functions are in the context of TRAK and how to use & design
         them.
@@ -66,10 +65,8 @@ class AbstractModelOutput(ABC):
         ...
 
     @abstractmethod
-    def get_out_to_loss_grad(self,
-                             model,
-                             batch: Iterable[Tensor]) -> Tensor:
-        """ See Sections 2 & 3 of `our paper
+    def get_out_to_loss_grad(self, model, batch: Iterable[Tensor]) -> Tensor:
+        """See Sections 2 & 3 of `our paper
         <https://arxiv.org/abs/2303.14186>`_ for more details on what the
         out-to-loss functions (in the notation of the paper, :math:`Q`) are in
         the context of TRAK and how to use & design them.
@@ -85,11 +82,11 @@ class AbstractModelOutput(ABC):
 
 
 class ImageClassificationModelOutput(AbstractModelOutput):
-    """ Margin for (multiclass) image classification. See Section 3.3 of `our
+    """Margin for (multiclass) image classification. See Section 3.3 of `our
     paper <https://arxiv.org/abs/2303.14186>`_ for more details.
     """
 
-    def __init__(self, temperature: float = 1.) -> None:
+    def __init__(self, temperature: float = 1.0) -> None:
         """
         Args:
             temperature (float, optional): Temperature to use inside the
@@ -100,12 +97,14 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         self.loss_temperature = temperature
 
     @staticmethod
-    def get_output(model: Module,
-                   weights: Iterable[Tensor],
-                   buffers: Iterable[Tensor],
-                   image: Tensor,
-                   label: Tensor) -> Tensor:
-        """ For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
+    def get_output(
+        model: Module,
+        weights: Iterable[Tensor],
+        buffers: Iterable[Tensor],
+        image: Tensor,
+        label: Tensor,
+    ) -> Tensor:
+        """For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
         let :math:`p(z, \\theta)` be the softmax probability of the correct class.
         This method implements the model output function
 
@@ -143,13 +142,17 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         cloned_logits = logits.clone()
         # remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf, device=logits.device, dtype=logits.dtype)
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(
+            -ch.inf, device=logits.device, dtype=logits.dtype
+        )
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
 
-    def get_out_to_loss_grad(self, model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
-        """ Computes the (reweighting term Q in the paper)
+    def get_out_to_loss_grad(
+        self, model, weights, buffers, batch: Iterable[Tensor]
+    ) -> Tensor:
+        """Computes the (reweighting term Q in the paper)
 
         Args:
             model (torch.nn.Module):
@@ -169,12 +172,14 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         logits = ch.func.functional_call(model, (weights, buffers), images)
         # here we are directly implementing the gradient instead of relying on autodiff to do
         # that for us
-        ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
+        ps = self.softmax(logits / self.loss_temperature)[
+            ch.arange(logits.size(0)), labels
+        ]
         return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 class CLIPModelOutput(AbstractModelOutput):
-    """ Margin for multimodal contrastive learning (CLIP). See Section 5.1 of
+    """Margin for multimodal contrastive learning (CLIP). See Section 5.1 of
     `our paper <https://arxiv.org/abs/2303.14186>`_ for more details.
     Compatible with the open_clip implementation of CLIP.
 
@@ -183,12 +188,15 @@ class CLIPModelOutput(AbstractModelOutput):
         CLIP embeddings, which are computed using the :func:`get_embeddings`
         method. This method should be invoked before featurizing.
     """
+
     num_computed_embeddings = 0
     sim_batch_size = 0
     image_embeddings = None
     text_embeddings = None
 
-    def __init__(self, temperature: float = None, simulated_batch_size: int = 300) -> None:
+    def __init__(
+        self, temperature: float = None, simulated_batch_size: int = 300
+    ) -> None:
         """
 
         Args:
@@ -212,15 +220,16 @@ class CLIPModelOutput(AbstractModelOutput):
         CLIPModelOutput.sim_batch_size = simulated_batch_size
 
     @staticmethod
-    def get_embeddings(model,
-                       loader,
-                       batch_size: int,
-                       embedding_dim: int,
-                       size: int = 50_000,
-                       preprocess_fn_img=None,
-                       preprocess_fn_txt=None,
-                       ) -> None:
-        """ Computes (image and text) embeddings and saves them in the class
+    def get_embeddings(
+        model,
+        loader,
+        batch_size: int,
+        embedding_dim: int,
+        size: int = 50_000,
+        preprocess_fn_img=None,
+        preprocess_fn_txt=None,
+    ) -> None:
+        """Computes (image and text) embeddings and saves them in the class
         attributes :code:`image_embeddings` and :code:`text_embeddings`.
 
         Args:
@@ -242,8 +251,10 @@ class CLIPModelOutput(AbstractModelOutput):
                 pass. Defaults to None.
 
         """
-        img_embs, txt_embs = ch.zeros(size, embedding_dim).cuda(),\
-            ch.zeros(size, embedding_dim).cuda()
+        img_embs, txt_embs = (
+            ch.zeros(size, embedding_dim).cuda(),
+            ch.zeros(size, embedding_dim).cuda(),
+        )
 
         cutoff = batch_size
         with ch.no_grad():
@@ -256,8 +267,8 @@ class CLIPModelOutput(AbstractModelOutput):
                 if ed == size:
                     cutoff = size - ind * batch_size
                 image_embeddings, text_embeddings, _ = model(images, text)
-                img_embs[st: ed] = image_embeddings[:cutoff].clone().detach()
-                txt_embs[st: ed] = text_embeddings[:cutoff].clone().detach()
+                img_embs[st:ed] = image_embeddings[:cutoff].clone().detach()
+                txt_embs[st:ed] = text_embeddings[:cutoff].clone().detach()
                 if (ind + 1) * batch_size >= size:
                     break
 
@@ -266,12 +277,14 @@ class CLIPModelOutput(AbstractModelOutput):
         CLIPModelOutput.num_computed_embeddings = size
 
     @staticmethod
-    def get_output(model: Module,
-                   weights: Iterable[Tensor],
-                   buffers: Iterable[Tensor],
-                   image: Tensor,
-                   label: Tensor) -> Tensor:
-        """ For a given input :math:`z=(x, y)` and model parameters
+    def get_output(
+        model: Module,
+        weights: Iterable[Tensor],
+        buffers: Iterable[Tensor],
+        image: Tensor,
+        label: Tensor,
+    ) -> Tensor:
+        """For a given input :math:`z=(x, y)` and model parameters
         :math:`\\theta`, let :math:`\\phi(x, \\theta)` be the CLIP image
         embedding and :math:`\\psi(y, \\theta)` be the CLIP text embedding.
         Last, let :math:`B` be a (simulated) batch. This method implements the
@@ -313,26 +326,32 @@ class CLIPModelOutput(AbstractModelOutput):
         sim_bs = CLIPModelOutput.sim_batch_size
 
         if all_im_embs is None:
-            raise AssertionError('Run traker.task.get_embeddings first before featurizing!')
+            raise AssertionError(
+                "Run traker.task.get_embeddings first before featurizing!"
+            )
 
         # tailored for open_clip
         # https://github.com/mlfoundations/open_clip/blob/fb72f4db1b17133befd6c67c9cf32a533b85a321/src/open_clip/model.py#L242-L245
-        clip_inputs = {'image': image.unsqueeze(0), 'text': label.unsqueeze(0)}
-        image_embeddings, text_embeddings, _ = ch.func.functional_call(model,
-                                                                       (weights, buffers),
-                                                                       args=(),
-                                                                       kwargs=clip_inputs)
+        clip_inputs = {"image": image.unsqueeze(0), "text": label.unsqueeze(0)}
+        image_embeddings, text_embeddings, _ = ch.func.functional_call(
+            model, (weights, buffers), args=(), kwargs=clip_inputs
+        )
 
-        ii = ch.multinomial(input=ch.arange(N).float(),
-                            num_samples=sim_bs,
-                            replacement=False)
+        ii = ch.multinomial(
+            input=ch.arange(N).float(), num_samples=sim_bs, replacement=False
+        )
 
-        result = -ch.logsumexp(-image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1) +\
-                 -ch.logsumexp(-text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1)
+        result = -ch.logsumexp(
+            -image_embeddings @ (text_embeddings - all_txt_embs[ii]).T, dim=1
+        ) + -ch.logsumexp(
+            -text_embeddings @ (image_embeddings - all_im_embs[ii]).T, dim=1
+        )
         return result.sum()  # shape of result should be [1]
 
-    def get_out_to_loss_grad(self, model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
-        """ Computes the (reweighting term Q in the paper)
+    def get_out_to_loss_grad(
+        self, model, weights, buffers, batch: Iterable[Tensor]
+    ) -> Tensor:
+        """Computes the (reweighting term Q in the paper)
 
         Args:
             model (torch.nn.Module):
@@ -350,20 +369,19 @@ class CLIPModelOutput(AbstractModelOutput):
 
         """
         image, label = batch
-        clip_inputs = {'image': image, 'text': label}
-        image_embeddings, text_embeddings, temp = ch.func.functional_call(model,
-                                                                          (weights, buffers),
-                                                                          args=(),
-                                                                          kwargs=clip_inputs)
+        clip_inputs = {"image": image, "text": label}
+        image_embeddings, text_embeddings, temp = ch.func.functional_call(
+            model, (weights, buffers), args=(), kwargs=clip_inputs
+        )
         if self.temperature is None:
             self.temperature = temp
         res = self.temperature * image_embeddings @ text_embeddings.T
-        ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.
+        ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.0
         return (1 - ps).clone().detach()
 
 
 class TextClassificationModelOutput(AbstractModelOutput):
-    """ Margin for text classification models. This assumes that the model takes
+    """Margin for text classification models. This assumes that the model takes
     in input_ids, token_type_ids, and attention_mask.
 
     .. math::
@@ -373,52 +391,61 @@ class TextClassificationModelOutput(AbstractModelOutput):
 
     """
 
-    def __init__(self, temperature=1.) -> None:
+    def __init__(self, temperature=1.0) -> None:
         super().__init__()
         self.softmax = ch.nn.Softmax(-1)
         self.loss_temperature = temperature
 
     @staticmethod
-    def get_output(model,
-                   weights: Iterable[Tensor],
-                   buffers: Iterable[Tensor],
-                   input_id: Tensor,
-                   token_type_id: Tensor,
-                   attention_mask: Tensor,
-                   label: Tensor,
-                   ) -> Tensor:
-        kw_inputs = {'input_ids': input_id.unsqueeze(0),
-                     'token_type_ids': token_type_id.unsqueeze(0),
-                     'attention_mask': attention_mask.unsqueeze(0)}
+    def get_output(
+        model,
+        weights: Iterable[Tensor],
+        buffers: Iterable[Tensor],
+        input_id: Tensor,
+        token_type_id: Tensor,
+        attention_mask: Tensor,
+        label: Tensor,
+    ) -> Tensor:
+        kw_inputs = {
+            "input_ids": input_id.unsqueeze(0),
+            "token_type_ids": token_type_id.unsqueeze(0),
+            "attention_mask": attention_mask.unsqueeze(0),
+        }
 
-        logits = ch.func.functional_call(model,
-                                         (weights, buffers),
-                                         args=(),
-                                         kwargs=kw_inputs)
+        logits = ch.func.functional_call(
+            model, (weights, buffers), args=(), kwargs=kw_inputs
+        )
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
         logits_correct = logits[bindex, label.unsqueeze(0)]
 
         cloned_logits = logits.clone()
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(-ch.inf, device=logits.device, dtype=logits.dtype)
+        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(
+            -ch.inf, device=logits.device, dtype=logits.dtype
+        )
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
         return margins.sum()
 
-    def get_out_to_loss_grad(self, model, weights, buffers, batch: Iterable[Tensor]) -> Tensor:
+    def get_out_to_loss_grad(
+        self, model, weights, buffers, batch: Iterable[Tensor]
+    ) -> Tensor:
         input_ids, token_type_ids, attention_mask, labels = batch
-        kw_inputs = {'input_ids': input_ids,
-                     'token_type_ids': token_type_ids,
-                     'attention_mask': attention_mask}
-        logits = ch.func.functional_call(model,
-                                         (weights, buffers),
-                                         args=(),
-                                         kwargs=kw_inputs)
-        ps = self.softmax(logits / self.loss_temperature)[ch.arange(logits.size(0)), labels]
+        kw_inputs = {
+            "input_ids": input_ids,
+            "token_type_ids": token_type_ids,
+            "attention_mask": attention_mask,
+        }
+        logits = ch.func.functional_call(
+            model, (weights, buffers), args=(), kwargs=kw_inputs
+        )
+        ps = self.softmax(logits / self.loss_temperature)[
+            ch.arange(logits.size(0)), labels
+        ]
         return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 TASK_TO_MODELOUT = {
-    'image_classification': ImageClassificationModelOutput,
-    'clip': CLIPModelOutput,
-    'text_classification': TextClassificationModelOutput,
+    "image_classification": ImageClassificationModelOutput,
+    "clip": CLIPModelOutput,
+    "text_classification": TextClassificationModelOutput,
 }
