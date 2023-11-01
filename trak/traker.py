@@ -127,10 +127,6 @@ class TRAKer:
         logging.basicConfig()
         self.logger = logging.getLogger("TRAK")
         self.logger.setLevel(logging_level)
-        self.logger.warning(
-            "TRAK is still in an early 0.x.x version.\n\
-                             Report any issues at https://github.com/MadryLab/trak/issues"
-        )
 
         self.num_params = get_num_params(self.model)
         # inits self.projector
@@ -533,8 +529,9 @@ class TRAKer:
         _completed = [False] * len(model_ids)
 
         self.saver.load_current_store(list(model_ids.keys())[0], exp_name, num_targets)
-        _scores = self.saver.current_store[f"{exp_name}_scores"]
-        _scores[:] = 0.0
+        _scores_mmap = self.saver.current_store[f"{exp_name}_scores"]
+        _scores_on_cpu = ch.zeros(*_scores_mmap.shape, device="cpu")
+        _scores_on_cpu.pin_memory()
 
         _avg_out_to_losses = np.zeros(
             (self.saver.train_set_size, 1),
@@ -567,21 +564,21 @@ class TRAKer:
                 self.saver.current_store[f"{exp_name}_grads"], device=self.device
             )
 
-            # TODO: do this in-place
-            _scores[:] += (
-                self.score_computer.get_scores(g, g_target).cpu().detach().numpy()
-            )
+            self.score_computer.get_scores(g, g_target, accumulator=_scores_on_cpu)
+            # .cpu().detach().numpy()
 
             _avg_out_to_losses += self.saver.current_store["out_to_loss"]
             _completed[j] = True
 
         _num_models_used = float(sum(_completed))
-        _scores[:] = (_scores / _num_models_used) * (
+
+        # only write to mmap (on disk) once at the end
+        _scores_mmap[:] = (_scores_on_cpu.numpy() / _num_models_used) * (
             _avg_out_to_losses / _num_models_used
         )
 
-        self.logger.debug(f"Scores dtype is {_scores.dtype}")
+        self.logger.debug(f"Scores dtype is {_scores_mmap.dtype}")
         self.saver.save_scores(exp_name)
-        self.scores = _scores
+        self.scores = _scores_mmap
 
         return self.scores
