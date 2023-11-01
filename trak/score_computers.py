@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 from torch import Tensor
-import torch as ch
+import torch
+import logging
+
+from .utils import get_matrix_mult
+
+ch = torch
 
 
 class AbstractScoreComputer(ABC):
@@ -56,15 +61,27 @@ class BasicScoreComputer(AbstractScoreComputer):
     block-wise manner.
     """
 
-    def __init__(self, dtype, device, CUDA_MAX_DIM_SIZE: int = 100_000) -> None:
+    def __init__(
+        self,
+        dtype: torch.dtype,
+        device: torch.device,
+        CUDA_MAX_DIM_SIZE: int = 20_000,
+        logging_level=logging.INFO,
+    ) -> None:
         """
         Args:
-            device (Union[str, torch.device]): torch device to do matmuls on
-            CUDA_MAX_DIM_SIZE (int, optional): Size of block for block-wise
-            matmuls. Defaults to 100_000.
+            dtype (torch.dtype):
+            device (Union[str, torch.device]):
+                torch device to do matmuls on
+            CUDA_MAX_DIM_SIZE (int, optional):
+                Size of block for block-wise matmuls. Defaults to 100_000.
+            logging_level (logging level, optional):
+                Logging level for the logger. Defaults to logging.info.
         """
         super().__init__(dtype, device)
         self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
+        self.logger = logging.getLogger("ScoreComputer")
+        self.logger.setLevel(logging_level)
 
     def get_xtx(self, grads: Tensor) -> Tensor:
         self.proj_dim = grads.shape[1]
@@ -100,17 +117,6 @@ class BasicScoreComputer(AbstractScoreComputer):
         train_dim = features.shape[0]
         target_dim = target_grads.shape[0]
 
-        if target_dim < self.CUDA_MAX_DIM_SIZE:
-            return features @ target_grads.T
+        self.logger.debug(f"{train_dim=}, {target_dim=}")
 
-        result = ch.empty(train_dim, target_dim, dtype=self.dtype, device=self.device)
-        blocks = ch.split(
-            target_grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0
-        )
-
-        for i, block in enumerate(blocks):
-            start = i * self.CUDA_MAX_DIM_SIZE
-            end = min(target_grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[:, start:end] = features @ block.T
-
-        return result
+        return get_matrix_mult(features=features, target_grads=target_grads)
