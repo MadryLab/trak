@@ -1,3 +1,11 @@
+"""
+This module contains classes that save TRAK results, intermediate values, and
+metadata to disk. The :code:`AbstractSaver` class defines the interface for
+savers. Then, we provide one implementation:
+- :class:`MmapSaver`: A saver that uses memory-mapped numpy arrays. This makes
+  loading and saving small chunks of data (e.g.) during featurizing feasible
+  without loading the entire file into memory.
+"""
 from abc import ABC, abstractmethod
 from typing import Optional, Iterable, Union
 from pathlib import Path

@@ -1,7 +1,23 @@
+"""
+Computing features for the TRAK algorithm involves computing (and projecting)
+per-sample gradients. This module contains classes that compute these
+per-sample gradients. The :code:`AbstractFeatureComputer` class defines the
+interface for such gradient computers. Then, we provide two implementations:
+- :class:`FunctionalFeatureComputer`: A fast implementation that uses
+  :code:`torch.func` to vectorize the computation of per-sample gradients, and
+  thus fully levereage parallelism.
+- :class:`IterativeFeatureComputer`: A more naive implementation that only uses
+  native pytorch operations (i.e. no :code:`torch.func`), and computes per-sample
+  gradients in a for-loop. This is often much slower than the functional
+  version, but it is useful if you cannot use :code:`torch.func`, e.g., if you
+  have an old version of pytorch that does not support it, or if your application
+  is not supported by :code:`torch.func`.
+
+"""
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional
 from torch import Tensor
-from .utils import vectorize, get_num_params, parameters_to_vector
+from .utils import get_num_params, parameters_to_vector
 from .modelout_functions import AbstractModelOutput
 import torch
 

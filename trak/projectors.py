@@ -1,8 +1,19 @@
+"""
+Projectors are used to project gradients to a lower-dimensional space. This 1) allows
+us to compute TRAK scores in a *much* more efficient manner, and 2) turns out to be
+act as a useful regularizer (see Appendix E.1 in our paper).
+
+Here, we provide four implementations of the projector:
+- :class:`NoOpProjector` (no-op)
+- :class:`BasicSingleBlockProjector` (bare-bones, inefficient implementation)
+- :class:`BasicProjector` (block-wise implementation)
+- :class:`CudaProjector` (a fast implementation with a custom CUDA kernel)
+"""
 from abc import ABC, abstractmethod
 from typing import Union
 from enum import Enum
-from torch import Tensor
 import math
+from torch import Tensor
 import torch
 
 from .utils import vectorize
@@ -71,7 +82,6 @@ class AbstractProjector(ABC):
         Returns:
             Tensor: the projected gradients
         """
-        ...
 
 
 class NoOpProjector(AbstractProjector):
@@ -357,14 +367,14 @@ class CudaProjector(AbstractProjector):
                 grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms
             )
         except RuntimeError as e:
-            if (
-                str(e)
-                == "CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n"
-            ):  # noqa: E501
+            if "CUDA error: too many resources requested for launch" in str(e):
                 # provide a more helpful error message
                 raise RuntimeError(
-                    "The batch size of the CudaProjector is too large for your GPU. Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error."
-                )  # noqa: E501
+                    (
+                        "The batch size of the CudaProjector is too large for your GPU. "
+                        "Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error:"
+                    )
+                )
             else:
                 raise e
 

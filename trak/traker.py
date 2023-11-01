@@ -1,3 +1,19 @@
+"""
+This module contains the main :class:`.TRAKer` class, which is the front-facing
+class for TRAK. See the `README <https://github.com/MadryLab/trak>`_ and `docs
+<https://trak.readthedocs.io/en/latest/>`_ for example usage.
+
+In short, methods of the :class:`.TRAKer` class are used to compute TRAK scores
+for a set of model checkpoints, a set of target samples, and a set of train samples.
+This is done in two stages:
+- Featurizing. :func:`.TRAKer.featurize` and :func:`.TRAKer.finalize_features`
+  are used to compute the TRAK features for a set of model checkpoints and a set
+  of train samples.
+- Scoring. :func:`.TRAKer.start_scoring_checkpoint`, :func:`.TRAKer.score`, and
+  :func:`.TRAKer.finalize_scores` are used to compute the TRAK scores for a set
+  of target samples, given the TRAK features computed in the previous step.
+
+"""
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
 from .gradient_computers import FunctionalGradientComputer, AbstractGradientComputer
