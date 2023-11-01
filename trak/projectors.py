@@ -5,6 +5,9 @@ from torch import Tensor
 import math
 import torch
 
+from .utils import vectorize
+
+
 ch = torch
 
 
@@ -83,7 +86,7 @@ class NoOpProjector(AbstractProjector):
         proj_dim: int = 0,
         seed: int = 0,
         proj_type: Union[str, ProjectionType] = "na",
-        device: Union[str, torch.device] = "na",
+        device: Union[str, torch.device] = "cuda",
         *args,
         **kwargs,
     ) -> None:
@@ -99,7 +102,7 @@ class NoOpProjector(AbstractProjector):
         Returns:
             Tensor: the (non-)projected gradients
         """
-        return grads
+        return vectorize(grads, device=self.device)
 
 
 class BasicSingleBlockProjector(AbstractProjector):
@@ -158,6 +161,7 @@ class BasicSingleBlockProjector(AbstractProjector):
             raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = vectorize(grads, device=self.device)
         grads = grads.to(dtype=self.dtype)
         if model_id != self.model_id:
             self.model_id = model_id
@@ -238,6 +242,7 @@ class BasicProjector(AbstractProjector):
             raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = vectorize(grads, device=self.device)
         grads = grads.to(dtype=self.dtype)
         sketch = ch.zeros(
             size=(grads.size(0), self.proj_dim), dtype=self.dtype, device=self.device
@@ -331,6 +336,7 @@ class CudaProjector(AbstractProjector):
             raise ModuleNotFoundError(err)
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = vectorize(grads, device=self.device)
         batch_size = grads.shape[0]
 
         effective_batch_size = 32

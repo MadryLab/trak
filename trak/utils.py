@@ -77,7 +77,7 @@ def is_not_buffer(ind, params_dict) -> bool:
     return True
 
 
-def vectorize(g, arr) -> Tensor:
+def vectorize(g, arr=None, device="cuda") -> Tensor:
     """
     records result into arr
 
@@ -86,6 +86,15 @@ def vectorize(g, arr) -> Tensor:
     :code:`grad_wi` has shape :code:`[batch_size, ...]` this function flattens
     :code:`g` to have shape :code:`[batch_size, num_params]`.
     """
+    if arr is None:
+        g_elt = g[list(g.keys())[0]]
+        batch_size = g_elt.shape[0]
+        num_params = 0
+        for param in g.values():
+            assert param.shape[0] == batch_size
+            num_params += int(param.numel() / batch_size)
+        arr = ch.empty(size=(batch_size, num_params), dtype=g_elt.dtype, device=device)
+
     pointer = 0
     for param in g.values():
         if len(param.shape) < 2:
@@ -95,8 +104,10 @@ def vectorize(g, arr) -> Tensor:
             num_param = param[0].numel()
             p = param.flatten(start_dim=1).data
 
-        arr[:, pointer : pointer + num_param] = p
+        arr[:, pointer : pointer + num_param] = p.to(device)
         pointer += num_param
+
+    return arr
 
 
 def get_output_memory(features: Tensor, target_grads: Tensor, target_dtype: type):

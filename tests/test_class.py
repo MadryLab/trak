@@ -136,7 +136,7 @@ def test_class_featurize_noop(tmp_path):
         model=model,
         task="image_classification",
         save_dir=tmp_path,
-        projector=NoOpProjector(),
+        projector=NoOpProjector(device="cpu"),
         train_set_size=N,
         logging_level=logging.DEBUG,
         device="cpu",

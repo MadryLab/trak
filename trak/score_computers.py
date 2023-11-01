@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from torch import Tensor
+from torch.utils.data import Dataset
 import torch
+import numpy as np
 import logging
 
 from .utils import get_matrix_mult

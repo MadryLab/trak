@@ -551,11 +551,9 @@ class TRAKer:
                 self.saver.current_store[f"{exp_name}_grads"], device=self.device
             )
 
+            # TODO: do this in-place
             _scores[:] += (
-                self.score_computer.get_scores(g, g_target)
-                .cpu()
-                .detach()
-                .numpy()
+                self.score_computer.get_scores(g, g_target).cpu().detach().numpy()
             )
 
             _avg_out_to_losses += self.saver.current_store["out_to_loss"]

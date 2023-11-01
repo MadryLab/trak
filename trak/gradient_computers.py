@@ -117,23 +117,13 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         grads_loss = torch.func.grad(
             self.modelout_fn.get_output, has_aux=False, argnums=1
         )
+
         # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
-        grads = torch.empty(
-            size=(batch[0].shape[0], self.num_params),
-            dtype=self.dtype,
-            device=self.device,
-        )
-
-        vectorize(
-            torch.func.vmap(
-                grads_loss,
-                in_dims=(None, None, None, *([0] * len(batch))),
-                randomness="different",
-            )(self.model, self.func_weights, self.func_buffers, *batch),
-            grads,
-        )
-
-        return grads
+        return torch.func.vmap(
+            grads_loss,
+            in_dims=(None, None, None, *([0] * len(batch))),
+            randomness="different",
+        )(self.model, self.func_weights, self.func_buffers, *batch)
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
