@@ -145,7 +145,9 @@ class TRAKer:
 
         if score_computer is None:
             score_computer = BasicScoreComputer
-        self.score_computer = score_computer(dtype=self.dtype, device=self.device)
+        self.score_computer = score_computer(
+            dtype=self.dtype, device=self.device, logging_level=logging_level
+        )
 
         metadata = {
             "JL dimension": self.proj_dim,
@@ -552,7 +554,6 @@ class TRAKer:
             _scores[:] += (
                 self.score_computer.get_scores(g, g_target)
                 .cpu()
-                .clone()
                 .detach()
                 .numpy()
             )
