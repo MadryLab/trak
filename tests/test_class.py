@@ -377,7 +377,7 @@ def test_custom_model_output(tmp_path, cpu_proj):
 def test_grad_wrt_last_layer(tmp_path):
     model = resnet18().eval()
     N = 5
-    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,))
+    batch = ch.randn(N, 3, 32, 32), ch.randint(low=0, high=10, size=(N,))
     traker = TRAKer(
         model=model,
         task="image_classification",
