@@ -12,7 +12,7 @@ ch = torch
 
 def get_max_chunk_size(
     batch_size: int,
-) -> tuple[int, list]:
+):
     max_chunk_size = np.iinfo(np.uint32).max // batch_size
     return max_chunk_size
 
