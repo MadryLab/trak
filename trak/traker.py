@@ -122,7 +122,7 @@ class TRAKer:
                 for V100 GPUs, 40 for H100 GPUs. Defaults to 32.
             projector_seed (int):
                 Random seed used by the projector. Defaults to 0.
-            grad_wrt (Optional[List[str]], optional):
+            grad_wrt (Optional[Iterable[str]], optional):
                 If not None, the gradients will be computed only with respect to
                 the parameters specified in this list. The list should contain
                 the names of the parameters to compute gradients with respect to,

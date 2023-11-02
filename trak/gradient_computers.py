@@ -93,7 +93,7 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         grad_dim: int,
         dtype: torch.dtype,
         device: torch.device,
-        grad_wrt: Optional[list[str]] = None,
+        grad_wrt: Optional[Iterable[str]] = None,
     ) -> None:
         """Initializes attributes, and loads model parameters.
 
