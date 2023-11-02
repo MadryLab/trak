@@ -197,7 +197,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
         grad_dim: int,
         dtype: torch.dtype,
         device: torch.device,
-        grad_wrt: Optional[list[str]] = None,
+        grad_wrt: Optional[Iterable[str]] = None,
     ) -> None:
         super().__init__(model, task, grad_dim, dtype, device)
         self.load_model_params(model)
