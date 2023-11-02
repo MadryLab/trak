@@ -1,30 +1,48 @@
+"""
+Projectors are used to project gradients to a lower-dimensional space. This 1) allows
+us to compute TRAK scores in a *much* more efficient manner, and 2) turns out to be
+act as a useful regularizer (see Appendix E.1 in our paper).
+
+Here, we provide four implementations of the projector:
+- :class:`NoOpProjector` (no-op)
+- :class:`BasicSingleBlockProjector` (bare-bones, inefficient implementation)
+- :class:`BasicProjector` (block-wise implementation)
+- :class:`CudaProjector` (a fast implementation with a custom CUDA kernel)
+"""
 from abc import ABC, abstractmethod
 from typing import Union
 from enum import Enum
-from torch import Tensor
 import math
+from torch import Tensor
 import torch
+
+from .utils import vectorize
+
+
 ch = torch
 
 
 class ProjectionType(str, Enum):
-    normal: str = 'normal'
-    rademacher: str = 'rademacher'
+    normal: str = "normal"
+    rademacher: str = "rademacher"
 
 
 class AbstractProjector(ABC):
-    """ Implementations of the Projector class must implement the
+    """Implementations of the Projector class must implement the
     :meth:`AbstractProjector.project` method, which takes in model gradients and
     returns
     """
+
     @abstractmethod
-    def __init__(self,
-                 grad_dim: int,
-                 proj_dim: int,
-                 seed: int,
-                 proj_type: Union[str, ProjectionType],
-                 device: Union[str, torch.device]) -> None:
-        """ Initializes hyperparameters for the projection.
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: Union[str, ProjectionType],
+        device: Union[str, torch.device],
+    ) -> None:
+        """Initializes hyperparameters for the projection.
 
         Args:
             grad_dim (int):
@@ -53,7 +71,7 @@ class AbstractProjector(ABC):
 
     @abstractmethod
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        """ Performs the random projection. Model ID is included
+        """Performs the random projection. Model ID is included
         so that we generate different projection matrices for every
         model ID.
 
@@ -64,7 +82,9 @@ class AbstractProjector(ABC):
         Returns:
             Tensor: the projected gradients
         """
-        ...
+
+    def free_memory(self):
+        """Frees up memory used by the projector."""
 
 
 class NoOpProjector(AbstractProjector):
@@ -72,18 +92,21 @@ class NoOpProjector(AbstractProjector):
     A projector that returns the gradients as they are, i.e., implements
     :code:`projector.project(grad) = grad`.
     """
-    def __init__(self,
-                 grad_dim: int = 0,
-                 proj_dim: int = 0,
-                 seed: int = 0,
-                 proj_type: Union[str, ProjectionType] = 'na',
-                 device: Union[str, torch.device] = 'na',
-                 *args,
-                 **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int = 0,
+        proj_dim: int = 0,
+        seed: int = 0,
+        proj_type: Union[str, ProjectionType] = "na",
+        device: Union[str, torch.device] = "cuda",
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        """ A no-op method.
+        """A no-op method.
 
         Args:
             grads (Tensor): a batch of gradients to be projected
@@ -92,7 +115,11 @@ class NoOpProjector(AbstractProjector):
         Returns:
             Tensor: the (non-)projected gradients
         """
-        return grads
+        return vectorize(grads, device=self.device)
+
+    def free_memory(self):
+        """A no-op method."""
+        pass
 
 
 class BasicSingleBlockProjector(AbstractProjector):
@@ -107,40 +134,69 @@ class BasicSingleBlockProjector(AbstractProjector):
     added this only for testing purposes), use instead the CudaProjector or
     BasicProjector.
     """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, dtype=ch.float32, model_id=0,
-                 *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device,
+        dtype=ch.float32,
+        model_id=0,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.model_id = model_id
         self.proj_type = proj_type
         self.generator = ch.Generator(device=self.device)
-        self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
+        self.generator = self.generator.manual_seed(
+            self.seed + int(1e4) * self.model_id
+        )
         self.dtype = dtype
 
-        self.proj_matrix = ch.empty(self.grad_dim,
-                                    self.proj_dim,
-                                    dtype=self.dtype,
-                                    device=self.device)
+        self.proj_matrix = ch.empty(
+            self.grad_dim, self.proj_dim, dtype=self.dtype, device=self.device
+        )
+
+        self.proj_matrix_available = True
 
         self.generate_sketch_matrix()  # updates self.proj_matrix
 
+    def free_memory(self):
+        del self.proj_matrix
+        self.proj_matrix_available = False
+
     def generate_sketch_matrix(self):
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
+        if not self.proj_matrix_available:
+            self.proj_matrix = ch.empty(
+                self.grad_dim, self.proj_dim, dtype=self.dtype, device=self.device
+            )
+            self.proj_matrix_available = True
+
+        if self.proj_type == ProjectionType.normal or self.proj_type == "normal":
             self.proj_matrix.normal_(generator=self.generator)
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
+        elif (
+            self.proj_type == ProjectionType.rademacher
+            or self.proj_type == "rademacher"
+        ):
             self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
             # going from Bernoulli {0, 1} to Rademacher {-1, 1}
-            self.proj_matrix *= 2.
-            self.proj_matrix -= 1.
+            self.proj_matrix *= 2.0
+            self.proj_matrix -= 1.0
         else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+            raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = vectorize(grads, device=self.device)
         grads = grads.to(dtype=self.dtype)
         if model_id != self.model_id:
             self.model_id = model_id
-            self.generator = self.generator.manual_seed(self.seed + int(1e4) * self.model_id)
+            self.generator = self.generator.manual_seed(
+                self.seed + int(1e4) * self.model_id
+            )
             self.generate_sketch_matrix()  # updates self.proj_matrix
 
         return grads @ self.proj_matrix
@@ -158,15 +214,20 @@ class BasicProjector(AbstractProjector):
     a CUDA-enabled device with compute capability >=7.0 (see
     https://developer.nvidia.com/cuda-gpus).
     """
-    def __init__(self, grad_dim: int,
-                 proj_dim: int,
-                 seed: int,
-                 proj_type: ProjectionType,
-                 device: torch.device,
-                 block_size: int = 100,
-                 dtype: torch.dtype = ch.float32,
-                 model_id=0,
-                 *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device: torch.device,
+        block_size: int = 100,
+        dtype: torch.dtype = ch.float32,
+        model_id=0,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(grad_dim, proj_dim, seed, proj_type, device)
 
         self.block_size = min(self.proj_dim, block_size)
@@ -175,15 +236,20 @@ class BasicProjector(AbstractProjector):
         self.proj_type = proj_type
         self.model_id = model_id
 
-        self.proj_matrix = ch.empty(self.grad_dim,
-                                    self.block_size,
-                                    dtype=self.dtype,
-                                    device=self.device)
+        self.proj_matrix = ch.empty(
+            self.grad_dim, self.block_size, dtype=self.dtype, device=self.device
+        )
+
+        self.proj_matrix_available = True
 
         self.generator = ch.Generator(device=self.device)
 
         self.get_generator_states()
         self.generate_sketch_matrix(self.generator_states[0])
+
+    def free_memory(self):
+        del self.proj_matrix
+        self.proj_matrix_available = False
 
     def get_generator_states(self):
         self.generator_states = []
@@ -197,20 +263,31 @@ class BasicProjector(AbstractProjector):
             self.generator_states.append(self.generator.get_state())
 
     def generate_sketch_matrix(self, generator_state):
+        if not self.proj_matrix_available:
+            self.proj_matrix = ch.empty(
+                self.grad_dim, self.block_size, dtype=self.dtype, device=self.device
+            )
+            self.proj_matrix_available = True
+
         self.generator.set_state(generator_state)
-        if self.proj_type == ProjectionType.normal or self.proj_type == 'normal':
+        if self.proj_type == ProjectionType.normal or self.proj_type == "normal":
             self.proj_matrix.normal_(generator=self.generator)
-        elif self.proj_type == ProjectionType.rademacher or self.proj_type == 'rademacher':
+        elif (
+            self.proj_type == ProjectionType.rademacher
+            or self.proj_type == "rademacher"
+        ):
             self.proj_matrix.bernoulli_(p=0.5, generator=self.generator)
-            self.proj_matrix *= 2.
-            self.proj_matrix -= 1.
+            self.proj_matrix *= 2.0
+            self.proj_matrix -= 1.0
         else:
-            raise KeyError(f'Projection type {self.proj_type} not recognized.')
+            raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
+        grads = vectorize(grads, device=self.device)
         grads = grads.to(dtype=self.dtype)
-        sketch = ch.zeros(size=(grads.size(0), self.proj_dim),
-                          dtype=self.dtype, device=self.device)
+        sketch = ch.zeros(
+            size=(grads.size(0), self.proj_dim), dtype=self.dtype, device=self.device
+        )
 
         if model_id != self.model_id:
             self.model_id = model_id
@@ -226,7 +303,9 @@ class BasicProjector(AbstractProjector):
 
                 st = ind * self.block_size
                 ed = min((ind + 1) * self.block_size, self.proj_dim)
-                sketch[:, st:ed] = grads.type(self.dtype) @ self.proj_matrix[:, :(ed - st)]
+                sketch[:, st:ed] = (
+                    grads.type(self.dtype) @ self.proj_matrix[:, : (ed - st)]
+                )
         return sketch.type(grads.dtype)
 
 
@@ -235,8 +314,18 @@ class CudaProjector(AbstractProjector):
     A performant implementation of the projection for CUDA with compute
     capability >= 7.0.
     """
-    def __init__(self, grad_dim: int, proj_dim: int, seed: int, proj_type:
-                 ProjectionType, device, max_batch_size: int, *args, **kwargs) -> None:
+
+    def __init__(
+        self,
+        grad_dim: int,
+        proj_dim: int,
+        seed: int,
+        proj_type: ProjectionType,
+        device,
+        max_batch_size: int,
+        *args,
+        **kwargs,
+    ) -> None:
         """
 
         Args:
@@ -269,7 +358,7 @@ class CudaProjector(AbstractProjector):
         if isinstance(device, str):
             device = ch.device(device)
 
-        if device.type != 'cuda':
+        if device.type != "cuda":
             err = "CudaProjector only works on a CUDA device; Either switch to a CUDA device, or use the BasicProjector"
             raise ValueError(err)
 
@@ -277,14 +366,24 @@ class CudaProjector(AbstractProjector):
 
         try:
             import fast_jl
+
             # test run to catch at init time if projection goes through
-            fast_jl.project_rademacher_8(ch.zeros(8, 1_000, device='cuda'), 512, 0, self.num_sms)
+            fast_jl.project_rademacher_8(
+                ch.zeros(8, 1_000, device="cuda"), 512, 0, self.num_sms
+            )
         except ImportError:
             err = "You should make sure to install the CUDA projector for traker (called fast_jl).\
                   See the installation FAQs for more details."
             raise ModuleNotFoundError(err)
 
-    def project(self, grads: Tensor, model_id: int) -> Tensor:
+    def project(
+        self,
+        grads: Union[dict, Tensor],
+        model_id: int,
+        is_grads_dict: bool = True,
+    ) -> Tensor:
+        if is_grads_dict:
+            grads = vectorize(grads, device=self.device)
         batch_size = grads.shape[0]
 
         effective_batch_size = 32
@@ -297,15 +396,118 @@ class CudaProjector(AbstractProjector):
 
         function_name = f"project_{self.proj_type.value}_{effective_batch_size}"
         import fast_jl
+
         fn = getattr(fast_jl, function_name)
 
         try:
-            result = fn(grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms)
+            result = fn(
+                grads, self.proj_dim, self.seed + int(1e4) * model_id, self.num_sms
+            )
         except RuntimeError as e:
-            if str(e) == 'CUDA error: too many resources requested for launch\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\nCompile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.\n':  # noqa: E501
+            if "CUDA error: too many resources requested for launch" in str(e):
                 # provide a more helpful error message
-                raise RuntimeError('The batch size of the CudaProjector is too large for your GPU. Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error.')  # noqa: E501
+                raise RuntimeError(
+                    (
+                        "The batch size of the CudaProjector is too large for your GPU. "
+                        "Reduce it by using the proj_max_batch_size argument of the TRAKer.\nOriginal error:"
+                    )
+                )
             else:
                 raise e
 
         return result
+
+    def free_memory(self):
+        """A no-op method."""
+        pass
+
+
+class ChunkedCudaProjector:
+    def __init__(
+        self,
+        projector_per_chunk: list,
+        max_chunk_size: int,
+        params_per_chunk: list,
+        feat_bs: int,
+        device: torch.device,
+        dtype: torch.dtype,
+    ):
+        self.projector_per_chunk = projector_per_chunk
+        self.proj_dim = self.projector_per_chunk[0].proj_dim
+        self.proj_type = self.projector_per_chunk[0].proj_type
+        self.params_per_chunk = params_per_chunk
+
+        self.max_chunk_size = max_chunk_size
+        self.feat_bs = feat_bs
+        self.device = device
+        self.dtype = dtype
+        self.input_allocated = False
+
+    def allocate_input(self):
+        if self.input_allocated:
+            return
+
+        self.ch_input = ch.zeros(
+            size=(self.feat_bs, self.max_chunk_size),
+            device=self.device,
+            dtype=self.dtype,
+        )
+
+        self.input_allocated = True
+
+    def free_memory(self):
+        if not self.input_allocated:
+            return
+
+        del self.ch_input
+        self.input_allocated = False
+
+    def project(self, grads, model_id):
+        self.allocate_input()
+        ch_output = ch.zeros(
+            size=(self.feat_bs, self.proj_dim), device=self.device, dtype=self.dtype
+        )
+        pointer = 0
+        # iterate over params, keep a counter of params so far, and when prev
+        # chunk reaches max_chunk_size, project and accumulate
+        projector_index = 0
+        for i, p in enumerate(grads.values()):
+            if len(p.shape) < 2:
+                p_flat = p.data.unsqueeze(-1)
+            else:
+                p_flat = p.data.flatten(start_dim=1)
+
+            param_size = p_flat.size(1)
+            if pointer + param_size > self.max_chunk_size:
+                # fill remaining entries with 0
+                assert pointer == self.params_per_chunk[projector_index]
+                # project and accumulate
+                ch_output.add_(
+                    self.projector_per_chunk[projector_index].project(
+                        self.ch_input[:, :pointer].contiguous(),
+                        model_id=model_id,
+                        is_grads_dict=False,
+                    )
+                )
+                # reset counter
+                pointer = 0
+                projector_index += 1
+
+            # continue accumulation
+            actual_bs = min(self.ch_input.size(0), p_flat.size(0))
+            self.ch_input[:actual_bs, pointer : pointer + param_size].copy_(p_flat)
+            pointer += param_size
+
+        # at the end, we need to project remaining items
+        # fill remaining entries with 0
+        assert pointer == self.params_per_chunk[projector_index]
+        # project and accumulate
+        ch_output[:actual_bs].add_(
+            self.projector_per_chunk[projector_index].project(
+                self.ch_input[:actual_bs, :pointer].contiguous(),
+                model_id=model_id,
+                is_grads_dict=False,
+            )
+        )
+
+        return ch_output[:actual_bs]

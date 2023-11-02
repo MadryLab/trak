@@ -23,33 +23,33 @@ if __name__ == "__main__":
 
     print("1. Without autocast")
     grads = ch.func.grad(compute_loss)(weights, inputs, targets)
-    print(f'grads are {grads}')
+    print(f"grads are {grads}")
     print(f"grads dtype: {grads['weight'].dtype}")
-    print('='*50)
+    print("=" * 50)
 
     inputs = inputs.half()
     targets = targets.half()
 
-    print('2. With autocast for forward pass')
+    print("2. With autocast for forward pass")
     grads = ch.func.grad(compute_loss_autocast)(weights, inputs, targets)
-    print(f'grads are {grads}')
+    print(f"grads are {grads}")
     print(f"grads dtype: {grads['weight'].dtype}")
-    print('='*50)
+    print("=" * 50)
 
-    print('3. With autocast for forward pass and backward pass')
+    print("3. With autocast for forward pass and backward pass")
     with autocast(device_type="cuda", dtype=ch.float16):
         grads = ch.func.grad(compute_loss)(weights, inputs, targets)
-        print(f'inside grads are {grads}')
+        print(f"inside grads are {grads}")
         print(f"inside grads dtype: {grads['weight'].dtype}")
-        print('exiting autocast')
-    print(f'grads are {grads}')
+        print("exiting autocast")
+    print(f"grads are {grads}")
     print(f"grads dtype: {grads['weight'].dtype}")
-    print('='*50)
+    print("=" * 50)
 
-    print('4. .half() the model')
+    print("4. .half() the model")
     model = model.half()
     grads = ch.func.grad(compute_loss)(weights, inputs, targets)
-    print(f'grads are {grads}')
+    print(f"grads are {grads}")
     print(f"grads dtype: {grads['weight'].dtype}")
 
 """

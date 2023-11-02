@@ -7,61 +7,76 @@ from scipy.stats import spearmanr
 import numpy as np
 import torch
 import torchvision
+
 ch = torch
 
 try:
     from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
     from ffcv.loader import Loader, OrderOption
     from ffcv.pipeline.operation import Operation
-    from ffcv.transforms import RandomHorizontalFlip, Cutout, \
-        RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
+    from ffcv.transforms import (
+        RandomHorizontalFlip,
+        Cutout,
+        RandomTranslate,
+        Convert,
+        ToDevice,
+        ToTensor,
+        ToTorchImage,
+    )
     from ffcv.transforms.common import Squeeze
 except ImportError:
-    print('No ffcv installed')
+    print("No ffcv installed")
 
 
-STATS = {
-        'mean': [125.307, 122.961, 113.8575],
-        'std': [51.5865, 50.847, 51.255]
-}
+STATS = {"mean": [125.307, 122.961, 113.8575], "std": [51.5865, 50.847, 51.255]}
 
 
-def get_dataloader(BETONS,
-                   batch_size=256,
-                   num_workers=8,
-                   split='train',  # split \in [train, val]
-                   aug_seed=0,
-                   should_augment=True,
-                   indices=None):
-    label_pipeline: List[Operation] = [IntDecoder(),
-                                       ToTensor(),
-                                       ToDevice(ch.device('cuda:0')),
-                                       Squeeze()]
+def get_dataloader(
+    BETONS,
+    batch_size=256,
+    num_workers=8,
+    split="train",  # split \in [train, val]
+    aug_seed=0,
+    should_augment=True,
+    indices=None,
+):
+    label_pipeline: List[Operation] = [
+        IntDecoder(),
+        ToTensor(),
+        ToDevice(ch.device("cuda:0")),
+        Squeeze(),
+    ]
     image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
 
     if should_augment:
-        image_pipeline.extend([
+        image_pipeline.extend(
+            [
                 RandomHorizontalFlip(),
-                RandomTranslate(padding=2, fill=tuple(map(int, STATS['mean']))),
-                Cutout(4, tuple(map(int, STATS['mean']))),
-        ])
+                RandomTranslate(padding=2, fill=tuple(map(int, STATS["mean"]))),
+                Cutout(4, tuple(map(int, STATS["mean"]))),
+            ]
+        )
 
-    image_pipeline.extend([
-        ToTensor(),
-        ToDevice(ch.device('cuda:0'), non_blocking=True),
-        ToTorchImage(),
-        Convert(ch.float32),
-        torchvision.transforms.Normalize(STATS['mean'], STATS['std']),
-    ])
+    image_pipeline.extend(
+        [
+            ToTensor(),
+            ToDevice(ch.device("cuda:0"), non_blocking=True),
+            ToTorchImage(),
+            Convert(ch.float32),
+            torchvision.transforms.Normalize(STATS["mean"], STATS["std"]),
+        ]
+    )
 
-    return Loader(BETONS[split],
-                  batch_size=batch_size,
-                  num_workers=num_workers,
-                  order=OrderOption.SEQUENTIAL,
-                  drop_last=False,
-                  seed=aug_seed,
-                  indices=indices,
-                  pipelines={'image': image_pipeline, 'label': label_pipeline})
+    return Loader(
+        BETONS[split],
+        batch_size=batch_size,
+        num_workers=num_workers,
+        order=OrderOption.SEQUENTIAL,
+        drop_last=False,
+        seed=aug_seed,
+        indices=indices,
+        pipelines={"image": image_pipeline, "label": label_pipeline},
+    )
 
 
 # Resnet9
@@ -75,7 +90,8 @@ class Mul(ch.nn.Module):
 
 
 class Flatten(ch.nn.Module):
-    def forward(self, x): return x.view(x.size(0), -1)
+    def forward(self, x):
+        return x.view(x.size(0), -1)
 
 
 class Residual(ch.nn.Module):
@@ -88,13 +104,23 @@ class Residual(ch.nn.Module):
 
 
 def construct_rn9(num_classes=2):
-    def conv_bn(channels_in, channels_out, kernel_size=3, stride=1, padding=1, groups=1):
+    def conv_bn(
+        channels_in, channels_out, kernel_size=3, stride=1, padding=1, groups=1
+    ):
         return ch.nn.Sequential(
-                ch.nn.Conv2d(channels_in, channels_out, kernel_size=kernel_size,
-                             stride=stride, padding=padding, groups=groups, bias=False),
-                ch.nn.BatchNorm2d(channels_out),
-                ch.nn.ReLU(inplace=True)
+            ch.nn.Conv2d(
+                channels_in,
+                channels_out,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                groups=groups,
+                bias=False,
+            ),
+            ch.nn.BatchNorm2d(channels_out),
+            ch.nn.ReLU(inplace=True),
         )
+
     model = ch.nn.Sequential(
         conv_bn(3, 64, kernel_size=3, stride=1, padding=1),
         conv_bn(64, 128, kernel_size=5, stride=2, padding=2),
@@ -106,64 +132,65 @@ def construct_rn9(num_classes=2):
         ch.nn.AdaptiveMaxPool2d((1, 1)),
         Flatten(),
         ch.nn.Linear(128, num_classes, bias=False),
-        Mul(0.2)
+        Mul(0.2),
     )
     return model
 
 
 def download_cifar_betons(BETON_PATH):
-    url_train = 'https://www.dropbox.com/s/0llwyuja7u0s9an/train.beton?dl=1'
-    url_val = 'https://www.dropbox.com/s/63ef3g8dsq32484/val.beton?dl=1'
+    url_train = "https://www.dropbox.com/s/0llwyuja7u0s9an/train.beton?dl=1"
+    url_val = "https://www.dropbox.com/s/63ef3g8dsq32484/val.beton?dl=1"
 
     os.makedirs(BETON_PATH, exist_ok=True)
 
-    train_path = Path(BETON_PATH).joinpath('cifar_train.beton')
+    train_path = Path(BETON_PATH).joinpath("cifar_train.beton")
     wget.download(url_train, out=str(train_path), bar=None)
 
-    val_path = Path(BETON_PATH).joinpath('cifar_val.beton')
+    val_path = Path(BETON_PATH).joinpath("cifar_val.beton")
     wget.download(url_val, out=str(val_path), bar=None)
 
-    return {'train': train_path,
-            'val': val_path}
+    return {"train": train_path, "val": val_path}
 
 
-def download_cifar_checkpoints(CKPT_PATH, ds='cifar10'):
-    if ds == 'cifar10':
-        urls = ['https://www.dropbox.com/s/g2f6mlit151bapk/ckpt_0.pt?dl=1',
-                'https://www.dropbox.com/s/0avlz649tmwr7fv/ckpt_1.pt?dl=1',
-                'https://www.dropbox.com/s/qafphepxnav2igr/ckpt_2.pt?dl=1'
-                ]
+def download_cifar_checkpoints(CKPT_PATH, ds="cifar10"):
+    if ds == "cifar10":
+        urls = [
+            "https://www.dropbox.com/s/g2f6mlit151bapk/ckpt_0.pt?dl=1",
+            "https://www.dropbox.com/s/0avlz649tmwr7fv/ckpt_1.pt?dl=1",
+            "https://www.dropbox.com/s/qafphepxnav2igr/ckpt_2.pt?dl=1",
+        ]
     else:
-        urls = ['https://www.dropbox.com/s/n2p96rbvdy5xruy/model_sd_97.pt?dl=1',
-                'https://www.dropbox.com/s/vljde3qwadaqwbt/model_sd_98.pt?dl=1',
-                'https://www.dropbox.com/s/ehwx0u131214uak/model_sd_99.pt?dl=1'
-                ]
+        urls = [
+            "https://www.dropbox.com/s/n2p96rbvdy5xruy/model_sd_97.pt?dl=1",
+            "https://www.dropbox.com/s/vljde3qwadaqwbt/model_sd_98.pt?dl=1",
+            "https://www.dropbox.com/s/ehwx0u131214uak/model_sd_99.pt?dl=1",
+        ]
 
     os.makedirs(CKPT_PATH, exist_ok=True)
     for ind, url in enumerate(urls):
-        ckpt_path = Path(CKPT_PATH).joinpath(f'sd_{ind}.pt')
+        ckpt_path = Path(CKPT_PATH).joinpath(f"sd_{ind}.pt")
         wget.download(url, out=str(ckpt_path), bar=None)
 
     return list(Path(CKPT_PATH).rglob("*.pt"))
 
 
-def eval_correlations(infls, tmp_path, ds='cifar10'):
-    if ds == 'cifar10':
-        masks_url = 'https://www.dropbox.com/s/x76uyen8ffkjfke/mask.npy?dl=1'
-        margins_url = 'https://www.dropbox.com/s/q1dxoxw78ct7c27/val_margins.npy?dl=1'
+def eval_correlations(infls, tmp_path, ds="cifar10"):
+    if ds == "cifar10":
+        masks_url = "https://www.dropbox.com/s/x76uyen8ffkjfke/mask.npy?dl=1"
+        margins_url = "https://www.dropbox.com/s/q1dxoxw78ct7c27/val_margins.npy?dl=1"
     else:
-        masks_url = 'https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1'
-        margins_url = 'https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1'
+        masks_url = "https://www.dropbox.com/s/2nmcjaftdavyg0m/mask.npy?dl=1"
+        margins_url = "https://www.dropbox.com/s/tc3r3c3kgna2h27/val_margins.npy?dl=1"
 
-    masks_path = Path(tmp_path).joinpath('mask.npy')
+    masks_path = Path(tmp_path).joinpath("mask.npy")
     wget.download(masks_url, out=str(masks_path), bar=None)
     # num masks, num train samples
-    masks = ch.as_tensor(np.load(masks_path, mmap_mode='r')).float()
+    masks = ch.as_tensor(np.load(masks_path, mmap_mode="r")).float()
 
-    margins_path = Path(tmp_path).joinpath('val_margins.npy')
+    margins_path = Path(tmp_path).joinpath("val_margins.npy")
     wget.download(margins_url, out=str(margins_path), bar=None)
     # num , num val samples
-    margins = ch.as_tensor(np.load(margins_path, mmap_mode='r'))
+    margins = ch.as_tensor(np.load(margins_path, mmap_mode="r"))
 
     val_inds = np.arange(2000)
     preds = masks @ infls
@@ -174,5 +201,5 @@ def eval_correlations(infls, tmp_path, ds='cifar10'):
         rs.append(r)
         ps.append(p)
     rs, ps = np.array(rs), np.array(ps)
-    print(f'Correlation: {rs.mean()} (avg p value {ps.mean()})')
+    print(f"Correlation: {rs.mean()} (avg p value {ps.mean()})")
     return rs.mean()

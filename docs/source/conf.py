@@ -22,8 +22,8 @@ copyright = '2023, Kristian Georgiev'
 author = 'Kristian Georgiev'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.2'
-version = '0.2.2'
+release = '0.3.0'
+version = '0.3.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,10 +46,12 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__":
         return False
     return would_skip
+
 
 def setup(app):
     app.connect("autodoc-skip-member", skip)

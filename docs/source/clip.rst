@@ -61,6 +61,9 @@ Now we are ready to implement :meth:`.CLIPModelOutput.get_output`:
                    buffers: Iterable[Tensor],
                    image: Tensor,
                    label: Tensor):
+        # tailored for open_clip
+        # https://github.com/mlfoundations/open_clip/blob/fb72f4db1b17133befd6c67c9cf32a533b85a321/src/open_clip/model.py#L242-L245
+        clip_inputs = {"image": image.unsqueeze(0), "text": label.unsqueeze(0)}
         image_embeddings, text_embeddings, _ = ch.func.functional_call(model,
                                                                        (weights, buffers),
                                                                        args=(),
@@ -116,14 +119,15 @@ Using the above :code:`CLIPModelOutput` implementation, we can compute
                     device=device,
                     proj_dim=1024)
 
-    traker.task.get_embeddings(model, loader_train, batch_size=...,
+    traker.task.get_embeddings(model, ds_train, batch_size=1, size=600, embedding_dim=1024,
                                preprocess_fn_img=lambda x: preprocess(x).to(device).unsqueeze(0),
                                preprocess_fn_txt=lambda x: tokenizer(x[0]).to(device))
 
     traker.load_checkpoint(model.state_dict(), model_id=0)
-    for batch in tqdm(loader_train, desc='Featurizing...'):
-        batch = [x.cuda() for x in batch]
-        traker.featurize(batch=batch, num_samples=batch[0].shape[0])
+    for (img, captions) in tqdm(loader_train, desc='Featurizing...'):
+        x = preprocess(img).to('cuda').unsqueeze(0)
+        y = tokenizer(captions).to('cuda')
+        traker.featurize(batch=(x, y), num_samples=x.shape[0])
 
     traker.finalize_features()
 
@@ -131,9 +135,10 @@ Using the above :code:`CLIPModelOutput` implementation, we can compute
                                     checkpoint=model.state_dict(),
                                     model_id=0,
                                     num_targets=VAL_SET_SIZE)
-    for batch in tqdm(loader_val, desc='Scoring...'):
-        batch = [x.cuda() for x in batch]
-        traker.score(batch=batch, num_samples=batch[0].shape[0])
+    for (img, captions) in tqdm(loader_val, desc='Scoring...'):
+        x = preprocess(img).to('cuda').unsqueeze(0)
+        y = tokenizer(captions).to('cuda')
+        traker.score(batch=(x, y), num_samples=x.shape[0])
 
     scores = traker.finalize_scores(exp_name='clip_example')
 
