@@ -290,3 +290,40 @@ def get_matrix_mult(
         return get_matrix_mult_blockwise(
             features.cpu(), target_grads.cpu(), target_dtype, batch_size
         )
+
+
+def get_parameter_chunk_sizes(
+    model: torch.nn.Module,
+    batch_size: int,
+) -> tuple[int, list]:
+    """The :class:`CudaProjector` supports projecting when the product of the
+    number of parameters and the batch size is less than the the max value of
+    int32. This function computes the number of parameters that can be projected
+    at once for a given model and batch size.
+
+    The method returns a tuple containing the maximum number of parameters that
+    can be projected at once and a list of the actual number of parameters in
+    each chunk (a sequence of paramter groups).  Used in
+    :class:`ChunkedCudaProjector`.
+    """
+    param_shapes = []
+    for p in model.parameters():
+        param_shapes.append(p.numel())
+
+    param_shapes = np.array(param_shapes)
+
+    chunk_sum = 0
+    max_chunk_size = np.iinfo(np.uint32).max // batch_size
+    params_per_chunk = []
+
+    for ps in param_shapes:
+        if chunk_sum + ps >= max_chunk_size:
+            params_per_chunk.append(chunk_sum)
+            chunk_sum = 0
+
+        chunk_sum += ps
+
+    if param_shapes.sum() - np.sum(params_per_chunk) > 0:
+        params_per_chunk.append(param_shapes.sum() - np.sum(params_per_chunk))
+
+    return max_chunk_size, params_per_chunk

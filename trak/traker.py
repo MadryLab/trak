@@ -15,11 +15,17 @@ This is done in two stages:
 
 """
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
-from .projectors import ProjectionType, AbstractProjector, CudaProjector, BasicProjector
+from .projectors import (
+    ProjectionType,
+    AbstractProjector,
+    CudaProjector,
+    BasicProjector,
+    ChunkedCudaProjector,
+)
 from .gradient_computers import FunctionalGradientComputer, AbstractGradientComputer
 from .score_computers import AbstractScoreComputer, BasicScoreComputer
 from .savers import AbstractSaver, MmapSaver, ModelIDException
-from .utils import get_num_params
+from .utils import get_num_params, get_parameter_chunk_sizes
 
 from typing import Iterable, Optional, Union
 from pathlib import Path
@@ -110,10 +116,10 @@ class TRAKer:
                 computations and arrays will be stored in float16. Otherwise, it
                 will use float32. Defaults to True.
             proj_max_batch_size (int):
-                Batch size used by fast_jl if teh CudaProjector is used. Must be
+                Batch size used by fast_jl if the CudaProjector is used. Must be
                 a multiple of 8. The maximum batch size is 32 for A100 GPUs, 16
                 for V100 GPUs, 40 for H100 GPUs. Defaults to 32.
-            projecotr_seed (int):
+            projector_seed (int):
                 Random seed used by the projector. Defaults to 0.
 
         """
@@ -181,13 +187,24 @@ class TRAKer:
 
         self.ckpt_loaded = "no ckpt loaded"
 
-    def init_projector(self, projector, proj_dim, proj_max_batch_size) -> None:
+    def init_projector(
+        self,
+        projector: Optional[AbstractProjector],
+        proj_dim: int,
+        proj_max_batch_size: int,
+    ) -> None:
         """Initialize the projector for a traker class
 
         Args:
-            projector (AbstractProjector):
-                JL projector
-
+            projector (Optional[AbstractProjector]):
+                JL projector to use. If None, a CudaProjector will be used (if
+                possible).
+            proj_dim (int):
+                Dimension of the projected gradients and TRAK features.
+            proj_max_batch_size (int):
+                Batch size used by fast_jl if the CudaProjector is used. Must be
+                a multiple of 8. The maximum batch size is 32 for A100 GPUs, 16
+                for V100 GPUs, 40 for H100 GPUs.
         """
 
         self.projector = projector
@@ -197,6 +214,7 @@ class TRAKer:
                 self.proj_dim = self.num_params
 
         else:
+            using_cuda_projector = False
             self.proj_dim = proj_dim
             if self.device == "cpu":
                 self.logger.info("Using BasicProjector since device is CPU")
@@ -218,12 +236,63 @@ class TRAKer:
                         test_gradient, self.proj_dim, 0, num_sms
                     )
                     projector = CudaProjector
+                    using_cuda_projector = True
 
                 except (ImportError, RuntimeError, AttributeError) as e:
                     self.logger.error(f"Could not use CudaProjector.\nReason: {str(e)}")
                     self.logger.error("Defaulting to BasicProjector.")
                     projector = BasicProjector
                 proj_type = ProjectionType.rademacher
+
+            if using_cuda_projector:
+                max_chunk_size, param_chunk_sizes = get_parameter_chunk_sizes(
+                    self.model, proj_max_batch_size
+                )
+                self.logger.debug(
+                    (
+                        f"the max chunk size is {max_chunk_size}, ",
+                        "while the model has the following chunk sizes",
+                        f"{param_chunk_sizes}.",
+                    )
+                )
+
+                if (
+                    len(param_chunk_sizes) > 1
+                ):  # we have to use the ChunkedCudaProjector
+                    self.logger.info(
+                        (
+                            f"Using ChunkedCudaProjector with"
+                            f"{len(param_chunk_sizes)} chunks of sizes"
+                            f"{param_chunk_sizes}."
+                        )
+                    )
+                    rng = np.random.default_rng(self.proj_seed)
+                    seeds = rng.integers(
+                        low=0,
+                        high=500,
+                        size=len(param_chunk_sizes),
+                    )
+                    projector_per_chunk = [
+                        projector(
+                            grad_dim=chunk_size,
+                            proj_dim=self.proj_dim,
+                            seed=seeds[i],
+                            proj_type=ProjectionType.rademacher,
+                            max_batch_size=proj_max_batch_size,
+                            dtype=self.dtype,
+                            device=self.device,
+                        )
+                        for i, chunk_size in enumerate(param_chunk_sizes)
+                    ]
+                    self.projector = ChunkedCudaProjector(
+                        projector_per_chunk,
+                        max_chunk_size,
+                        param_chunk_sizes,
+                        proj_max_batch_size,
+                        self.device,
+                        self.dtype,
+                    )
+                    return  # do not initialize projector below
 
             self.logger.debug(f"Initializing projector with grad_dim {self.num_params}")
             self.projector = projector(
@@ -356,6 +425,11 @@ class TRAKer:
                 class. Defaults to None.
 
         """
+
+        # this method is memory-intensive, so we're freeing memory beforehand
+        torch.cuda.empty_cache()
+        self.projector.free_memory()
+
         if model_ids is None:
             model_ids = list(self.saver.model_ids.keys())
 
