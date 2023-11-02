@@ -63,6 +63,7 @@ class TRAKer:
         use_half_precision: bool = True,
         proj_max_batch_size: int = 32,
         projector_seed: int = 0,
+        grad_wrt: Optional[list[str]] = None,
     ) -> None:
         """
 
@@ -121,6 +122,13 @@ class TRAKer:
                 for V100 GPUs, 40 for H100 GPUs. Defaults to 32.
             projector_seed (int):
                 Random seed used by the projector. Defaults to 0.
+            grad_wrt (Optional[list[str]], optional):
+                If not None, the gradients will be computed only with respect to
+                the parameters specified in this list. The list should contain
+                the names of the parameters to compute gradients with respect to,
+                as they appear in the model's state dictionary. If None,
+                gradients are taken with respect to all model parameters.
+                Defaults to None.
 
         """
 
@@ -129,12 +137,20 @@ class TRAKer:
         self.train_set_size = train_set_size
         self.device = device
         self.dtype = ch.float16 if use_half_precision else ch.float32
+        self.grad_wrt = grad_wrt
 
         logging.basicConfig()
         self.logger = logging.getLogger("TRAK")
         self.logger.setLevel(logging_level)
 
         self.num_params = get_num_params(self.model)
+        if self.grad_wrt is not None:
+            d = dict(self.model.named_parameters())
+            self.num_params_for_grad = sum(
+                [d[param_name].numel() for param_name in self.grad_wrt]
+            )
+        else:
+            self.num_params_for_grad = self.num_params
         # inits self.projector
         self.proj_seed = projector_seed
         self.init_projector(
@@ -145,7 +161,9 @@ class TRAKer:
 
         # normalize to make X^TX numerically stable
         # doing this instead of normalizing the projector matrix
-        self.normalize_factor = ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
+        self.normalize_factor = ch.sqrt(
+            ch.tensor(self.num_params_for_grad, dtype=ch.float32)
+        )
 
         self.save_dir = Path(save_dir).resolve()
         self.load_from_save_dir = load_from_save_dir
@@ -156,9 +174,10 @@ class TRAKer:
         self.gradient_computer = gradient_computer(
             model=self.model,
             task=self.task,
-            grad_dim=self.num_params,
+            grad_dim=self.num_params_for_grad,
             dtype=self.dtype,
             device=self.device,
+            grad_wrt=self.grad_wrt,
         )
 
         if score_computer is None:
@@ -211,7 +230,7 @@ class TRAKer:
         if projector is not None:
             self.proj_dim = self.projector.proj_dim
             if self.proj_dim == 0:  # using NoOpProjector
-                self.proj_dim = self.num_params
+                self.proj_dim = self.num_params_for_grad
 
         else:
             using_cuda_projector = False
@@ -228,7 +247,7 @@ class TRAKer:
                 try:
                     import fast_jl
 
-                    test_gradient = ch.ones(1, self.num_params).cuda()
+                    test_gradient = ch.ones(1, self.num_params_for_grad).cuda()
                     num_sms = ch.cuda.get_device_properties(
                         "cuda"
                     ).multi_processor_count
@@ -294,9 +313,11 @@ class TRAKer:
                     )
                     return  # do not initialize projector below
 
-            self.logger.debug(f"Initializing projector with grad_dim {self.num_params}")
+            self.logger.debug(
+                f"Initializing projector with grad_dim {self.num_params_for_grad}"
+            )
             self.projector = projector(
-                grad_dim=self.num_params,
+                grad_dim=self.num_params_for_grad,
                 proj_dim=self.proj_dim,
                 seed=self.proj_seed,
                 proj_type=proj_type,

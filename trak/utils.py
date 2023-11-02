@@ -280,6 +280,8 @@ def get_matrix_mult(
         return get_matrix_mult_blockwise(
             features.cpu(), target_grads.cpu(), target_dtype, batch_size
         )
+    elif features.device.type == "cpu":
+        return get_matrix_mult_standard(features, target_grads, target_dtype)
 
     output_memory = get_output_memory(features, target_grads, target_dtype)
     free_memory = get_free_memory(features.device)

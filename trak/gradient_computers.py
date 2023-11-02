@@ -19,6 +19,7 @@ from typing import Iterable, Optional
 from torch import Tensor
 from .utils import get_num_params, parameters_to_vector
 from .modelout_functions import AbstractModelOutput
+import logging
 import torch
 
 ch = torch
@@ -92,11 +93,22 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         grad_dim: int,
         dtype: torch.dtype,
         device: torch.device,
+        grad_wrt: Optional[list[str]] = None,
     ) -> None:
+        """Initializes attributes, and loads model parameters.
+
+        Args:
+            grad_wrt (list[str], optional):
+                A list of parameter names for which to keep gradients.  If None,
+                gradients are taken with respect to all model parameters.
+                Defaults to None.
+        """
         super().__init__(model, task, grad_dim, dtype, device)
         self.model = model
         self.num_params = get_num_params(self.model)
         self.load_model_params(model)
+        self.grad_wrt = grad_wrt
+        self.logger = logging.getLogger("GradientComputer")
 
     def load_model_params(self, model) -> None:
         """Given a a torch.nn.Module model, inits/updates the (functional)
@@ -135,11 +147,17 @@ class FunctionalGradientComputer(AbstractGradientComputer):
         )
 
         # map over batch dimensions (hence 0 for each batch dimension, and None for model params)
-        return torch.func.vmap(
+        grads = torch.func.vmap(
             grads_loss,
             in_dims=(None, None, None, *([0] * len(batch))),
             randomness="different",
         )(self.model, self.func_weights, self.func_buffers, *batch)
+
+        if self.grad_wrt is not None:
+            for param_name in list(grads.keys()):
+                if param_name not in self.grad_wrt:
+                    del grads[param_name]
+        return grads
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
@@ -179,9 +197,16 @@ class IterativeGradientComputer(AbstractGradientComputer):
         grad_dim: int,
         dtype: torch.dtype,
         device: torch.device,
+        grad_wrt: Optional[list[str]] = None,
     ) -> None:
         super().__init__(model, task, grad_dim, dtype, device)
         self.load_model_params(model)
+        self.grad_wrt = grad_wrt
+        self.logger = logging.getLogger("GradientComputer")
+        if self.grad_wrt is not None:
+            self.logger.warning(
+                "IterativeGradientComputer: ignoring grad_wrt argument."
+            )
 
     def load_model_params(self, model) -> Tensor:
         self.model = model
