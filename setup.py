@@ -22,6 +22,8 @@ setup(
             "open_clip_torch",
             "wget",
             "scipy",
+            "datasets",
+            "transformers",
         ],
         "fast": ["fast_jl"],
     },
