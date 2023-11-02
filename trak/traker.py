@@ -626,7 +626,8 @@ class TRAKer:
         self.saver.load_current_store(list(model_ids.keys())[0], exp_name, num_targets)
         _scores_mmap = self.saver.current_store[f"{exp_name}_scores"]
         _scores_on_cpu = ch.zeros(*_scores_mmap.shape, device="cpu")
-        _scores_on_cpu.pin_memory()
+        if self.device != "cpu":
+            _scores_on_cpu.pin_memory()
 
         _avg_out_to_losses = np.zeros(
             (self.saver.train_set_size, 1),

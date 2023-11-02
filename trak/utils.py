@@ -297,7 +297,7 @@ def get_matrix_mult(
 def get_parameter_chunk_sizes(
     model: torch.nn.Module,
     batch_size: int,
-) -> tuple[int, list]:
+):
     """The :class:`CudaProjector` supports projecting when the product of the
     number of parameters and the batch size is less than the the max value of
     int32. This function computes the number of parameters that can be projected
