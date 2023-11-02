@@ -80,9 +80,6 @@ the :code:`task` when instantiating :class:`.TRAKer`:
         def get_output(...):
             # Implement
 
-        def forward(...):
-            # Implement
-
         def get_out_to_loss_grad(...):
             # Implement
 
