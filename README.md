@@ -65,6 +65,9 @@ for model_id, checkpoint in enumerate(checkpoints):
 
 scores = traker.finalize_scores(exp_name='test')
 ```
+Then, you can use the compute TRAK scores to analyze your model's behavior. For example, here are the most (positively and negatively) impactful examples for a ResNet18 model trained on ImageNet:
+![ImageNet Figure](assets/imagenet_figure.jpeg)
+
 Check out the [quickstart](https://trak.readthedocs.io/en/latest/quickstart.html) for a complete ready-to-run example notebook.
 
 
