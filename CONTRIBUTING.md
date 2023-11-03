@@ -27,12 +27,14 @@ guidelines for how to structure your extension.
    extension's dependencies with `pip install traker[diffusion_models]`. Do
    **not** add the dependencies to the `install_requires` list in `setup.py`.
 
-3. Add any tests in a subdirectory of `tests/contrib` matching the name of your
+5. Add any tests in a subdirectory of `tests/contrib` matching the name of your
    extension's directory. For example, if your extension is in
    `trak/contrib/diffusion_models`, add tests in
    `tests/contrib/diffusion_models`.  At a minimum, submit an integration test
    that demonstrates how to use your extension. Ideally, also submit unit tests
    that verify that your extension works as expected.
+
+6. Once you are done, make a pull request to add your extension to TRAK.
 
 ## Bugs
 
