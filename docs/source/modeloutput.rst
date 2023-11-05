@@ -101,7 +101,7 @@ the cross-entropy loss:
 
 .. math::
 
-    L(z;\theta) = \log(p(z;\theta))
+    L(z;\theta) = -\log(p(z;\theta))
 
 where :math:`p(z;\theta)` is the soft-max probability associated for the correct class :math:`y` for example :math:`z=(x,y)`.
 
@@ -119,8 +119,8 @@ The corresponding output-to-loss gradient is given by:
 
 .. math::
 
-    \frac{\partial L(z;\theta)}{\partial f} = \frac{\partial}{\partial f}
-    \log(1 + \exp(-f)) = -\frac{\exp(-f)}{1 + \exp(-f)}  = -(1 - p(z;\theta))
+    \frac{\partial L(z;\theta)}{\partial f} = -\frac{\partial}{\partial f}
+    \log(1 + \exp(-f)) = \frac{\exp(-f)}{1 + \exp(-f)}  = 1 - p(z;\theta)
 
 
 .. note::
