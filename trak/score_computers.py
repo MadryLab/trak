@@ -21,7 +21,7 @@ class AbstractScoreComputer(ABC):
         ...
 
     @abstractmethod
-    def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor) -> Tensor:
+    def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor, damping: float = 0.) -> Tensor:
         ...
 
     @abstractmethod
@@ -73,20 +73,20 @@ class BasicScoreComputer(AbstractScoreComputer):
 
         return result
 
-    def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor) -> Tensor:
+    def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor, damping: float = 0) -> Tensor:
         blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
-        xtx_inv = ch.linalg.inv(xtx.to(ch.float32))
+        xtx_inv = ch.linalg.inv(xtx.to(ch.float32) + ch.eye(xtx.shape[0]).to(xtx.device) * damping)
 
         # center X^TX inverse a bit to avoid numerical issues when going to float16
         xtx_inv /= xtx_inv.abs().mean()
 
         xtx_inv = xtx_inv.to(self.dtype)
 
-        result = ch.empty(grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device=self.device)
+        result = ch.empty(grads.shape[0], xtx_inv.shape[1], dtype=self.dtype, device='cpu')
         for i, block in enumerate(blocks):
             start = i * self.CUDA_MAX_DIM_SIZE
             end = min(grads.shape[0], (i + 1) * self.CUDA_MAX_DIM_SIZE)
-            result[start: end] = (block.to(self.device) @ xtx_inv)
+            result[start: end] = (block.to(self.device) @ xtx_inv).cpu()
         return result
 
     def get_scores(self, features: Tensor, target_grads: Tensor) -> Tensor:

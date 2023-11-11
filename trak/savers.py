@@ -280,11 +280,12 @@ class MmapSaver(AbstractSaver):
         if os.path.exists(prefix):
             self.logger.info(f'Model ID folder {prefix} already exists')
         os.makedirs(prefix, exist_ok=True)
-        featurized_so_far = np.zeros(shape=(self.train_set_size,), dtype=np.int32)
+        print('HELLO', self.train_set_size)
+        featurized_so_far = np.zeros(shape=(self.train_set_size,), dtype=np.int64)
         ft = self._load(prefix.joinpath('_is_featurized.mmap'),
                         shape=(self.train_set_size, ),
                         mode='w+',
-                        dtype=np.int32)
+                        dtype=np.int64)
         ft[:] = featurized_so_far[:]
         ft.flush()
 

@@ -248,6 +248,12 @@ class CLIPModelOutput(AbstractModelOutput):
         cutoff = batch_size
         with ch.no_grad():
             for ind, (images, text) in enumerate(loader):
+                if (ind + 1) * batch_size >= size:
+                    try:
+                        loader.set_description('Done actually computing')
+                    except:
+                        pass
+                    continue
                 if preprocess_fn_img is not None:
                     images = preprocess_fn_img(images)
                 if preprocess_fn_txt is not None:
@@ -258,8 +264,6 @@ class CLIPModelOutput(AbstractModelOutput):
                 image_embeddings, text_embeddings, _ = model(images, text)
                 img_embs[st: ed] = image_embeddings[:cutoff].clone().detach()
                 txt_embs[st: ed] = text_embeddings[:cutoff].clone().detach()
-                if (ind + 1) * batch_size >= size:
-                    break
 
         CLIPModelOutput.image_embeddings = img_embs
         CLIPModelOutput.text_embeddings = txt_embs

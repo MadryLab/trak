@@ -14,6 +14,7 @@ from torch import Tensor
 import logging
 import numpy as np
 import torch
+import gc
 ch = torch
 
 
@@ -107,6 +108,7 @@ class TRAKer():
 
         self.num_params = get_num_params(self.model)
         # inits self.projector
+        self.proj_max_batch_size = proj_max_batch_size
         self.init_projector(projector, proj_dim, proj_max_batch_size)
 
         # normalize to make X^TX numerically stable
@@ -119,9 +121,10 @@ class TRAKer():
         if type(self.task) is str:
             self.task = TASK_TO_MODELOUT[self.task]()
 
+        self.gradient_computer_constructor = gradient_computer
         self.gradient_computer = gradient_computer(model=self.model,
-                                                   task=self.task,
-                                                   grad_dim=self.num_params)
+                                                    task=self.task,
+                                                    grad_dim=self.num_params)
 
         if score_computer is None:
             score_computer = BasicScoreComputer
@@ -155,7 +158,6 @@ class TRAKer():
 
         """
 
-        self.projector = projector
         if projector is not None:
             self.proj_dim = self.projector.proj_dim
             if self.proj_dim == 0:  # using NoOpProjector
@@ -214,7 +216,7 @@ class TRAKer():
 
         self._last_ind = 0
         self.ckpt_loaded = model_id
-
+    
     def featurize(self,
                   batch: Iterable[Tensor],
                   inds: Optional[Iterable[int]] = None,
@@ -262,20 +264,23 @@ class TRAKer():
             self.logger.debug('All samples in batch already featurized.')
             return 0
 
+        # Print gpu memory usage
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
         grads = self.projector.project(grads, model_id=self.saver.current_model_id)
         grads /= self.normalize_factor
-        self.saver.current_store['grads'][inds] = grads.to(self.dtype).cpu().clone().detach()
+        self.saver.current_store['grads'][inds] = grads.to(self.dtype).cpu().clone().detach()    
 
         loss_grads = self.gradient_computer.compute_loss_grad(batch)
-        self.saver.current_store['out_to_loss'][inds] = loss_grads.to(self.dtype).cpu().clone().detach()
+        self.saver.current_store['out_to_loss'][inds] = loss_grads.to(self.dtype).cpu().clone().detach().unsqueeze(-1)
 
         self.saver.current_store['is_featurized'][inds] = 1
         self.saver.serialize_current_model_id_metadata()
 
     def finalize_features(self,
                           model_ids: Iterable[int] = None,
-                          del_grads: bool = False) -> None:
+                          del_grads: bool = False,
+                          damping: float = 0.,
+                          force: bool = False) -> None:
         """ For a set of checkpoints :math:`C` (specified by model IDs), and
         gradients :math:`\\{ \\Phi_c \\}_{c\\in C}`, this method computes
         :math:`\\Phi_c (\\Phi_c^\\top\\Phi_c)^{-1}` for all :math:`c\\in C`
@@ -299,9 +304,11 @@ class TRAKer():
                 raise ModelIDException(f'Model ID {model_id} not registered, not ready for finalizing.')
             elif self.saver.model_ids[model_id]['is_featurized'] == 0:
                 raise ModelIDException(f'Model ID {model_id} not fully featurized, not ready for finalizing.')
-            elif self.saver.model_ids[model_id]['is_finalized'] == 1:
+            elif self.saver.model_ids[model_id]['is_finalized'] == 1 and not force:
                 self.logger.warning(f'Model ID {model_id} already finalized, skipping .finalize_features for it.')
                 continue
+            elif self.saver.model_ids[model_id]['is_finalized'] == 1 and not force:
+                self.logger.warning(f'Model ID {model_id} already finalized, but force=True so doing it anyways.')
 
             self.saver.load_current_store(model_id)
 
@@ -309,7 +316,7 @@ class TRAKer():
             xtx = self.score_computer.get_xtx(g)
             self.logger.debug(f'XTX is {xtx}')
 
-            features = self.score_computer.get_x_xtx_inv(g, xtx)
+            features = self.score_computer.get_x_xtx_inv(g, xtx, damping)
             self.logger.debug(f'Features are {features}')
             self.saver.current_store['features'][:] = features.to(self.dtype).cpu()
             if del_grads:
@@ -346,6 +353,48 @@ class TRAKer():
 
         self.model.load_state_dict(checkpoint)
         self.model.eval()
+        self.gradient_computer.load_model_params(self.model)
+
+        # TODO: make this exp_name-dependent
+        # e.g. make it a value in self.saver.experiments[exp_name]
+        self._last_ind_target = 0
+
+    def start_scoring_model(self,
+                                 exp_name: str,
+                                 model: ch.nn.Module,
+                                 model_id: int,
+                                 num_targets: int,
+                                 ) -> None:
+        """ This method prepares the internal store of the :class:`.TRAKer` class
+        to start computing scores for a set of targets.
+
+        Args:
+            exp_name (str):
+                Experiment name. Each experiment should have a unique name, and
+                it corresponds to a set of targets being scored. The experiment
+                name is used as the name for saving the target features, as well
+                as scores produced by this method in the :code:`save_dir` of the
+                :class:`.TRAKer` class.
+            checkpoint (Iterable[Tensor]):
+                model checkpoint (state dict)
+            model_id (int):
+                a unique ID for a checkpoint
+            num_targets (int):
+                number of targets to score
+
+        """
+        self.saver.init_experiment(exp_name, num_targets, model_id)
+
+        self.model = model
+        self.model.eval()
+        self.num_params = get_num_params(self.model)
+        self.normalize_factor = ch.sqrt(ch.tensor(self.num_params, dtype=ch.float32))
+        self.init_projector(None, self.proj_dim, self.proj_max_batch_size)
+        self.gradient_computer = self.gradient_computer_constructor(
+            model=self.model,
+            task=self.task,
+            grad_dim=self.num_params
+        )
         self.gradient_computer.load_model_params(self.model)
 
         # TODO: make this exp_name-dependent
