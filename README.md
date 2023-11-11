@@ -65,11 +65,17 @@ for model_id, checkpoint in enumerate(checkpoints):
 
 scores = traker.finalize_scores(exp_name='test')
 ```
-Check out the [quickstart](https://trak.readthedocs.io/en/latest/quickstart.html) for a complete ready-to-run example notebook.
+Then, you can use the compute TRAK scores to analyze your model's behavior. For example, here are the most (positively and negatively) impactful examples for a ResNet18 model trained on ImageNet for three targets from the ImageNet validation set:
+![ImageNet Figure](assets/imagenet_figure.jpeg)
 
+Check out the
+[quickstart](https://trak.readthedocs.io/en/latest/quickstart.html) for a
+complete ready-to-run example notebook.  You can also find several end-to-end
+examples in the `examples/` directory.
 
-## Examples
-You can find several end-to-end examples in the `examples/` directory.
+## Contributing
+We welcome contributions to this project! Please see our [contributing
+guidelines](CONTRIBUTING.md) for more information.
 
 ## Citation
 If you use this code in your work, please cite using the following BibTeX entry:

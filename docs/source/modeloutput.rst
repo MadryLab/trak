@@ -101,7 +101,7 @@ the cross-entropy loss:
 
 .. math::
 
-    L(z;\theta) = \log(p(z;\theta))
+    L(z;\theta) = -\log(p(z;\theta))
 
 where :math:`p(z;\theta)` is the soft-max probability associated for the correct class :math:`y` for example :math:`z=(x,y)`.
 
@@ -119,9 +119,30 @@ The corresponding output-to-loss gradient is given by:
 
 .. math::
 
-    \frac{\partial L(z;\theta)}{\partial f} = \frac{\partial}{\partial f}
-    \log(1 + \exp(-f)) = -\frac{\exp(-f)}{1 + \exp(-f)}  = -(1 - p(z;\theta))
+    \frac{\partial L(z;\theta)}{\partial f} = -\frac{\partial}{\partial f}
+    \log(1 + \exp(-f)) = \frac{\exp(-f)}{1 + \exp(-f)}  = 1 - p(z;\theta)
 
+
+.. note::
+
+    Note that :math:`p` here is the soft-max probability associated with the
+    correct class :math:`y` for example :math:`z=(x,y)`, and *not* the logit
+    associated with the correct class.  In other words, :math:`p(z;\theta) =
+    \frac{\exp(g_y)}{\sum_j \exp(g_j)}` where :math:`g(z;\theta)` is the vector
+    of logits for example :math:`z=(x,y)`. Thus, the model output function in
+    terms of logits is given by:
+
+    .. math::
+
+        \begin{align}
+        f(z;\theta) &= \log\left(\frac{{\exp(g_y)}/{\sum_j \exp(g_j)}}{1-{\exp(g_y)}/{\sum_j \exp(g_j)}}\right) \\
+        &=  \log\left(\frac{{\exp(g_y)}/{\sum_j \exp(g_j)}}{(\sum_j \exp(g_j)-{\exp(g_y)})/{\sum_j \exp(g_j)}}\right) \\
+        &= \log\left(\frac{\exp(g_y)}{\sum_{j\neq y} \exp(g_j)}\right) \\
+        &= g_y - \log\left(\sum_{j\neq y} \exp(g_j)\right)
+        \end{align}
+
+    We can implement the above model output function in a numerically stable way
+    using the built-in :code:`torch` :code:`logsumexp` function.
 
 Implementation
 ~~~~~~~~~~~~~~~~~
