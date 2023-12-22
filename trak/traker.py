@@ -416,7 +416,7 @@ class TRAKer:
             return 0
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
-        grads = self.projector.project(grads, model_id=self.saver.current_model_id)
+        grads = self.projector.project(grads, model_id=self.saver.current_model_id, is_grads_dict=isinstance(grads, dict))
         grads /= self.normalize_factor
         self.saver.current_store["grads"][inds] = (
             grads.to(self.dtype).cpu().clone().detach()
@@ -565,7 +565,7 @@ class TRAKer:
 
         grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
 
-        grads = self.projector.project(grads, model_id=self.saver.current_model_id)
+        grads = self.projector.project(grads, model_id=self.saver.current_model_id, is_grads_dict=isinstance(grads, dict))
         grads /= self.normalize_factor
 
         exp_name = self.saver.current_experiment_name
