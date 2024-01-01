@@ -473,7 +473,7 @@ class TRAKer:
 
             self.saver.load_current_store(model_id)
 
-            g = ch.as_tensor(self.saver.current_store["grads"])
+            g = ch.as_tensor(self.saver.current_store["grads"], device=self.device)
             xtx = self.score_computer.get_xtx(g)
             self.logger.debug(f"XTX is {xtx}")
 
