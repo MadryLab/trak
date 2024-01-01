@@ -475,10 +475,8 @@ class TRAKer:
 
             g = ch.as_tensor(self.saver.current_store["grads"], device=self.device)
             xtx = self.score_computer.get_xtx(g)
-            self.logger.debug(f"XTX is {xtx}")
 
             features = self.score_computer.get_x_xtx_inv(g, xtx)
-            self.logger.debug(f"Features are {features}")
             self.saver.current_store["features"][:] = features.to(self.dtype).cpu()
             if del_grads:
                 self.saver.del_grads(model_id)
