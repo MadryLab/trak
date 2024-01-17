@@ -115,7 +115,9 @@ class NoOpProjector(AbstractProjector):
         Returns:
             Tensor: the (non-)projected gradients
         """
-        return vectorize(grads, device=self.device)
+        if isinstance(grads, dict):
+            grads = vectorize(grads, device=self.device)
+        return grads
 
     def free_memory(self):
         """A no-op method."""
@@ -190,7 +192,9 @@ class BasicSingleBlockProjector(AbstractProjector):
             raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        grads = vectorize(grads, device=self.device)
+        if isinstance(grads, dict):
+            grads = vectorize(grads, device=self.device)
+
         grads = grads.to(dtype=self.dtype)
         if model_id != self.model_id:
             self.model_id = model_id
@@ -254,7 +258,7 @@ class BasicProjector(AbstractProjector):
     def get_generator_states(self):
         self.generator_states = []
         self.seeds = []
-        self.jl_size = self.proj_matrix.numel()
+        self.jl_size = self.grad_dim * self.block_size
 
         for i in range(self.num_blocks):
             s = self.seed + int(1e3) * i + int(1e5) * self.model_id
@@ -283,7 +287,8 @@ class BasicProjector(AbstractProjector):
             raise KeyError(f"Projection type {self.proj_type} not recognized.")
 
     def project(self, grads: Tensor, model_id: int) -> Tensor:
-        grads = vectorize(grads, device=self.device)
+        if isinstance(grads, dict):
+            grads = vectorize(grads, device=self.device)
         grads = grads.to(dtype=self.dtype)
         sketch = ch.zeros(
             size=(grads.size(0), self.proj_dim), dtype=self.dtype, device=self.device
@@ -380,10 +385,10 @@ class CudaProjector(AbstractProjector):
         self,
         grads: Union[dict, Tensor],
         model_id: int,
-        is_grads_dict: bool = True,
     ) -> Tensor:
-        if is_grads_dict:
+        if isinstance(grads, dict):
             grads = vectorize(grads, device=self.device)
+
         batch_size = grads.shape[0]
 
         effective_batch_size = 32
@@ -486,7 +491,6 @@ class ChunkedCudaProjector:
                     self.projector_per_chunk[projector_index].project(
                         self.ch_input[:, :pointer].contiguous(),
                         model_id=model_id,
-                        is_grads_dict=False,
                     )
                 )
                 # reset counter
@@ -506,7 +510,6 @@ class ChunkedCudaProjector:
             self.projector_per_chunk[projector_index].project(
                 self.ch_input[:actual_bs, :pointer].contiguous(),
                 model_id=model_id,
-                is_grads_dict=False,
             )
         )
 

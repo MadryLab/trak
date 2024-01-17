@@ -136,9 +136,9 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                 batch of data
 
         Returns:
-            Tensor:
-                gradients of the model output function of each sample in the
-                batch with respect to the model's parameters.
+            dict[Tensor]:
+                A dictionary where each key is a parameter name and the value is
+                the gradient tensor for that parameter.
 
         """
         # taking the gradient wrt weights (second argument of get_output, hence argnums=1)
@@ -183,6 +183,9 @@ class FunctionalGradientComputer(AbstractGradientComputer):
             batch (Iterable[Tensor]):
                 batch of data
 
+        Returns:
+            Tensor:
+                The gradient of the loss with respect to the model output.
         """
         return self.modelout_fn.get_out_to_loss_grad(
             self.model, self.func_weights, self.func_buffers, batch
@@ -229,7 +232,7 @@ class IterativeGradientComputer(AbstractGradientComputer):
         batch_size = batch[0].shape[0]
         grads = ch.zeros(batch_size, self.grad_dim).to(batch[0].device)
 
-        margin = self.modelout_fn.get_output(self.model, *batch)
+        margin = self.modelout_fn.get_output(self.model, None, None, *batch)
         for ind in range(batch_size):
             grads[ind] = parameters_to_vector(
                 ch.autograd.grad(margin[ind], self.model_params, retain_graph=True)
@@ -254,5 +257,9 @@ class IterativeGradientComputer(AbstractGradientComputer):
         Args:
             batch (Iterable[Tensor]):
                 batch of data
+
+        Returns:
+            Tensor:
+                The gradient of the loss with respect to the model output.
         """
-        return self.modelout_fn.get_out_to_loss_grad(self.model, batch)
+        return self.modelout_fn.get_out_to_loss_grad(self.model, None, None, batch)

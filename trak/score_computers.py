@@ -122,6 +122,7 @@ class BasicScoreComputer(AbstractScoreComputer):
         device: torch.device,
         CUDA_MAX_DIM_SIZE: int = 20_000,
         logging_level=logging.INFO,
+        lambda_reg: float = 0.0,
     ) -> None:
         """
         Args:
@@ -132,11 +133,14 @@ class BasicScoreComputer(AbstractScoreComputer):
                 Size of block for block-wise matmuls. Defaults to 100_000.
             logging_level (logging level, optional):
                 Logging level for the logger. Defaults to logging.info.
+            lambda_reg (int):
+                regularization term for l2 reg on xtx
         """
         super().__init__(dtype, device)
         self.CUDA_MAX_DIM_SIZE = CUDA_MAX_DIM_SIZE
         self.logger = logging.getLogger("ScoreComputer")
         self.logger.setLevel(logging_level)
+        self.lambda_reg = lambda_reg
 
     def get_xtx(self, grads: Tensor) -> Tensor:
         self.proj_dim = grads.shape[1]
@@ -152,7 +156,11 @@ class BasicScoreComputer(AbstractScoreComputer):
 
     def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor) -> Tensor:
         blocks = ch.split(grads, split_size_or_sections=self.CUDA_MAX_DIM_SIZE, dim=0)
-        xtx_inv = ch.linalg.inv(xtx.to(ch.float32))
+
+        xtx_reg = xtx + self.lambda_reg * torch.eye(
+            xtx.size(dim=0), device=xtx.device, dtype=xtx.dtype
+        )
+        xtx_inv = ch.linalg.inv(xtx_reg.to(ch.float32))
 
         # center X^TX inverse a bit to avoid numerical issues when going to float16
         xtx_inv /= xtx_inv.abs().mean()

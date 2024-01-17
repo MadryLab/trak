@@ -5,6 +5,7 @@ with a number of subclasses for particular applications (vision, language, etc):
 - :class:`.ImageClassificationModelOutput`
 - :class:`.CLIPModelOutput`
 - :class:`.TextClassificationModelOutput`
+- :class:`.IterativeImageClassificationModelOutput`
 
 These classes implement methods that transform input batches to the desired
 model output (e.g. logits, loss, etc).  See Sections 2 & 3 of `our paper
@@ -444,8 +445,105 @@ class TextClassificationModelOutput(AbstractModelOutput):
         return (1 - ps).clone().detach().unsqueeze(-1)
 
 
+class IterativeImageClassificationModelOutput(AbstractModelOutput):
+    """Margin for (multiclass) image classification. See Section 3.3 of `our
+    paper <https://arxiv.org/abs/2303.14186>`_ for more details.
+    """
+
+    def __init__(self, temperature: float = 1.0) -> None:
+        """
+        Args:
+            temperature (float, optional): Temperature to use inside the
+            softmax for the out-to-loss function. Defaults to 1.
+        """
+        super().__init__()
+        self.softmax = ch.nn.Softmax(-1)
+        self.loss_temperature = temperature
+
+    @staticmethod
+    def get_output(
+        model: Module,
+        weights: Iterable[Tensor],
+        buffers: Iterable[Tensor],
+        images: Tensor,
+        labels: Tensor,
+    ) -> Tensor:
+        """For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
+        let :math:`p(z, \\theta)` be the softmax probability of the correct class.
+        This method implements the model output function
+
+        .. math::
+
+            \\log(\\frac{p(z, \\theta)}{1 - p(z, \\theta)}).
+
+        It uses functional models from torch.func (previously functorch) to make
+        the per-sample gradient computations (much) faster. For more details on
+        what functional models are, and how to use them, please refer to
+        https://pytorch.org/docs/stable/func.html and
+        https://pytorch.org/functorch/stable/notebooks/per_sample_grads.html.
+
+        Args:
+            model (torch.nn.Module):
+                torch model
+            weights (Iterable[Tensor]):
+                functorch model weights (added se we don't break abstraction)
+            buffers (Iterable[Tensor]):
+                functorch model buffers (added se we don't break abstraction)
+            images (Tensor):
+                input images
+            labels (Tensor):
+                input labels
+
+        Returns:
+            Tensor:
+                model output for the given image-label pair :math:`z`
+        """
+        logits = model(images)
+        bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
+        logits_correct = logits[bindex, labels]
+
+        cloned_logits = logits.clone()
+        # remove the logits of the correct labels from the sum
+        # in logsumexp by setting to -ch.inf
+        cloned_logits[bindex, labels] = ch.tensor(
+            -ch.inf, device=logits.device, dtype=logits.dtype
+        )
+
+        margins = logits_correct - cloned_logits.logsumexp(dim=-1)
+        return margins
+
+    def get_out_to_loss_grad(
+        self, model, weights, buffers, batch: Iterable[Tensor]
+    ) -> Tensor:
+        """Computes the (reweighting term Q in the paper)
+
+        Args:
+            model (torch.nn.Module):
+                torch model
+            weights (Iterable[Tensor]):
+                functorch model weights
+            buffers (Iterable[Tensor]):
+                functorch model buffers
+            batch (Iterable[Tensor]):
+                input batch
+
+        Returns:
+            Tensor:
+                out-to-loss (reweighting term) for the input batch
+        """
+        images, labels = batch
+        logits = model(images)
+        # here we are directly implementing the gradient instead of relying on autodiff to do
+        # that for us
+        ps = self.softmax(logits / self.loss_temperature)[
+            ch.arange(logits.size(0)), labels
+        ]
+        return (1 - ps).clone().detach().unsqueeze(-1)
+
+
 TASK_TO_MODELOUT = {
     "image_classification": ImageClassificationModelOutput,
     "clip": CLIPModelOutput,
     "text_classification": TextClassificationModelOutput,
+    "iterative_image_classification": IterativeImageClassificationModelOutput,
 }
