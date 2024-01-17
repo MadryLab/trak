@@ -374,6 +374,30 @@ def test_custom_model_output(tmp_path, cpu_proj):
     )
 
 
+def test_iterative_gradient_computer(tmp_path, cpu_proj):
+    from trak.gradient_computers import IterativeGradientComputer
+    from trak.projectors import NoOpProjector
+
+    model = resnet18()
+    N = 5
+    batch = ch.randn(N, 3, 32, 32), ch.randint(low=0, high=10, size=(N,))
+    traker = TRAKer(
+        model=model,
+        task="iterative_image_classification",
+        save_dir=tmp_path,
+        train_set_size=N,
+        logging_level=logging.DEBUG,
+        device="cpu",
+        use_half_precision=False,
+        projector=NoOpProjector(),
+        proj_dim=0,
+        gradient_computer=IterativeGradientComputer,
+    )
+    ckpt = model.state_dict()
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(batch, num_samples=N)
+
+
 def test_grad_wrt_last_layer(tmp_path):
     model = resnet18().eval()
     N = 5
@@ -402,7 +426,7 @@ def test_grad_wrt_last_layer(tmp_path):
 def test_grad_wrt_last_layer_cuda(tmp_path):
     model = resnet18().cuda().eval()
     N = 5
-    batch = ch.randn(N, 3, 32, 32).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
+    batch = ch.randn(N, 3, 4, 4).cuda(), ch.randint(low=0, high=10, size=(N,)).cuda()
     traker = TRAKer(
         model=model,
         task="image_classification",

@@ -72,11 +72,9 @@ class TRAKer:
                 model to use for TRAK
             task (Union[AbstractModelOutput, str]):
                 Type of model that TRAK will be ran on. Accepts either one of
-                the following strings:
-                - :code:`image_classification`
-                - :code:`text_classification`
-                - :code:`clip`
-                or an instance of some implementation of the abstract class
+                the following strings: 1) :code:`image_classification` 2)
+                :code:`text_classification` 3) :code:`clip` or an instance of
+                some implementation of the abstract class
                 :class:`.AbstractModelOutput`.
             train_set_size (int):
                 Size of the train set that TRAK is featurizing
