@@ -64,6 +64,7 @@ class TRAKer:
         proj_max_batch_size: int = 32,
         projector_seed: int = 0,
         grad_wrt: Optional[Iterable[str]] = None,
+        lambda_reg: float = 0.0,
     ) -> None:
         """
 
@@ -127,7 +128,10 @@ class TRAKer:
                 as they appear in the model's state dictionary. If None,
                 gradients are taken with respect to all model parameters.
                 Defaults to None.
-
+            lambda_reg (float):
+                The :math:`\ell_2` (ridge) regularization penalty added to the
+                :math:`XTX` term in score computers when computing the matrix
+                inverse :math:`(XTX)^{-1}`. Defaults to 0.
         """
 
         self.model = model
@@ -136,6 +140,7 @@ class TRAKer:
         self.device = device
         self.dtype = ch.float16 if use_half_precision else ch.float32
         self.grad_wrt = grad_wrt
+        self.lambda_reg = lambda_reg
 
         logging.basicConfig()
         self.logger = logging.getLogger("TRAK")
@@ -181,7 +186,10 @@ class TRAKer:
         if score_computer is None:
             score_computer = BasicScoreComputer
         self.score_computer = score_computer(
-            dtype=self.dtype, device=self.device, logging_level=logging_level
+            dtype=self.dtype,
+            device=self.device,
+            logging_level=logging_level,
+            lambda_reg=self.lambda_reg,
         )
 
         metadata = {
