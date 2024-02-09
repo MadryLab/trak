@@ -36,17 +36,17 @@ from trak import TRAKer
 model, checkpoints = ...
 train_loader = ...
 
-traker = TRAKer(model=model, task='image_classification', train_set_size=...)
+traker = TRAKer(model=model, task='image_classification', train_set_size=len(train_loader.dataset))
 ```
 
 ### Compute `TRAK` features on training data
 
 ```python
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.load_checkpoint(checkpoint, model_id=model_id)
-  for batch in loader_train:
-      # batch should be a tuple of inputs and labels
-      traker.featurize(batch=batch, ...)
+    traker.load_checkpoint(checkpoint, model_id=model_id)
+    for batch in train_loader:
+        # batch should be a tuple of inputs and labels
+        traker.featurize(batch=batch, num_samples=batch[0].shape[0])
 traker.finalize_features()
 ```
 
@@ -56,12 +56,12 @@ traker.finalize_features()
 targets_loader = ...
 
 for model_id, checkpoint in enumerate(checkpoints):
-  traker.start_scoring_checkpoint(checkpoint,
-                                  model_id=model_id,
-                                  exp_name='test',
-                                  num_targets=...)
-  for batch in targets_loader:
-    traker.score(batch=batch, ...)
+    traker.start_scoring_checkpoint(exp_name='test',
+                                    checkpoint=checkpoint,
+                                    model_id=model_id,
+                                    num_targets=len(targets_loader.dataset))
+    for batch in targets_loader:
+        traker.score(batch=batch, num_samples=batch[0].shape[0])
 
 scores = traker.finalize_scores(exp_name='test')
 ```
