@@ -21,14 +21,58 @@ comparably effective methods, e.g., see our evaluation on:
 ![Main figure](/docs/assets/main_figure.png)
 
 ## Usage
-
 - [quickstart (tutorial & notebook)](https://trak.readthedocs.io/en/latest/quickstart.html)
+
+Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed
+examples and tutorials on how to use `TRAK`.  Below, we provide a brief
+blueprint of using `TRAK`'s API to compute attribution scores.
+
+```python
+from trak import TRAKer
+import torchvision
+from torch.utils.data import DataLoader
+
+model = torchvision.models.resnet18(pretrained=True)
+# train or load a pre-trained model here ...
+checkpoints = [model.state_dict()]
+transforms = torchvision.transforms.Compose([
+                  torchvision.transforms.ToTensor(),
+                  torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465),
+                                                  (0.2023, 0.1994, 0.201))])
+train_loader = DataLoader(torchvision.datasets.cifar10(train=True, download=True),
+                          batch_size=100,
+                          shuffle=False,
+                          transform=transforms)
+targets_loader = DataLoader(torchvision.datasets.cifar10(train=False, download=True),
+                            batch_size=100,
+                            shuffle=False,
+                            transform=transforms)
+
+traker = TRAKer(model=model, task='image_classification', train_set_size=len(train_loader.dataset))
+
+for batch in targets_loader:
+    traker.score(batch=batch, num_samples=batch[0].shape[0], prefeaturized=False)
+```
+
+Then, you can use the computed TRAK scores to analyze your model's behavior. For
+example, here are the most (positively and negatively) impactful examples for a
+ResNet18 model trained on ImageNet for three targets from the ImageNet
+validation set:
+![ImageNet Figure](assets/imagenet_figure.jpeg)
+
+Check out the
+[quickstart](https://trak.readthedocs.io/en/latest/quickstart.html) for a
+complete ready-to-run example notebook.  You can also find several end-to-end
+examples in the `examples/` directory.
+
+### Advanced: pre-compute TRAK features to ammortize cost
+Note: this comes at the cost of memory, but can be useful if you need to compute
+TRAK scores in an online setting.
+
 - [pre-computed TRAK scores for CIFAR-10 (Google Colab notebook)](https://colab.research.google.com/drive/1Mlpzno97qpI3UC1jpOATXEHPD-lzn9Wg?usp=sharing)
 
-Check [our docs](https://trak.readthedocs.io/en/latest/) for more detailed examples and
-tutorials on how to use `TRAK`.  Below, we provide a brief blueprint of using `TRAK`'s API to compute attribution scores.
 
-### Make a `TRAKer` instance
+**Make a `TRAKer` instance**
 
 ```python
 from trak import TRAKer
@@ -39,7 +83,7 @@ train_loader = ...
 traker = TRAKer(model=model, task='image_classification', train_set_size=len(train_loader.dataset))
 ```
 
-### Compute `TRAK` features on training data
+**Compute `TRAK` features on training data**
 
 ```python
 for model_id, checkpoint in enumerate(checkpoints):
@@ -50,7 +94,7 @@ for model_id, checkpoint in enumerate(checkpoints):
 traker.finalize_features()
 ```
 
-### Compute `TRAK` scores for target examples
+**Compute `TRAK` scores for target examples**
 
 ```python
 targets_loader = ...
@@ -61,17 +105,10 @@ for model_id, checkpoint in enumerate(checkpoints):
                                     model_id=model_id,
                                     num_targets=len(targets_loader.dataset))
     for batch in targets_loader:
-        traker.score(batch=batch, num_samples=batch[0].shape[0])
+        traker.score(batch=batch, num_samples=batch[0].shape[0], prefeaturized=True)
 
 scores = traker.finalize_scores(exp_name='test')
 ```
-Then, you can use the compute TRAK scores to analyze your model's behavior. For example, here are the most (positively and negatively) impactful examples for a ResNet18 model trained on ImageNet for three targets from the ImageNet validation set:
-![ImageNet Figure](assets/imagenet_figure.jpeg)
-
-Check out the
-[quickstart](https://trak.readthedocs.io/en/latest/quickstart.html) for a
-complete ready-to-run example notebook.  You can also find several end-to-end
-examples in the `examples/` directory.
 
 ## Contributing
 We welcome contributions to this project! Please see our [contributing
