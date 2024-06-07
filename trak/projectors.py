@@ -344,6 +344,8 @@ class BasicProjector(AbstractProjector):
                 self.generate_sketch_matrix(self.generator_states[0])
 
         if self.num_blocks == 1:
+            if not self.proj_matrix_available:
+                self.generate_sketch_matrix(self.generator_states[0])
             ch.matmul(grads.data, self.proj_matrix, out=sketch)
         else:
             for ind in range(self.num_blocks):
@@ -363,13 +365,15 @@ class BasicProjector(AbstractProjector):
             if self.num_blocks == 1:
                 self.generate_sketch_matrix(self.generator_states[0])
 
-        unprojected_grads = ch.empty(
+        unprojected_grads = ch.zeros(
             size=(projected_grads.size(0), self.grad_dim),
             dtype=self.dtype,
             device=self.device,
         )
 
         if self.num_blocks == 1:
+            if not self.proj_matrix_available:
+                self.generate_sketch_matrix(self.generator_states[0])
             ch.matmul(projected_grads.data, self.proj_matrix.T, out=unprojected_grads)
         else:
             for ind in range(self.num_blocks):
@@ -377,10 +381,9 @@ class BasicProjector(AbstractProjector):
 
                 st = ind * self.block_size
                 ed = min((ind + 1) * self.block_size, self.proj_dim)
-                # TODO: change this
-                # unprojected_grads[:, st:ed] = (
-                #     projected_grads.type(self.dtype) @ self.proj_matrix[:, : (ed - st)]
-                # )
+                unprojected_grads += (
+                    projected_grads.type(self.dtype)[:, st:ed] @ self.proj_matrix.T
+                )
         return unprojected_grads.type(projected_grads.dtype)
 
 

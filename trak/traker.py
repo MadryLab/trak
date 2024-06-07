@@ -776,7 +776,12 @@ class TRAKer:
                     train_loader_to_estimate_xtxinv.dataset
                 )
             # compute X^TX inverse from i.i.d. sampled train points
-            xtx = ch.zeros(self.proj_dim, self.proj_dim, device=self.device)
+            xtx = ch.zeros(
+                self.proj_dim,
+                self.proj_dim,
+                device=self.device,
+                dtype=self.dtype,
+            )
 
             for batch in train_loader_to_estimate_xtxinv:
                 self.logger.debug(f"batch shape: {batch[0].shape}")
