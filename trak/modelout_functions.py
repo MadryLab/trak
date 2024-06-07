@@ -16,6 +16,7 @@ See, e.g. `this tutorial
 <https://trak.readthedocs.io/en/latest/modeloutput.html>`_ for an example on how
 to subclass :code:`AbstractModelOutput` for a task of your choice.
 """
+
 from abc import ABC, abstractmethod
 from typing import Iterable
 from torch import Tensor
@@ -104,6 +105,7 @@ class ImageClassificationModelOutput(AbstractModelOutput):
         buffers: Iterable[Tensor],
         image: Tensor,
         label: Tensor,
+        has_batch_dim: bool = False,
     ) -> Tensor:
         """For a given input :math:`z=(x, y)` and model parameters :math:`\\theta`,
         let :math:`p(z, \\theta)` be the softmax probability of the correct class.
@@ -136,19 +138,25 @@ class ImageClassificationModelOutput(AbstractModelOutput):
                 model output for the given image-label pair :math:`z` and
                 weights & buffers :math:`\\theta`.
         """
-        logits = ch.func.functional_call(model, (weights, buffers), image.unsqueeze(0))
+        if not has_batch_dim:
+            image = image.unsqueeze(0)
+            label = label.unsqueeze(0)
+
+        logits = ch.func.functional_call(model, (weights, buffers), image)
         bindex = ch.arange(logits.shape[0]).to(logits.device, non_blocking=False)
-        logits_correct = logits[bindex, label.unsqueeze(0)]
+        logits_correct = logits[bindex, label]
 
         cloned_logits = logits.clone()
         # remove the logits of the correct labels from the sum
         # in logsumexp by setting to -ch.inf
-        cloned_logits[bindex, label.unsqueeze(0)] = ch.tensor(
+        cloned_logits[bindex, label] = ch.tensor(
             -ch.inf, device=logits.device, dtype=logits.dtype
         )
 
         margins = logits_correct - cloned_logits.logsumexp(dim=-1)
-        return margins.sum()
+        if not has_batch_dim:
+            margins = margins.sum()
+        return margins
 
     def get_out_to_loss_grad(
         self, model, weights, buffers, batch: Iterable[Tensor]

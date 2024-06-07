@@ -14,6 +14,7 @@ interface for such gradient computers. Then, we provide two implementations:
   is not supported by :code:`torch.func`.
 
 """
+
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional
 from torch import Tensor
@@ -73,16 +74,16 @@ class AbstractGradientComputer(ABC):
         self.device = device
 
     @abstractmethod
-    def load_model_params(self, model) -> None:
-        ...
+    def load_model_params(self, model) -> None: ...
 
     @abstractmethod
-    def compute_per_sample_grad(self, batch: Iterable[Tensor]) -> Tensor:
-        ...
+    def compute_per_sample_grad(self, batch: Iterable[Tensor]) -> Tensor: ...
 
     @abstractmethod
-    def compute_loss_grad(self, batch: Iterable[Tensor], batch_size: int) -> Tensor:
-        ...
+    def compute_per_sample_jvp(self, batch: Iterable[Tensor], v: Tensor) -> Tensor: ...
+
+    @abstractmethod
+    def compute_loss_grad(self, batch: Iterable[Tensor], batch_size: int) -> Tensor: ...
 
 
 class FunctionalGradientComputer(AbstractGradientComputer):
@@ -158,6 +159,38 @@ class FunctionalGradientComputer(AbstractGradientComputer):
                 if param_name not in self.grad_wrt:
                     del grads[param_name]
         return grads
+
+    def compute_per_sample_jvp(self, batch: Iterable[Tensor], vs: Tensor) -> Tensor:
+        """Computes the Jacobian-vector product of the model output function
+        with a given batch of tangents :code:`vs`.
+
+        Args:
+            batch (Iterable[Tensor]):
+                batch of data
+            vs (Tensor):
+                batch of tangent vectors
+
+        Returns:
+            Tensor:
+                Jacobian-vector product of the model output function with respect
+                to the model's parameters.
+        """
+
+        def mof(params):
+            return self.modelout_fn.get_output(
+                self.model,
+                params,
+                self.func_buffers,
+                *batch,
+                has_batch_dim=True,
+            )
+
+        _, f_jvp = torch.func.jvp(
+            mof,
+            primals=(self.func_weights,),
+            tangents=(vs,),
+        )
+        return f_jvp.data
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output
@@ -238,6 +271,11 @@ class IterativeGradientComputer(AbstractGradientComputer):
                 ch.autograd.grad(margin[ind], self.model_params, retain_graph=True)
             )
         return grads
+
+    def compute_per_sample_jvp(self, batch: Iterable[Tensor], v: Tensor) -> Tensor:
+        raise NotImplementedError(
+            "compute_per_sample_jvp not implemented for IterativeGradientComputer"
+        )
 
     def compute_loss_grad(self, batch: Iterable[Tensor]) -> Tensor:
         """Computes the gradient of the loss with respect to the model output

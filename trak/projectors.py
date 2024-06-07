@@ -9,6 +9,7 @@ Here, we provide four implementations of the projector:
 - :class:`BasicProjector` (block-wise implementation)
 - :class:`CudaProjector` (a fast implementation with a custom CUDA kernel)
 """
+
 from abc import ABC, abstractmethod
 from typing import Union
 from enum import Enum
@@ -83,6 +84,18 @@ class AbstractProjector(ABC):
             Tensor: the projected gradients
         """
 
+    @abstractmethod
+    def unproject(self, projected_grads: Tensor, model_id: int) -> Tensor:
+        """Unprojects the projected gradients back to the original space.
+
+        Args:
+            projected_grads (Tensor): the projected gradients
+            model_id (int): a unique ID for a checkpoint
+
+        Returns:
+            Tensor: the unprojected gradients
+        """
+
     def free_memory(self):
         """Frees up memory used by the projector."""
 
@@ -118,6 +131,18 @@ class NoOpProjector(AbstractProjector):
         if isinstance(grads, dict):
             grads = vectorize(grads, device=self.device)
         return grads
+
+    def unproject(self, projected_grads: Tensor, model_id: int) -> Tensor:
+        """A no-op method.
+
+        Args:
+            projected_grads (Tensor): the projected gradients
+            model_id (int): a unique ID for a checkpoint
+
+        Returns:
+            Tensor: the (non-)projected gradients
+        """
+        return projected_grads
 
     def free_memory(self):
         """A no-op method."""
@@ -172,6 +197,11 @@ class BasicSingleBlockProjector(AbstractProjector):
         self.proj_matrix_available = False
 
     def generate_sketch_matrix(self):
+
+        self.generator = self.generator.manual_seed(
+            self.seed + int(1e4) * self.model_id
+        )
+
         if not self.proj_matrix_available:
             self.proj_matrix = ch.empty(
                 self.grad_dim, self.proj_dim, dtype=self.dtype, device=self.device
@@ -196,6 +226,9 @@ class BasicSingleBlockProjector(AbstractProjector):
             grads = vectorize(grads, device=self.device)
 
         grads = grads.to(dtype=self.dtype)
+        if not self.proj_matrix_available:
+            self.generate_sketch_matrix()
+
         if model_id != self.model_id:
             self.model_id = model_id
             self.generator = self.generator.manual_seed(
@@ -204,6 +237,16 @@ class BasicSingleBlockProjector(AbstractProjector):
             self.generate_sketch_matrix()  # updates self.proj_matrix
 
         return grads @ self.proj_matrix
+
+    def unproject(self, projected_grads: Tensor, model_id: int) -> Tensor:
+        if model_id != self.model_id:
+            self.model_id = model_id
+            self.generator = self.generator.manual_seed(
+                self.seed + int(1e4) * self.model_id
+            )
+            self.generate_sketch_matrix()  # updates self.proj_matrix
+
+        return projected_grads @ self.proj_matrix.T
 
 
 class BasicProjector(AbstractProjector):
@@ -313,6 +356,33 @@ class BasicProjector(AbstractProjector):
                 )
         return sketch.type(grads.dtype)
 
+    def unproject(self, projected_grads: Tensor, model_id: int) -> Tensor:
+        if model_id != self.model_id:
+            self.model_id = model_id
+            self.get_generator_states()  # regenerate random seeds for new model_id
+            if self.num_blocks == 1:
+                self.generate_sketch_matrix(self.generator_states[0])
+
+        unprojected_grads = ch.empty(
+            size=(projected_grads.size(0), self.grad_dim),
+            dtype=self.dtype,
+            device=self.device,
+        )
+
+        if self.num_blocks == 1:
+            ch.matmul(projected_grads.data, self.proj_matrix.T, out=unprojected_grads)
+        else:
+            for ind in range(self.num_blocks):
+                self.generate_sketch_matrix(self.generator_states[ind])
+
+                st = ind * self.block_size
+                ed = min((ind + 1) * self.block_size, self.proj_dim)
+                # TODO: change this
+                # unprojected_grads[:, st:ed] = (
+                #     projected_grads.type(self.dtype) @ self.proj_matrix[:, : (ed - st)]
+                # )
+        return unprojected_grads.type(projected_grads.dtype)
+
 
 class CudaProjector(AbstractProjector):
     """
@@ -421,6 +491,9 @@ class CudaProjector(AbstractProjector):
                 raise e
 
         return result
+
+    def unproject(self, projected_grads: Tensor, model_id: int) -> Tensor:
+        raise NotImplementedError()
 
     def free_memory(self):
         """A no-op method."""

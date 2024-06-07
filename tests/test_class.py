@@ -1,9 +1,11 @@
+import trak
 from trak import TRAKer
 from torchvision.models import resnet18
 import logging
 import pytest
 import torch as ch
-from trak.projectors import BasicProjector, NoOpProjector
+from torch.utils.data import DataLoader, TensorDataset
+from trak.projectors import BasicProjector, NoOpProjector, BasicSingleBlockProjector
 from trak.modelout_functions import ImageClassificationModelOutput
 
 
@@ -444,3 +446,55 @@ def test_grad_wrt_last_layer_cuda(tmp_path):
     traker.start_scoring_checkpoint("test_experiment", ckpt, 0, num_targets=N)
     traker.score(batch, num_samples=N)
     traker.finalize_scores(exp_name="test_experiment")
+
+
+@pytest.mark.cuda
+def test_score_jvp(tmp_path):
+    print(trak.__file__)
+    ch.manual_seed(0)
+    ch.cuda.manual_seed(42)
+    model = resnet18().cuda().eval()
+    N_target = 5
+    N_train = 200
+    batch = (
+        ch.randn(N_target, 3, 4, 4).cuda(),
+        ch.randint(low=0, high=10, size=(N_target,)).cuda(),
+    )
+    train_batch = (
+        ch.randn(N_train, 3, 4, 4).cuda(),
+        ch.randint(low=0, high=10, size=(N_train,)).cuda(),
+    )
+
+    projector = BasicSingleBlockProjector(
+        grad_dim=11689512, proj_dim=50, seed=0, proj_type="rademacher", device="cuda:0"
+    )
+
+    traker = TRAKer(
+        model=model,
+        task="image_classification",
+        save_dir=tmp_path,
+        projector=projector,
+        train_set_size=N_train,
+        logging_level=logging.DEBUG,
+        device="cuda:0",
+    )
+    ckpt = model.state_dict()
+    loader = DataLoader(TensorDataset(*train_batch), batch_size=N_train // 2)
+
+    scores_jvp = traker.score_jvp(
+        batch,
+        train_loader=loader,
+        checkpoints=[ckpt],
+        num_samples_to_estimate_xtxinv=N_train,
+        batch_size_to_estimate_xtxinv=N_train,
+    )
+
+    traker.load_checkpoint(ckpt, model_id=0)
+    traker.featurize(train_batch, num_samples=N_train)
+    traker.finalize_features()
+    traker.start_scoring_checkpoint("test_experiment", ckpt, 0, num_targets=N_target)
+    traker.score(batch, num_samples=N_target)
+    scores = ch.from_numpy(traker.finalize_scores(exp_name="test_experiment")).to(
+        ch.float32
+    )
+    assert ch.isclose(scores_jvp.cpu(), scores, atol=1e-6).all()

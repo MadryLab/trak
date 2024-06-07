@@ -77,6 +77,16 @@ def is_not_buffer(ind, params_dict) -> bool:
     return True
 
 
+def unvectorize(v_vector, param_shapes):
+    v_dict = {}
+    pointer = 0
+    for k, shape in param_shapes.items():
+        size = np.prod(shape)
+        v_dict[k] = v_vector[pointer : pointer + size].reshape(shape).contiguous()
+        pointer += size
+    return v_dict
+
+
 def vectorize(g, arr=None, device="cuda") -> Tensor:
     """
     records result into arr

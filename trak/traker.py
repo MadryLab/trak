@@ -14,6 +14,7 @@ This is done in two stages:
   of target samples, given the TRAK features computed in the previous step.
 
 """
+
 from .modelout_functions import AbstractModelOutput, TASK_TO_MODELOUT
 from .projectors import (
     ProjectionType,
@@ -25,9 +26,9 @@ from .projectors import (
 from .gradient_computers import FunctionalGradientComputer, AbstractGradientComputer
 from .score_computers import AbstractScoreComputer, BasicScoreComputer
 from .savers import AbstractSaver, MmapSaver, ModelIDException
-from .utils import get_num_params, get_parameter_chunk_sizes
+from .utils import get_num_params, get_parameter_chunk_sizes, unvectorize
 
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, List
 from pathlib import Path
 from tqdm import tqdm
 from torch import Tensor
@@ -147,6 +148,7 @@ class TRAKer:
         self.logger.setLevel(logging_level)
 
         self.num_params = get_num_params(self.model)
+        self.param_shapes = {k: p.shape for (k, p) in self.model.named_parameters()}
         if self.grad_wrt is not None:
             d = dict(self.model.named_parameters())
             self.num_params_for_grad = sum(
@@ -338,6 +340,7 @@ class TRAKer:
         checkpoint: Iterable[Tensor],
         model_id: int,
         _allow_featurizing_already_registered=False,
+        register_model_id=True,
     ) -> None:
         """Loads state dictionary for the given checkpoint; initializes arrays
         to store TRAK features for that checkpoint, tied to the model ID.
@@ -351,13 +354,17 @@ class TRAKer:
                 Only use if you want to override the default behaviour that
                 :code:`featurize` is forbidden on already registered model IDs.
                 Defaults to None.
+            register_model_id (bool, optional):
+                Whether to initialize storage for the given checkpoint
+                (register the model ID). Defaults to True. Not needed
+                when calling :func:`score_jvp`.
 
         """
-        if self.saver.model_ids.get(model_id) is None:
+        if register_model_id and (self.saver.model_ids.get(model_id) is None):
             self.saver.register_model_id(
                 model_id, _allow_featurizing_already_registered
             )
-        else:
+        elif register_model_id:
             self.saver.load_current_store(model_id)
 
         self.model.load_state_dict(checkpoint)
@@ -682,3 +689,148 @@ class TRAKer:
         self.scores = _scores_mmap
 
         return self.scores
+
+    def score_jvp(
+        self,
+        targets_batch: Iterable[Tensor],
+        checkpoints: List[Iterable[Tensor]],
+        train_loader,
+        num_samples_to_estimate_xtxinv: int = 2500,
+        batch_size_to_estimate_xtxinv: int = 64,
+        train_loader_to_estimate_xtxinv=None,
+    ) -> Tensor:
+        """
+        A fast method to compute TRAK scores for a batch of targets.
+        Can be used instead of the combination of:
+        - :func:`.load_checkpoint`
+        - :func:`.featurize`
+        - :func:`.finalize_features`
+        - :func:`.start_scoring_checkpoint`
+        - :func:`.score`
+        - :func:`.finalize_scores`
+
+        Compared to running the above pipeline, this method computes the TRAK
+        scores for the batch of targets by first computing the *target* TRAK
+        features, then computing the TRAK scores directly using JVPs without
+        instantiating the TRAK features for the train set.
+
+        Args:
+            targets_batch (Iterable[Tensor]):
+                input batch of targets
+            checkpoints (List[Iterable[Tensor]]):
+                list of checkpoints (state dicts)
+            train_loader (DataLoader):
+                dataloader for the train set
+            num_samples_to_estimate_xtxinv (int, optional):
+                number of samples to estimate X^TX inverse from. Ignored if
+                :code:`train_loader_to_estimate_xtxinv` is provided. Defaults
+                to 2500.
+            train_loader_to_estimate_xtxinv (DataLoader, optional):
+                dataloader for the train set to estimate X^TX inverse from.
+                Defaults to None.
+
+        Returns:
+            Tensor: TRAK scores
+        """
+        num_targets = targets_batch[0].shape[0]
+        self.logger.debug(f"num_targets: {num_targets}")
+        # scores
+        _scores = ch.zeros(len(train_loader.dataset), num_targets, device=self.device)
+        # out-to-loss-grads
+        Q = ch.zeros(len(train_loader.dataset), 1, device=self.device)
+
+        for model_id, checkpoint in enumerate(checkpoints):
+            N = len(train_loader.dataset)
+
+            self.load_checkpoint(checkpoint, model_id, register_model_id=False)
+
+            # compute projected gradients for targets
+            target_grads = self.gradient_computer.compute_per_sample_grad(
+                batch=targets_batch
+            )
+            target_grads = self.projector.project(target_grads, model_id=model_id)
+            target_grads /= self.normalize_factor
+            target_grads = target_grads.to(self.dtype)
+
+            # create train loader for computing X^TX inverse if needed
+            if train_loader_to_estimate_xtxinv is None:
+                if num_samples_to_estimate_xtxinv > N:
+                    self.logger.warning(
+                        f"Number of samples to estimate X^TX inverse ({num_samples_to_estimate_xtxinv}) is greater than the number of train samples ({N}). Reducing to {N}."
+                    )
+                    num_samples_to_estimate_xtxinv = N
+                indices = np.random.choice(
+                    np.arange(N), num_samples_to_estimate_xtxinv, replace=False
+                )
+                self.logger.debug(f"indices: {indices}")
+                train_loader_to_estimate_xtxinv = ch.utils.data.Subset(
+                    train_loader.dataset, indices
+                )
+                train_loader_to_estimate_xtxinv = ch.utils.data.DataLoader(
+                    train_loader_to_estimate_xtxinv,
+                    batch_size=batch_size_to_estimate_xtxinv,
+                    shuffle=True,
+                )
+            else:
+                num_samples_to_estimate_xtxinv = len(
+                    train_loader_to_estimate_xtxinv.dataset
+                )
+            # compute X^TX inverse from i.i.d. sampled train points
+            xtx = ch.zeros(self.proj_dim, self.proj_dim, device=self.device)
+
+            for batch in train_loader_to_estimate_xtxinv:
+                self.logger.debug(f"batch shape: {batch[0].shape}")
+                grads = self.gradient_computer.compute_per_sample_grad(batch=batch)
+                grads = (
+                    self.projector.project(grads, model_id=model_id).clone().detach()
+                )
+                grads /= self.normalize_factor
+                # TODO: we could call score_computer.get_xtx(grads) here but in
+                # practice we'll have small batch sizes so this should be fine
+                xtx += grads.T @ grads
+
+            xtx_reg = xtx + self.lambda_reg * torch.eye(
+                xtx.size(dim=0), device=xtx.device, dtype=xtx.dtype
+            )
+            xtx_inv = ch.linalg.inv(xtx_reg.to(ch.float32))
+            # lil hack to avoid numerical issues
+            xtx_inv /= xtx_inv.abs().mean()
+            xtx_inv = xtx_inv.to(self.dtype)
+
+            # compute F_targets = (X^T X)^{-1} X_targets^T
+            F_targets = target_grads @ xtx_inv
+            self.logger.debug(f"F_targets: {F_targets.shape}, {F_targets.dtype}")
+
+            # "unproject" the target features
+            # TODO: fix this to work with float16
+            V_targets = self.projector.unproject(
+                F_targets.to(ch.float32), model_id=model_id
+            )
+            V_targets /= self.normalize_factor
+            num_targets = V_targets.shape[0]
+
+            # compute scores for targets using jacobian-vector products
+            for iv, _v in enumerate(V_targets):
+                # _v (the unprojected target features) is a vector of shape
+                # grad_dim; we now create a dictionary in the format of
+                # model.named_parameters()
+                v = unvectorize(_v, self.param_shapes)
+
+                s, e = 0, 0
+                for batch in train_loader:
+                    e = s + batch[0].shape[0]
+                    _scores[s:e, iv] += self.gradient_computer.compute_per_sample_jvp(
+                        batch, v
+                    )
+                    s = e
+
+            # compute Q entries; being a bit wasteful here with an extra forward pass
+            # keeping things simple for now
+            s, e = 0, 0
+            for batch in train_loader:
+                e = s + batch[0].shape[0]
+                Q[s:e] += self.gradient_computer.compute_loss_grad(batch)
+                s = e
+
+        scores = (_scores / len(checkpoints)) * (Q / len(checkpoints))
+        return scores

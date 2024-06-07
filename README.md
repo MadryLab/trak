@@ -30,7 +30,7 @@ blueprint of using `TRAK`'s API to compute attribution scores.
 ```python
 from trak import TRAKer
 import torchvision
-from torch.utils.data import DataLoader
+import torch
 
 model = torchvision.models.resnet18(pretrained=True)
 # train or load a pre-trained model here ...
@@ -39,19 +39,18 @@ transforms = torchvision.transforms.Compose([
                   torchvision.transforms.ToTensor(),
                   torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465),
                                                   (0.2023, 0.1994, 0.201))])
-train_loader = DataLoader(torchvision.datasets.cifar10(train=True, download=True),
-                          batch_size=100,
-                          shuffle=False,
-                          transform=transforms)
-targets_loader = DataLoader(torchvision.datasets.cifar10(train=False, download=True),
-                            batch_size=100,
-                            shuffle=False,
-                            transform=transforms)
+train_loader = torch.utils.data.DataLoader(
+    torchvision.datasets.CIFAR10(root=".", train=True, download=True, transform=transforms),
+    batch_size=100,
+    shuffle=False)
+
+ds = torchvision.datasets.CIFAR10(root=".", train=False, download=True, transform=transforms)[:100]
+# first 100 images of the CIFAR-10 test set
+targets = (torch.stack([ds[i][0] for i in range(100)]), torch.stack([ds[i][1] for i in range(100)]))
 
 traker = TRAKer(model=model, task='image_classification', train_set_size=len(train_loader.dataset))
 
-for batch in targets_loader:
-    traker.score(batch=batch, num_samples=batch[0].shape[0], prefeaturized=False)
+scores = traker.score_jvp(batch=targets, train_loader=train_loader, checkpoints=checkpoints)
 ```
 
 Then, you can use the computed TRAK scores to analyze your model's behavior. For
