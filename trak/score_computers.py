@@ -9,6 +9,7 @@ interface for score computers. Then, we provide two implementations:
     block-wise matrix multiplications to avoid OOM errors.
 
 """
+
 from abc import ABC, abstractmethod
 import logging
 from torch import Tensor
@@ -103,6 +104,8 @@ class BasicSingleBlockScoreComputer(AbstractScoreComputer):
 
     def get_x_xtx_inv(self, grads: Tensor, xtx: Tensor) -> Tensor:
         # torch.linalg.inv does not support float16
+        assert not ch.isnan(grads).any(), "grads contains NaN values"
+        assert not ch.isnan(xtx).any(), "xtx contains NaN values"
         return grads @ ch.linalg.inv(xtx.float()).to(self.dtype)
 
     def get_scores(
@@ -160,6 +163,8 @@ class BasicScoreComputer(AbstractScoreComputer):
         xtx_reg = xtx + self.lambda_reg * torch.eye(
             xtx.size(dim=0), device=xtx.device, dtype=xtx.dtype
         )
+        assert not ch.isnan(grads).any(), "grads contains NaN values"
+        assert not ch.isnan(xtx_reg).any(), "xtx_reg contains NaN values"
         xtx_inv = ch.linalg.inv(xtx_reg.to(ch.float32))
 
         # center X^TX inverse a bit to avoid numerical issues when going to float16
