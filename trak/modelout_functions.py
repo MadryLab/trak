@@ -378,7 +378,7 @@ class CLIPModelOutput(AbstractModelOutput):
             self.temperature = temp
         res = self.temperature * image_embeddings @ text_embeddings.T
         ps = (self.softmax(res) + self.softmax(res.T)).diag() / 2.0
-        return (1 - ps).clone().detach()
+        return (1 - ps).clone().detach().unsqueeze(-1)
 
 
 class TextClassificationModelOutput(AbstractModelOutput):
