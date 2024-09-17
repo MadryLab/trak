@@ -12,18 +12,19 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
+
+sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'TRAK'
-copyright = '2023, Kristian Georgiev'
-author = 'Kristian Georgiev'
+project = "TRAK"
+copyright = "2023, Kristian Georgiev"
+author = "Kristian Georgiev"
 
 # The full version, including alpha/beta/rc tags
-release = '0.3.2'
-version = '0.3.2'
+release = "0.3.3"
+version = "0.3.3"
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,18 +34,18 @@ version = '0.3.2'
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    'sphinx.ext.doctest',
+    "sphinx.ext.doctest",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    'sphinx.ext.autosectionlabel'
+    "sphinx.ext.autosectionlabel",
 ]
 
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 def skip(app, what, name, obj, would_skip, options):
@@ -57,9 +58,9 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
 
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
-html_theme = 'furo'
+html_theme = "furo"
 html_theme_options = {
     "source_repository": "https://github.com/MadryLab/trak",
     "source_branch": "main",
@@ -69,4 +70,4 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
