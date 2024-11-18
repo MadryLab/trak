@@ -55,6 +55,7 @@ class SequenceClassificationModel(nn.Module):
             'bert-base-cased',
             num_labels=2,
             finetuning_task='qnli',
+            attn_implementation='eager',
             cache_dir=None,
             revision='main',
             use_auth_token=None,
